@@ -28,7 +28,7 @@ return new class extends Migration
                 'currency',
                 'previous_contract_id',
                 'remarks',
-                'termination_reason'
+                'termination_reason',
             ]);
         });
     }

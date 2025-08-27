@@ -34,7 +34,7 @@ return new class extends Migration
                 $columnsToRemove[] = 'city_id';
             }
 
-            if (!empty($columnsToRemove)) {
+            if (! empty($columnsToRemove)) {
                 $table->dropColumn($columnsToRemove);
             }
         });

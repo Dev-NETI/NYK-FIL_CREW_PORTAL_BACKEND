@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\HasModifiedBy;
 
 class Allotee extends Model
 {
-    use SoftDeletes, HasModifiedBy;
+    use HasModifiedBy, SoftDeletes;
+
     protected $fillable = [
         'name',
         'relationship',
@@ -37,7 +37,7 @@ class Allotee extends Model
             ->withPivot([
                 'is_primary',
                 'is_emergency_contact',
-                'deleted_at'
+                'deleted_at',
             ])
             ->withTimestamps();
     }

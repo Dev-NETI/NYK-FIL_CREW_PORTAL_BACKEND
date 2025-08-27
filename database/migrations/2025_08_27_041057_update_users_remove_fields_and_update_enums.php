@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -20,7 +20,7 @@ return new class extends Migration
         // Update enum values for crew_status
         DB::statement("ALTER TABLE users MODIFY COLUMN crew_status ENUM('on_board', 'on_vacation', 'finished_contract_with_further_medical_attention') DEFAULT 'on_board'");
 
-        // Update enum values for hire_status  
+        // Update enum values for hire_status
         DB::statement("ALTER TABLE users MODIFY COLUMN hire_status ENUM('new_hire', 're_hire') DEFAULT 'new_hire'");
     }
 
