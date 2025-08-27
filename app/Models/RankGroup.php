@@ -2,20 +2,23 @@
 
 namespace App\Models;
 
+use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RankGroup extends Model
 {
+    use HasModifiedBy, SoftDeletes;
+
     protected $fillable = [
         'rank_category_id',
         'name',
-        'is_active',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'deleted_at' => 'datetime',
     ];
 
     /**

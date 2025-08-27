@@ -1,0 +1,73 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\University;
+use Illuminate\Database\Seeder;
+
+class UniversitySeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $universities = [
+            'NORTHERN ILOILO POLYTECHNIC STATE COLLEGE',
+            'COLEGIO DE LA PURISIMA CONCEPCION',
+            'JOHN B. LACSON COLLEGE FOUNDATION',
+            'MTC COLLEGE - ILOILO',
+            'EULOGIO AMANG RODRIGUEZ INSTITUTE OF SCIENCE AND TECHNOLOGY',
+            'PHILIPPINE MARITIME INSTITUTE',
+            'DAVAO MERCHANT MARINE ACADEMY-DAVAO CITY',
+            'JOHN B. LACSON COLLEGE FOUNDATION',
+            'CEBU STATE COLLEGE OF SCIENCE AND TECHNOLOGY',
+            'AKLAN POLYTECHNIC INSTITUTE',
+            'WESTERN INSTITUTE OF TECHNOLOGY',
+            'TECHNOLOGICAL UNIVERSITY OF THE PHILLIPPINES',
+            'PHILIPPINE MARINE INSTITUTE - BOHOL',
+            'PHILIPPINE MARITIME INSTITUTE-QUEZON CITY',
+            'PHILIPPINE MERCHANT MARINE ACADEMY',
+            'INTER-GLOBAL MARITIME COLLEGE',
+            'CAGAYAN DE ORO COLLEGES',
+            'UNIVERSITY OF CEBU',
+            'PHILIPPINE MARITIME INSTITUTE',
+            'MTC COLLEGE',
+            'LYCEUM OF BATANGAS CITY',
+            'PHILIPPINE MERCHANT MARINE SCHOOL',
+            'JOHN B. LACSON COLLEGE FOUNDATION - BACOLOD',
+            'PHILIPPINE MARINE INSTITUTE - BOHOL',
+            'TECHNOLOGICAL INSTITUTE OF THE PHIL.',
+            'SAINT JOSEPH INSTITUTE OF TECHNOLOGY',
+            'BULACAN STATE UNIVERSITY',
+            'JOHN B. LACSON COLLEGE FOUNDATION-ILOILO CITY',
+            'MARIANO MARCOS STATE UNIVERSITY',
+            'NAMEI POLYTECHNIC INSTITUTE',
+            'MARINER S POLYTECHNIC COLLEGES FOUNDATION',
+            'ILOILO STATE COLLEGE OF FISHERIES',
+            'NORTHERN PHILIPPINE COLLEGE FOR MARITIME STUDIES',
+            'NPMTI - LA UNION',
+            'UNIVERSITY OF THE EAST',
+            'WESTERN INSTITUTE OF TECHNOLOGY - ILOILO',
+            'UNIVERSITY OF ILOILO',
+            'ZAMBOANGA POLYTECHNIC COLLEGE',
+            'ZAMBOANGA STATE COLLEGE OF MARINE SCIENCE AND TEC',
+            'SAINT MARY\'S COLLEGE',
+            'PHILIPPINE MARITIME INSTITUTE - BOHOL',
+            'HOLY CROSS OF DAVAO COLLEGE',
+            'LYCEUM OF ILIGAN',
+            'PHILIPPINE MERCHANT MARINE SCHOOL LAS PIÑAS CITY',
+            'ILOILO MARITIME ACADEMY',
+            'CEBU CENTRAL COLLEGES',
+            'VIRGEN DELOS REMEDIOS COLLEGE',
+            'GALLANOSA NATIONAL HIGHSCHOOL',
+            'WESTERN VISAYAS COLLEGE OF SCIENCE AND TECHNOLOGY',
+        ];
+
+        foreach ($universities as $universityName) {
+            University::firstOrCreate([
+                'name' => $universityName,
+            ]);
+        }
+    }
+}
