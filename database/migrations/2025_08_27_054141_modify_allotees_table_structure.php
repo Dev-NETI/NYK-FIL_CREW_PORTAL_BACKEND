@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::table('allotees', function (Blueprint $table) {
             // Drop columns that are being removed
             $table->dropColumn(['id_type', 'id_number', 'is_emergency_contact', 'is_beneficiary', 'beneficiary_percentage']);
-            
+
             // Drop foreign key constraint and address_id column
             $table->dropForeign(['address_id']);
             $table->dropColumn('address_id');
-            
+
             // Add new address text column
             $table->text('address')->nullable()->after('email');
         });
@@ -32,10 +32,10 @@ return new class extends Migration
         Schema::table('allotees', function (Blueprint $table) {
             // Drop the new address column
             $table->dropColumn('address');
-            
+
             // Re-add the address_id column and foreign key
             $table->foreignId('address_id')->nullable()->constrained('addresses')->onDelete('set null');
-            
+
             // Re-add the dropped columns
             $table->string('id_type')->nullable();
             $table->string('id_number')->nullable();

@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -15,14 +15,14 @@ return new class extends Migration
         $tables = ['users', 'addresses', 'contracts', 'vessels', 'allotees', 'crew_allotees'];
 
         foreach ($tables as $tableName) {
-            if (!Schema::hasTable($tableName) || !Schema::hasColumn($tableName, 'modified_by')) {
+            if (! Schema::hasTable($tableName) || ! Schema::hasColumn($tableName, 'modified_by')) {
                 continue;
             }
 
             // Check current column type
             $columns = DB::select("SHOW COLUMNS FROM `{$tableName}` LIKE 'modified_by'");
 
-            if (!empty($columns) && $columns[0]->Type !== 'text') {
+            if (! empty($columns) && $columns[0]->Type !== 'text') {
                 Schema::table($tableName, function (Blueprint $table) {
                     $table->text('modified_by')->nullable()->change();
                 });

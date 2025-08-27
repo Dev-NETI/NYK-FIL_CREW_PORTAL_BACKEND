@@ -23,7 +23,7 @@ return new class extends Migration
                 'built_year',
                 'shipyard',
                 'status',
-                'specifications'
+                'specifications',
             ]);
         });
     }

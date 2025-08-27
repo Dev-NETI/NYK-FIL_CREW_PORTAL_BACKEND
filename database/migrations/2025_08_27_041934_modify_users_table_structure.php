@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -29,11 +29,11 @@ return new class extends Migration
         // Now we need to reorder the columns to move timestamps to the end
         // Since MySQL doesn't have a direct way to reorder all columns easily,
         // we'll use raw SQL to recreate the table structure
-        DB::statement("
+        DB::statement('
             ALTER TABLE users 
             MODIFY COLUMN created_at timestamp NULL AFTER deleted_at,
             MODIFY COLUMN updated_at timestamp NULL AFTER created_at
-        ");
+        ');
     }
 
     /**
@@ -54,10 +54,10 @@ return new class extends Migration
         });
 
         // Move timestamps back to their original positions
-        DB::statement("
+        DB::statement('
             ALTER TABLE users 
             MODIFY COLUMN created_at timestamp NULL AFTER remember_token,
             MODIFY COLUMN updated_at timestamp NULL AFTER created_at
-        ");
+        ');
     }
 };

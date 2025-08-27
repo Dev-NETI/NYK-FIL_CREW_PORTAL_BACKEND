@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use App\Traits\HasModifiedBy;
 
 class Contract extends Model
 {
-    use SoftDeletes, HasModifiedBy;
+    use HasModifiedBy, SoftDeletes;
+
     protected $fillable = [
         'contract_number',
         'user_id',
@@ -40,7 +41,7 @@ class Contract extends Model
 
         static::saving(function ($contract) {
             // Auto-calculate contract end date if not set
-            if ($contract->contract_start_date && $contract->duration_months && !$contract->contract_end_date) {
+            if ($contract->contract_start_date && $contract->duration_months && ! $contract->contract_end_date) {
                 $contract->contract_end_date = Carbon::parse($contract->contract_start_date)
                     ->addMonths($contract->duration_months);
             }
@@ -70,10 +71,6 @@ class Contract extends Model
     {
         return $this->belongsTo(Vessel::class);
     }
-
-
-
-
 
     /**
      * Check if contract is currently active.
@@ -127,6 +124,7 @@ class Contract extends Model
     public function scopeExpiringSoon($query, $days = 30)
     {
         $date = now()->addDays($days);
+
         return $query->where('contract_end_date', '<=', $date)
             ->where('contract_end_date', '>=', now());
     }

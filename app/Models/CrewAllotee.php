@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasModifiedBy;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Traits\HasModifiedBy;
 
 class CrewAllotee extends Pivot
 {
-    use SoftDeletes, HasModifiedBy;
+    use HasModifiedBy, SoftDeletes;
 
     protected $table = 'crew_allotees';
 

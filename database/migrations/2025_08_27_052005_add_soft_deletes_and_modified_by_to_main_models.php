@@ -26,7 +26,7 @@ return new class extends Migration
             'regions',
             'schools',
             'vessels',
-            'vessel_types'
+            'vessel_types',
         ];
 
         foreach ($tables as $tableName) {
@@ -65,7 +65,7 @@ return new class extends Migration
             'regions',
             'schools',
             'vessels',
-            'vessel_types'
+            'vessel_types',
         ];
 
         foreach ($tables as $tableName) {

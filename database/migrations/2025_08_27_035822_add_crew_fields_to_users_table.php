@@ -94,7 +94,7 @@ return new class extends Migration
                 'seaman_book_number',
                 'seaman_book_expiry',
                 'primary_allotee_id',
-                'is_active'
+                'is_active',
             ]);
         });
     }

@@ -17,7 +17,7 @@ return new class extends Migration
                 'allotment_percentage',
                 'fixed_amount',
                 'allotment_type',
-                'is_active'
+                'is_active',
             ]);
 
             // Add soft deletes

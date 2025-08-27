@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\HasModifiedBy;
 
 class Address extends Model
 {
-    use SoftDeletes, HasModifiedBy;
+    use HasModifiedBy, SoftDeletes;
+
     protected $fillable = [
         'street_address',
         'island_id',
@@ -89,7 +90,7 @@ class Address extends Model
             $this->city->name ?? '',
             $this->province->name ?? '',
             $this->region->name ?? '',
-            $this->island->name ?? ''
+            $this->island->name ?? '',
         ];
 
         return implode(', ', array_filter($parts));

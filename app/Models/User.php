@@ -3,20 +3,20 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
-use App\Traits\HasModifiedBy;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, HasModifiedBy;
+    use HasFactory, HasModifiedBy, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -155,7 +155,7 @@ class User extends Authenticatable
             ->withPivot([
                 'is_primary',
                 'is_emergency_contact',
-                'deleted_at'
+                'deleted_at',
             ])
             ->withTimestamps();
     }
@@ -201,6 +201,7 @@ class User extends Authenticatable
     public function currentVessel()
     {
         $contract = $this->currentContract();
+
         return $contract ? $contract->vessel : null;
     }
 
@@ -229,7 +230,7 @@ class User extends Authenticatable
             $this->first_name,
             $this->middle_name,
             $this->last_name,
-            $this->suffix
+            $this->suffix,
         ]);
 
         return implode(' ', $nameParts);

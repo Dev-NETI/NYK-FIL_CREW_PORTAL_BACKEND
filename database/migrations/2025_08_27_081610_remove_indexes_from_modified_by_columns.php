@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -15,7 +15,7 @@ return new class extends Migration
         $tables = ['users', 'addresses', 'contracts', 'vessels', 'allotees', 'crew_allotees'];
 
         foreach ($tables as $tableName) {
-            if (!Schema::hasTable($tableName) || !Schema::hasColumn($tableName, 'modified_by')) {
+            if (! Schema::hasTable($tableName) || ! Schema::hasColumn($tableName, 'modified_by')) {
                 continue;
             }
 
@@ -39,7 +39,7 @@ return new class extends Migration
                     echo "Dropped index {$index->Key_name} from {$tableName}\n";
                 } catch (\Exception $e) {
                     // Index might not exist or might be a primary key
-                    echo "Could not drop index {$index->Key_name} from {$tableName}: " . $e->getMessage() . "\n";
+                    echo "Could not drop index {$index->Key_name} from {$tableName}: ".$e->getMessage()."\n";
                 }
             }
 
@@ -54,8 +54,8 @@ return new class extends Migration
 
                 // Try to drop other possible index names
                 $possibleIndexNames = [
-                    $tableName . '_modified_by_index',
-                    $tableName . '_modified_by_foreign'
+                    $tableName.'_modified_by_index',
+                    $tableName.'_modified_by_foreign',
                 ];
 
                 foreach ($possibleIndexNames as $indexName) {
@@ -68,7 +68,7 @@ return new class extends Migration
                 }
             });
         } catch (\Exception $e) {
-            echo "Error processing table {$tableName}: " . $e->getMessage() . "\n";
+            echo "Error processing table {$tableName}: ".$e->getMessage()."\n";
         }
     }
 

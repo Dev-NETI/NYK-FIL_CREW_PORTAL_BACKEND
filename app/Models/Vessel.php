@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\HasModifiedBy;
 
 class Vessel extends Model
 {
-    use SoftDeletes, HasModifiedBy;
+    use HasModifiedBy, SoftDeletes;
+
     protected $fillable = [
         'name',
         'vessel_id', // vessel id from mpip

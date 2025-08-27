@@ -14,14 +14,14 @@ trait HasModifiedBy
         static::creating(function ($model) {
             if (Auth::check()) {
                 $user = Auth::user();
-                $model->modified_by = $user->first_name . ' ' . $user->last_name;
+                $model->modified_by = $user->first_name.' '.$user->last_name;
             }
         });
 
         static::updating(function ($model) {
             if (Auth::check()) {
                 $user = Auth::user();
-                $model->modified_by = $user->first_name . ' ' . $user->last_name;
+                $model->modified_by = $user->first_name.' '.$user->last_name;
             }
         });
     }
