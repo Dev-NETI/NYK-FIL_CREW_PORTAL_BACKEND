@@ -9,7 +9,6 @@ class Island extends Model
 {
     protected $fillable = [
         'name',
-        'code',
     ];
 
     /**

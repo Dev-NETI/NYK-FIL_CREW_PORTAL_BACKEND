@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use App\Traits\HasModifiedBy;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasModifiedBy;
 
     /**
      * The attributes that are mass assignable.
@@ -28,6 +29,7 @@ class User extends Authenticatable
         'password',
         'crew_id',
         'fleet_id',
+        'rank_id',
         'first_name',
         'middle_name',
         'last_name',
@@ -47,7 +49,6 @@ class User extends Authenticatable
         'seaman_book_number',
         'seaman_book_expiry',
         'primary_allotee_id',
-        'modified_by',
     ];
 
     /**
@@ -137,19 +138,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the user who last modified this record.
+     * Get the rank.
      */
-    public function modifiedBy(): BelongsTo
+    public function rank(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'modified_by');
-    }
-
-    /**
-     * Get the users this user has modified.
-     */
-    public function modifiedUsers(): HasMany
-    {
-        return $this->hasMany(User::class, 'modified_by');
+        return $this->belongsTo(Rank::class);
     }
 
     /**
@@ -181,7 +174,6 @@ class User extends Authenticatable
     public function currentContract()
     {
         return $this->contracts()
-            ->where('status', 'active')
             ->where('contract_start_date', '<=', now())
             ->where('contract_end_date', '>=', now())
             ->first();
@@ -217,8 +209,7 @@ class User extends Authenticatable
      */
     public function currentRank()
     {
-        $contract = $this->currentContract();
-        return $contract ? $contract->rank : null;
+        return $this->rank;
     }
 
     /**

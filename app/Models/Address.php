@@ -6,27 +6,46 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasModifiedBy;
 
 class Address extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasModifiedBy;
     protected $fillable = [
-        'type',
         'street_address',
-        'barangay',
+        'island_id',
+        'region_id',
+        'province_id',
         'city_id',
-        'zip_code',
-        'landmark',
-        'latitude',
-        'longitude',
-        'modified_by',
     ];
 
     protected $casts = [
-        'latitude' => 'decimal:8',
-        'longitude' => 'decimal:8',
         'deleted_at' => 'datetime',
     ];
+
+    /**
+     * Get the island where this address is located.
+     */
+    public function island(): BelongsTo
+    {
+        return $this->belongsTo(Island::class);
+    }
+
+    /**
+     * Get the region where this address is located.
+     */
+    public function region(): BelongsTo
+    {
+        return $this->belongsTo(Region::class);
+    }
+
+    /**
+     * Get the province where this address is located.
+     */
+    public function province(): BelongsTo
+    {
+        return $this->belongsTo(Province::class);
+    }
 
     /**
      * Get the city where this address is located.
@@ -34,14 +53,6 @@ class Address extends Model
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
-    }
-
-    /**
-     * Get the user who last modified this address.
-     */
-    public function modifiedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'modified_by');
     }
 
     /**
@@ -75,10 +86,10 @@ class Address extends Model
     {
         $parts = [
             $this->street_address,
-            $this->barangay,
             $this->city->name ?? '',
-            $this->city->province->name ?? '',
-            $this->zip_code
+            $this->province->name ?? '',
+            $this->region->name ?? '',
+            $this->island->name ?? ''
         ];
 
         return implode(', ', array_filter($parts));
