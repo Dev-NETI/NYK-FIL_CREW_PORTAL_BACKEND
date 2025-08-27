@@ -9,10 +9,6 @@ class Fleet extends Model
 {
     protected $fillable = [
         'name',
-        'code',
-        'description',
-        'manager_name',
-        'manager_contact',
         'is_active',
     ];
 

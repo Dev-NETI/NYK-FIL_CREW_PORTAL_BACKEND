@@ -6,29 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use App\Traits\HasModifiedBy;
 
 class Contract extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasModifiedBy;
     protected $fillable = [
         'contract_number',
         'user_id',
         'vessel_id',
-        'rank_id',
         'departure_date',
         'arrival_date',
         'duration_months',
         'contract_start_date',
         'contract_end_date',
-        'status',
-        'contract_type',
-        'basic_salary',
-        'overtime_rate',
-        'currency',
-        'previous_contract_id',
-        'remarks',
-        'termination_reason',
-        'modified_by',
     ];
 
     protected $casts = [
@@ -37,8 +28,6 @@ class Contract extends Model
         'contract_start_date' => 'date',
         'contract_end_date' => 'date',
         'duration_months' => 'integer',
-        'basic_salary' => 'decimal:2',
-        'overtime_rate' => 'decimal:2',
         'deleted_at' => 'datetime',
     ];
 
@@ -56,14 +45,6 @@ class Contract extends Model
                     ->addMonths($contract->duration_months);
             }
         });
-    }
-
-    /**
-     * Get the user who last modified this contract.
-     */
-    public function modifiedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'modified_by');
     }
 
     /**
@@ -90,37 +71,16 @@ class Contract extends Model
         return $this->belongsTo(Vessel::class);
     }
 
-    /**
-     * Get the rank for this contract.
-     */
-    public function rank(): BelongsTo
-    {
-        return $this->belongsTo(Rank::class);
-    }
 
-    /**
-     * Get the previous contract (for extensions/renewals).
-     */
-    public function previousContract(): BelongsTo
-    {
-        return $this->belongsTo(Contract::class, 'previous_contract_id');
-    }
 
-    /**
-     * Get contracts that extend this one.
-     */
-    public function extensionContracts()
-    {
-        return $this->hasMany(Contract::class, 'previous_contract_id');
-    }
+
 
     /**
      * Check if contract is currently active.
      */
     public function isActive(): bool
     {
-        return $this->status === 'active' &&
-            $this->contract_start_date <= now() &&
+        return $this->contract_start_date <= now() &&
             $this->contract_end_date >= now();
     }
 
@@ -149,8 +109,7 @@ class Contract extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('status', 'active')
-            ->where('contract_start_date', '<=', now())
+        return $query->where('contract_start_date', '<=', now())
             ->where('contract_end_date', '>=', now());
     }
 
@@ -168,8 +127,7 @@ class Contract extends Model
     public function scopeExpiringSoon($query, $days = 30)
     {
         $date = now()->addDays($days);
-        return $query->where('status', 'active')
-            ->where('contract_end_date', '<=', $date)
+        return $query->where('contract_end_date', '<=', $date)
             ->where('contract_end_date', '>=', now());
     }
 }

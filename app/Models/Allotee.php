@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasModifiedBy;
 
 class Allotee extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasModifiedBy;
     protected $fillable = [
         'name',
         'relationship',
@@ -19,22 +20,12 @@ class Allotee extends Model
         'address',
         'date_of_birth',
         'gender',
-        'modified_by',
     ];
 
     protected $casts = [
         'date_of_birth' => 'date',
         'deleted_at' => 'datetime',
     ];
-
-
-    /**
-     * Get the user who last modified this allotee.
-     */
-    public function modifiedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'modified_by');
-    }
 
     /**
      * Get the users (crew members) that have this allotee.

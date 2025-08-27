@@ -6,28 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasModifiedBy;
 
 class Vessel extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasModifiedBy;
     protected $fillable = [
         'name',
         'vessel_id', // vessel id from mpip
         'vessel_type_id',
-        'modified_by',
     ];
 
     protected $casts = [
         'deleted_at' => 'datetime',
     ];
-
-    /**
-     * Get the user who last modified this vessel.
-     */
-    public function modifiedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'modified_by');
-    }
 
     /**
      * Get the vessel type.
@@ -50,7 +42,9 @@ class Vessel extends Model
      */
     public function activeContracts()
     {
-        return $this->contracts()->where('status', 'active');
+        return $this->contracts()
+            ->where('contract_start_date', '<=', now())
+            ->where('contract_end_date', '>=', now());
     }
 
     /**
@@ -65,6 +59,7 @@ class Vessel extends Model
             'id',
             'id',
             'user_id'
-        )->where('contracts.status', 'active');
+        )->where('contracts.contract_start_date', '<=', now())
+            ->where('contracts.contract_end_date', '>=', now());
     }
 }
