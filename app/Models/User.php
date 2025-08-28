@@ -30,6 +30,8 @@ class User extends Authenticatable
         'crew_id',
         'fleet_id',
         'rank_id',
+        'job_designation_id',
+        'company_id',
         'first_name',
         'middle_name',
         'last_name',
@@ -143,6 +145,22 @@ class User extends Authenticatable
     public function rank(): BelongsTo
     {
         return $this->belongsTo(Rank::class);
+    }
+
+    /**
+     * Get the job designation.
+     */
+    public function jobDesignation(): BelongsTo
+    {
+        return $this->belongsTo(JobDesignation::class);
+    }
+
+    /**
+     * Get the company.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

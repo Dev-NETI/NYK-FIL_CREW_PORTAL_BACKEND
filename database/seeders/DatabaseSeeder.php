@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             VesselTypeSeeder::class,
             FleetSeeder::class,
             UniversitySeeder::class,
+            JobDesignationSeeder::class,
+            CompanySeeder::class,
 
             // Rank hierarchy (dependencies within rank system)
             RankCategorySeeder::class,

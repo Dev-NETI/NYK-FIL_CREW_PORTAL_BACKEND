@@ -15,8 +15,14 @@ use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
+use App\Http\Controllers\JobDescriptionRequestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Temporary public routes for testing job description requests
+// Route::post('job-description-requests', [JobDescriptionRequestController::class, 'store']);
+// Route::get('job-description-requests', [JobDescriptionRequestController::class, 'index']);
+Route::apiResource('job-description-requests', JobDescriptionRequestController::class);
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -38,4 +44,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('allotees', AlloteeController::class);
     Route::apiResource('contracts', ContractController::class);
     Route::apiResource('crew-allotees', CrewAlloteeController::class);
+    // Route::apiResource('job-description-requests', JobDescriptionRequestController::class);
 });
