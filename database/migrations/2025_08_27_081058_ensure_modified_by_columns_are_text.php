@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
@@ -23,7 +22,20 @@ return new class extends Migration
             $columns = DB::select("SHOW COLUMNS FROM `{$tableName}` LIKE 'modified_by'");
 
             if (! empty($columns) && $columns[0]->Type !== 'text') {
-                Schema::table($tableName, function (Blueprint $table) {
+                // Get all indexes on the modified_by column
+                $indexes = DB::select("SHOW INDEX FROM `{$tableName}` WHERE Column_name = 'modified_by'");
+
+                Schema::table($tableName, function (Blueprint $table) use ($indexes, $tableName) {
+                    // Drop any existing indexes on the modified_by column
+                    foreach ($indexes as $index) {
+                        try {
+                            // Use the actual index name from the database
+                            DB::statement("ALTER TABLE `{$tableName}` DROP INDEX `{$index->Key_name}`");
+                        } catch (\Exception $e) {
+                            // Ignore if index doesn't exist or can't be dropped
+                        }
+                    }
+
                     $table->text('modified_by')->nullable()->change();
                 });
                 echo "Changed modified_by to text in {$tableName}\n";

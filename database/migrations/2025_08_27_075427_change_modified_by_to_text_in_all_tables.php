@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
@@ -24,7 +23,7 @@ return new class extends Migration
                 }
 
                 // Change modified_by to text
-                $table->text('modified_by')->nullable()->change();
+                $table->string('modified_by')->nullable()->change();
             });
         }
     }
