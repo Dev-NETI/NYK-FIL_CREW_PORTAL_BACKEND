@@ -202,7 +202,7 @@ class AuthController extends Controller
             ],
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
-            'redirect_to' => $user->is_crew == 1 ? '/home' : '/admin'
+            'redirect_to' => $user->is_crew == 1 ? '/crew/home' : '/admin'
         ]);
     }
 
