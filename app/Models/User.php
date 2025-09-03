@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Traits\HasModifiedBy;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,7 +17,7 @@ use Illuminate\Support\Carbon;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasModifiedBy, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasModifiedBy, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -49,6 +50,8 @@ class User extends Authenticatable
         'seaman_book_number',
         'seaman_book_expiry',
         'primary_allotee_id',
+        'last_login_at',
+        'last_login_ip',
     ];
 
     /**
@@ -79,6 +82,7 @@ class User extends Authenticatable
             'age' => 'integer',
             'is_crew' => 'boolean',
             'deleted_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
     }
 
@@ -322,5 +326,21 @@ class User extends Authenticatable
     public function scopeUnspecifiedType($query)
     {
         return $query->whereNull('is_crew');
+    }
+
+    /**
+     * Get the user's OTP verifications.
+     */
+    public function otpVerifications()
+    {
+        return $this->hasMany(OtpVerification::class);
+    }
+
+    /**
+     * Get valid OTP verifications for this user.
+     */
+    public function validOtpVerifications()
+    {
+        return $this->otpVerifications()->valid();
     }
 }
