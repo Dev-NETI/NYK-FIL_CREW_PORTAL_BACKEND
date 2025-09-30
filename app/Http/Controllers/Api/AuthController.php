@@ -192,14 +192,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'email_verified_at' => $user->email_verified_at,
-                'is_crew' => $user->is_crew,
-                'role' => $user->is_crew == 1 ? 'crew' : 'admin'
-            ],
+            'user' => $this->formatUserData($user),
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
             'redirect_to' => $user->is_crew == 1 ? '/crew/home' : '/admin'
@@ -294,14 +287,44 @@ class AuthController extends Controller
     {
         return response()->json([
             'success' => true,
-            'user' => [
-                'id' => $request->user()->id,
-                'name' => $request->user()->name,
-                'email' => $request->user()->email,
-                'email_verified_at' => $request->user()->email_verified_at,
-                'last_login_at' => $request->user()->last_login_at
-            ]
+            'user' => $this->formatUserData($request->user())
         ]);
+    }
+
+    private function formatUserData($user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->full_name,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at,
+            'last_login_at' => $user->last_login_at,
+            'is_crew' => $user->is_crew,
+            'crew_id' => $user->crew_id,
+            'fleet_name' => optional(optional($user)->fleet)->name,
+            'rank_name' => optional(optional($user)->rank)->name,
+            'first_name' => $user->first_name,
+            'middle_name' => $user->middle_name,
+            'last_name' => $user->last_name,
+            'suffix' => $user->suffix,
+            'date_of_birth' => $user->date_of_birth,
+            'age' => $user->age,
+            'gender' => $user->gender,
+            'mobile_number' => $user->mobile_number,
+            'permanent_address_id' => $user->permanent_address_id,
+            'graduated_school_id' => $user->graduated_school_id,
+            'date_graduated' => $user->date_graduated,
+            'crew_status' => $user->crew_status,
+            'hire_status' => $user->hire_status,
+            'hire_date' => $user->hire_date,
+            'passport_number' => $user->passport_number,
+            'passport_expiry' => $user->passport_expiry,
+            'seaman_book_number' => $user->seaman_book_number,
+            'seaman_book_expiry' => $user->seaman_book_expiry,
+            'primary_allotee_id' => $user->primary_allotee_id,
+            'last_login_ip' => $user->last_login_ip,
+            'role' => $user->is_crew ? 'crew' : 'admin',
+        ];
     }
 
     private function generateSecureOTP(): string

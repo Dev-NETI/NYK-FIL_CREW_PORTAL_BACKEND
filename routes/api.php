@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\RankController;
 use App\Http\Controllers\Api\RankGroupController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UniversityController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
 use Illuminate\Http\Request;
@@ -31,6 +32,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // User info and auth management
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
+
+    // User profile routes
+    Route::get('/crew/{crewId}/profile', [UserController::class, 'getProfile']);
+
+    // Temporarily allow crew access for testing - REMOVE IN PRODUCTION
+    // Route::get('/admin/crew', [UserController::class, 'index']);
 });
 
 // Crew-only routes (requires is_crew = 1)
@@ -76,4 +83,5 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('allotees', AlloteeController::class);
     Route::apiResource('contracts', ContractController::class);
     Route::apiResource('crew-allotees', CrewAlloteeController::class);
+    Route::apiResource('crew', UserController::class);
 });
