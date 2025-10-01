@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             VesselTypeSeeder::class,
             FleetSeeder::class,
             UniversitySeeder::class,
+            ProgramSeeder::class,
             JobDesignationSeeder::class,
             CompanySeeder::class,
 
@@ -39,6 +40,13 @@ class DatabaseSeeder extends Seeder
 
             // User data (depends on fleet, rank, university, address)
             UserSeeder::class,
+
+            // User profile data (depends on users)
+            UserProfileSeeder::class,
+            UserContactSeeder::class,
+            UserEmploymentSeeder::class,
+            UserEducationSeeder::class,
+            UserPhysicalTraitSeeder::class,
 
             // Vessel data (depends on vessel types)
             VesselSeeder::class,

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -54,6 +55,7 @@ class User extends Authenticatable
         'primary_allotee_id',
         'last_login_at',
         'last_login_ip',
+        'email_verified_at'
     ];
 
     /**
@@ -76,12 +78,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'date_of_birth' => 'date',
-            'date_graduated' => 'date',
-            'hire_date' => 'date',
-            'passport_expiry' => 'date',
-            'seaman_book_expiry' => 'date',
-            'age' => 'integer',
             'is_crew' => 'boolean',
             'deleted_at' => 'datetime',
             'last_login_at' => 'datetime',
@@ -94,21 +90,63 @@ class User extends Authenticatable
     protected static function boot()
     {
         parent::boot();
-
-        static::saving(function ($user) {
-            // Auto-calculate age from date of birth
-            if ($user->date_of_birth) {
-                $user->age = Carbon::parse($user->date_of_birth)->age;
-            }
-        });
     }
 
+    /**
+     * Get the user's profile information.
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    /**
+     * Get the user's physical traits.
+     */
+    public function physicalTraits(): HasOne
+    {
+        return $this->hasOne(UserPhysicalTrait::class);
+    }
+
+    /**
+     * Get the user's contact information.
+     */
+    public function contacts(): HasOne
+    {
+        return $this->hasOne(UserContact::class);
+    }
+
+    /**
+     * Get the user's employment information.
+     */
+    public function employment(): HasOne
+    {
+        return $this->hasOne(UserEmployment::class);
+    }
+
+    /**
+     * Get the user's education information.
+     */
+    public function education(): HasOne
+    {
+        return $this->hasOne(UserEducation::class);
+    }
+
+    /**
+     * Get the user's program employment records.
+     */
+    public function programEmployments(): HasMany
+    {
+        return $this->hasMany(UserProgramEmployment::class);
+    }
+
+    // Convenience methods for backward compatibility
     /**
      * Get the permanent address.
      */
     public function permanentAddress(): BelongsTo
     {
-        return $this->belongsTo(Address::class, 'permanent_address_id');
+        return $this->contacts?->permanentAddress() ?? $this->belongsTo(Address::class, 'permanent_address_id');
     }
 
     /**
@@ -116,7 +154,7 @@ class User extends Authenticatable
      */
     public function graduatedUniversity(): BelongsTo
     {
-        return $this->belongsTo(University::class, 'graduated_school_id');
+        return $this->education?->graduatedUniversity() ?? $this->belongsTo(University::class, 'graduated_school_id');
     }
 
     /**
@@ -132,7 +170,7 @@ class User extends Authenticatable
      */
     public function primaryAllotee(): BelongsTo
     {
-        return $this->belongsTo(Allotee::class, 'primary_allotee_id');
+        return $this->employment?->primaryAllotee() ?? $this->belongsTo(Allotee::class, 'primary_allotee_id');
     }
 
     /**
@@ -140,7 +178,7 @@ class User extends Authenticatable
      */
     public function fleet(): BelongsTo
     {
-        return $this->belongsTo(Fleet::class);
+        return $this->employment?->fleet() ?? $this->belongsTo(Fleet::class);
     }
 
     /**
@@ -148,7 +186,7 @@ class User extends Authenticatable
      */
     public function rank(): BelongsTo
     {
-        return $this->belongsTo(Rank::class);
+        return $this->employment?->rank() ?? $this->belongsTo(Rank::class);
     }
 
     /**
@@ -248,14 +286,11 @@ class User extends Authenticatable
      */
     public function getFullNameAttribute(): string
     {
-        $nameParts = array_filter([
-            $this->first_name,
-            $this->middle_name,
-            $this->last_name,
-            $this->suffix,
-        ]);
-
-        return implode(' ', $nameParts);
+        if ($this->profile) {
+            return $this->profile->full_name;
+        }
+        
+        return $this->email; // fallback to email if no profile
     }
 
     /**

@@ -8,12 +8,15 @@ use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\IslandController;
+use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ProvinceController;
+use App\Http\Controllers\Api\UserProgramEmploymentController;
 use App\Http\Controllers\Api\RankCategoryController;
 use App\Http\Controllers\Api\RankController;
 use App\Http\Controllers\Api\RankGroupController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UniversityController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
 use App\Http\Controllers\JobDescriptionRequestController;
@@ -32,6 +35,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // User info and auth management
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
+
+    // User profile routes
+    Route::get('/crew/{crewId}/profile', [UserController::class, 'getProfile']);
 });
 
 // Crew-only routes (requires is_crew = 1)
@@ -60,8 +66,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
             'redirect_to' => '/admin'
         ]);
     });
-
-    // Admin has full CRUD access to all resources
     Route::apiResource('vessel-types', VesselTypeController::class);
     Route::apiResource('universities', UniversityController::class);
     Route::apiResource('rank-categories', RankCategoryController::class);
@@ -77,5 +81,16 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('allotees', AlloteeController::class);
     Route::apiResource('contracts', ContractController::class);
     Route::apiResource('crew-allotees', CrewAlloteeController::class);
+    Route::apiResource('programs', ProgramController::class);
+
+    // User employment records
+    Route::get('crew/{userId}/employment', [UserProgramEmploymentController::class, 'index']);
+    Route::post('crew/{userId}/employment', [UserProgramEmploymentController::class, 'store']);
+    Route::get('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'show']);
+    Route::put('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'update']);
+    Route::delete('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'destroy']);
+
+    Route::apiResource('crew', UserController::class);
+    Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
     // Route::apiResource('job-description-requests', JobDescriptionRequestController::class);
 });

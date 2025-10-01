@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\OtpVerification;
+use App\Traits\FormatsUserData;
 use Carbon\Carbon;
 
 class AuthController extends Controller
 {
+    use FormatsUserData;
     private const OTP_EXPIRY_MINUTES = 10;
     private const MAX_OTP_ATTEMPTS = 5;
     private const RATE_LIMIT_KEY = 'auth-attempt:';
@@ -47,7 +49,7 @@ class AuthController extends Controller
         }
 
         $email = $request->email;
-        $user = User::where('email', $email)->first();
+        $user = User::where('email', $email)->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])->first();
 
         if (!$user) {
             RateLimiter::hit($rateLimitKey, 60);
@@ -192,14 +194,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'email_verified_at' => $user->email_verified_at,
-                'is_crew' => $user->is_crew,
-                'role' => $user->is_crew == 1 ? 'crew' : 'admin'
-            ],
+            'user' => $this->formatUserData($user),
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at,
             'redirect_to' => $user->is_crew == 1 ? '/crew/home' : '/admin'
@@ -294,15 +289,10 @@ class AuthController extends Controller
     {
         return response()->json([
             'success' => true,
-            'user' => [
-                'id' => $request->user()->id,
-                'name' => $request->user()->name,
-                'email' => $request->user()->email,
-                'email_verified_at' => $request->user()->email_verified_at,
-                'last_login_at' => $request->user()->last_login_at
-            ]
+            'user' => $this->formatUserData($request->user())
         ]);
     }
+
 
     private function generateSecureOTP(): string
     {
