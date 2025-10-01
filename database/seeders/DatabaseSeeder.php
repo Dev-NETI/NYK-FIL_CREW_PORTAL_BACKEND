@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             VesselTypeSeeder::class,
             FleetSeeder::class,
             UniversitySeeder::class,
+            ProgramSeeder::class,
 
             // Rank hierarchy (dependencies within rank system)
             RankCategorySeeder::class,

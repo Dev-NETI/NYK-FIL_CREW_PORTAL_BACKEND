@@ -184,7 +184,7 @@ class UserController extends Controller
 
             return response()->json([
                 'success' => true,
-                'crew' => $this->formatUserData($crew),
+                'user' => $this->formatUserData($crew),
                 'message' => 'Crew profile retrieved successfully'
             ]);
         } catch (\Exception $e) {
@@ -200,5 +200,4 @@ class UserController extends Controller
             ], 500);
         }
     }
-
 }

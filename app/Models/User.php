@@ -108,6 +108,14 @@ class User extends Authenticatable
         return $this->hasOne(UserEducation::class);
     }
 
+    /**
+     * Get the user's program employment records.
+     */
+    public function programEmployments(): HasMany
+    {
+        return $this->hasMany(UserProgramEmployment::class);
+    }
+
     // Convenience methods for backward compatibility
     /**
      * Get the permanent address.
