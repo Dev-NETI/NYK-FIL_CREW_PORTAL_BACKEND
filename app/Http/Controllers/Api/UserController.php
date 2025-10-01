@@ -4,18 +4,22 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\FormatsUserData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
+    use FormatsUserData;
     public function getProfile($crewId, Request $request)
     {
         try {
             $currentUser = $request->user();
 
-            // Find the user by crew_id
-            $user = User::where('crew_id', $crewId)->first();
+            // Find the user by crew_id in user_profiles table
+            $user = User::whereHas('profile', function ($query) use ($crewId) {
+                $query->where('crew_id', $crewId);
+            })->with(['profile', 'contacts', 'employment', 'education', 'physicalTraits'])->first();
 
             if (!$user) {
                 return response()->json([
@@ -25,7 +29,8 @@ class UserController extends Controller
             }
 
             // Check permissions: users can only view their own profile or admin can view any profile
-            if ($currentUser->crew_id !== $crewId && $currentUser->is_crew !== 0) {
+            $currentUserCrewId = $currentUser->profile?->crew_id;
+            if ($currentUserCrewId !== $crewId && $currentUser->is_crew !== 0) {
                 return response()->json([
                     'success' => false,
                     'message' => 'You are not authorized to view this profile'
@@ -71,7 +76,7 @@ class UserController extends Controller
 
             // Get all crew members (is_crew = 1) with their related data
             $crew = User::where('is_crew', 1)
-                ->with(['fleet', 'rank'])
+                ->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -117,7 +122,7 @@ class UserController extends Controller
                 ], 403);
             }
 
-            $user = User::with(['fleet', 'rank'])->find($id);
+            $user = User::with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])->find($id);
 
             if (!$user) {
                 return response()->json([
@@ -161,7 +166,7 @@ class UserController extends Controller
             // Find crew by id with related data
             $crew = User::where('id', $id)
                 ->where('is_crew', 1)
-                ->with(['fleet', 'rank'])
+                ->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
                 ->first();
 
             if (!$crew) {
@@ -196,39 +201,4 @@ class UserController extends Controller
         }
     }
 
-    private function formatUserData($user): array
-    {
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'email_verified_at' => $user->email_verified_at,
-            'last_login_at' => $user->last_login_at,
-            'is_crew' => $user->is_crew,
-            'crew_id' => $user->crew_id,
-            'fleet_name' => optional($user->fleet)->name,
-            'rank_name' => optional($user->rank)->name,
-            'first_name' => $user->first_name,
-            'middle_name' => $user->middle_name,
-            'last_name' => $user->last_name,
-            'suffix' => $user->suffix,
-            'date_of_birth' => $user->date_of_birth,
-            'age' => $user->age,
-            'gender' => $user->gender,
-            'mobile_number' => $user->mobile_number,
-            'permanent_address_id' => $user->permanent_address_id,
-            'graduated_school_id' => $user->graduated_school_id,
-            'date_graduated' => $user->date_graduated,
-            'crew_status' => $user->crew_status,
-            'hire_status' => $user->hire_status,
-            'hire_date' => $user->hire_date,
-            'passport_number' => $user->passport_number,
-            'passport_expiry' => $user->passport_expiry,
-            'seaman_book_number' => $user->seaman_book_number,
-            'seaman_book_expiry' => $user->seaman_book_expiry,
-            'primary_allotee_id' => $user->primary_allotee_id,
-            'last_login_ip' => $user->last_login_ip,
-            'role' => $user->is_crew ? 'crew' : 'admin',
-        ];
-    }
 }

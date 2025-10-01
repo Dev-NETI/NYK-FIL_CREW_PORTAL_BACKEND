@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\OtpVerification;
+use App\Traits\FormatsUserData;
 use Carbon\Carbon;
 
 class AuthController extends Controller
 {
+    use FormatsUserData;
     private const OTP_EXPIRY_MINUTES = 10;
     private const MAX_OTP_ATTEMPTS = 5;
     private const RATE_LIMIT_KEY = 'auth-attempt:';
@@ -47,7 +49,7 @@ class AuthController extends Controller
         }
 
         $email = $request->email;
-        $user = User::where('email', $email)->first();
+        $user = User::where('email', $email)->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])->first();
 
         if (!$user) {
             RateLimiter::hit($rateLimitKey, 60);
@@ -291,41 +293,6 @@ class AuthController extends Controller
         ]);
     }
 
-    private function formatUserData($user): array
-    {
-        return [
-            'id' => $user->id,
-            'name' => $user->full_name,
-            'email' => $user->email,
-            'email_verified_at' => $user->email_verified_at,
-            'last_login_at' => $user->last_login_at,
-            'is_crew' => $user->is_crew,
-            'crew_id' => $user->crew_id,
-            'fleet_name' => optional(optional($user)->fleet)->name,
-            'rank_name' => optional(optional($user)->rank)->name,
-            'first_name' => $user->first_name,
-            'middle_name' => $user->middle_name,
-            'last_name' => $user->last_name,
-            'suffix' => $user->suffix,
-            'date_of_birth' => $user->date_of_birth,
-            'age' => $user->age,
-            'gender' => $user->gender,
-            'mobile_number' => $user->mobile_number,
-            'permanent_address_id' => $user->permanent_address_id,
-            'graduated_school_id' => $user->graduated_school_id,
-            'date_graduated' => $user->date_graduated,
-            'crew_status' => $user->crew_status,
-            'hire_status' => $user->hire_status,
-            'hire_date' => $user->hire_date,
-            'passport_number' => $user->passport_number,
-            'passport_expiry' => $user->passport_expiry,
-            'seaman_book_number' => $user->seaman_book_number,
-            'seaman_book_expiry' => $user->seaman_book_expiry,
-            'primary_allotee_id' => $user->primary_allotee_id,
-            'last_login_ip' => $user->last_login_ip,
-            'role' => $user->is_crew ? 'crew' : 'admin',
-        ];
-    }
 
     private function generateSecureOTP(): string
     {
