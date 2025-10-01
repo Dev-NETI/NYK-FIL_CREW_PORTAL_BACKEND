@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
+use App\Http\Controllers\JobDescriptionRequestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -91,4 +92,5 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
     Route::apiResource('crew', UserController::class);
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
+    // Route::apiResource('job-description-requests', JobDescriptionRequestController::class);
 });

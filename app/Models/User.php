@@ -29,6 +29,30 @@ class User extends Authenticatable
         'is_crew',
         'email',
         'password',
+        'crew_id',
+        'fleet_id',
+        'rank_id',
+        'job_designation_id',
+        'company_id',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'suffix',
+        'date_of_birth',
+        'age',
+        'gender',
+        'mobile_number',
+        'permanent_address_id',
+        'graduated_school_id',
+        'date_graduated',
+        'crew_status',
+        'hire_status',
+        'hire_date',
+        'passport_number',
+        'passport_expiry',
+        'seaman_book_number',
+        'seaman_book_expiry',
+        'primary_allotee_id',
         'last_login_at',
         'last_login_ip',
         'email_verified_at'
@@ -163,6 +187,22 @@ class User extends Authenticatable
     public function rank(): BelongsTo
     {
         return $this->employment?->rank() ?? $this->belongsTo(Rank::class);
+    }
+
+    /**
+     * Get the job designation.
+     */
+    public function jobDesignation(): BelongsTo
+    {
+        return $this->belongsTo(JobDesignation::class);
+    }
+
+    /**
+     * Get the company.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**
