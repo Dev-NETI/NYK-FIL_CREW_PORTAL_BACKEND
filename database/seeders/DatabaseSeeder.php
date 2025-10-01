@@ -53,6 +53,8 @@ class DatabaseSeeder extends Seeder
             ContractSeeder::class,
 
             EmploymentDocumentTypeSeeder::class,
+            TravelDocumentTypeSeeder::class,
+            TravelDocumentSeeder::class,
         ]);
     }
 }
