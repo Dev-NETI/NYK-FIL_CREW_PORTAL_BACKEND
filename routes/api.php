@@ -35,9 +35,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // User profile routes
     Route::get('/crew/{crewId}/profile', [UserController::class, 'getProfile']);
-
-    // Temporarily allow crew access for testing - REMOVE IN PRODUCTION
-    // Route::get('/admin/crew', [UserController::class, 'index']);
 });
 
 // Crew-only routes (requires is_crew = 1)
@@ -66,8 +63,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
             'redirect_to' => '/admin'
         ]);
     });
-
-    // Admin has full CRUD access to all resources
     Route::apiResource('vessel-types', VesselTypeController::class);
     Route::apiResource('universities', UniversityController::class);
     Route::apiResource('rank-categories', RankCategoryController::class);
@@ -83,5 +78,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('allotees', AlloteeController::class);
     Route::apiResource('contracts', ContractController::class);
     Route::apiResource('crew-allotees', CrewAlloteeController::class);
+
     Route::apiResource('crew', UserController::class);
+    Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
 });

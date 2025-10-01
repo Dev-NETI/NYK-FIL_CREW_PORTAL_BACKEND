@@ -61,25 +61,13 @@ class UserController extends Controller
     {
         try {
             $currentUser = $request->user();
-            
+
             // Log the current user for debugging
             Log::info('Crew list access attempt', [
                 'user_id' => $currentUser->id,
                 'is_crew' => $currentUser->is_crew,
                 'email' => $currentUser->email
             ]);
-            
-            // Check if user is admin (temporarily disabled for debugging - REMOVE IN PRODUCTION)
-            // if ($currentUser->is_crew !== 0) {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => 'You are not authorized to access this resource. Admin access required.',
-            //         'debug' => [
-            //             'current_user_is_crew' => $currentUser->is_crew,
-            //             'required_is_crew' => 0
-            //         ]
-            //     ], 403);
-            // }
 
             // Get all crew members (is_crew = 1) with their related data
             $crew = User::where('is_crew', 1)
@@ -103,7 +91,6 @@ class UserController extends Controller
                 'total' => $crew->count(),
                 'message' => 'Crew list retrieved successfully'
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error retrieving crew list', [
                 'error' => $e->getMessage(),
@@ -121,7 +108,7 @@ class UserController extends Controller
     {
         try {
             $currentUser = $request->user();
-            
+
             // Check if user is admin
             if ($currentUser->is_crew !== 0) {
                 return response()->json([
@@ -144,7 +131,6 @@ class UserController extends Controller
                 'user' => $this->formatUserData($user),
                 'message' => 'User retrieved successfully'
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error retrieving user', [
                 'user_id' => $id,
@@ -155,6 +141,57 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while retrieving the user'
+            ], 500);
+        }
+    }
+
+    public function getProfileAdmin($id, Request $request)
+    {
+        try {
+            $currentUser = $request->user();
+
+            // Check if user is admin
+            if ($currentUser->is_crew === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not authorized to access this resource'
+                ], 403);
+            }
+
+            // Find crew by id with related data
+            $crew = User::where('id', $id)
+                ->where('is_crew', 1)
+                ->with(['fleet', 'rank'])
+                ->first();
+
+            if (!$crew) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Crew member not found'
+                ], 404);
+            }
+
+            Log::info('Crew profile accessed by admin', [
+                'admin_id' => $currentUser->id,
+                'crew_id' => $id,
+                'ip' => $request->ip()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'crew' => $this->formatUserData($crew),
+                'message' => 'Crew profile retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error retrieving crew profile for admin', [
+                'crew_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving the crew profile'
             ], 500);
         }
     }
