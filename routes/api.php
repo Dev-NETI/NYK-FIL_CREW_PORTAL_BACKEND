@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
+use App\Http\Controllers\JobDescriptionRequestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -76,4 +77,5 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('allotees', AlloteeController::class);
     Route::apiResource('contracts', ContractController::class);
     Route::apiResource('crew-allotees', CrewAlloteeController::class);
+    // Route::apiResource('job-description-requests', JobDescriptionRequestController::class);
 });

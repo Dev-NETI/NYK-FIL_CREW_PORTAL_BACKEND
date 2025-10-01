@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Address;
+use App\Models\Company;
 use App\Models\Fleet;
+use App\Models\JobDesignation;
 use App\Models\Rank;
 use App\Models\University;
 use App\Models\User;
@@ -1243,6 +1245,57 @@ class UserSeeder extends Seeder
                 'date_graduated' => $data['date_graduated'] ? Carbon::parse($data['date_graduated']) : null,
                 'permanent_address_id' => $address?->id,
             ]);
+        }
+
+        // Add non-crew users (Executive Assistant and VP Office)
+        $this->seedNonCrewUsers();
+    }
+
+    /**
+     * Seed non-crew users with job designations and company
+     */
+    private function seedNonCrewUsers(): void
+    {
+        // Get NYK-Fil Ship Management company
+        $company = Company::where('name', 'NYK-Fil Ship Management Inc.')->first();
+
+        // Get job designations
+        $eaDesignation = JobDesignation::where('name', 'Executive Assistant')->first();
+        $vpDesignation = JobDesignation::where('name', 'Office of the Vice President')->first();
+
+        $nonCrewUsers = [
+            [
+                'is_crew' => false,
+                'email' => 'ea@nykfil.com',
+                'password' => Hash::make('password'),
+                'first_name' => 'Maria',
+                'middle_name' => 'Santos',
+                'last_name' => 'Cruz',
+                'date_of_birth' => '1985-06-15',
+                'gender' => 'Female',
+                'mobile_number' => '+639171234567',
+                'job_designation_id' => $eaDesignation?->id,
+                'company_id' => $company?->id,
+            ],
+            [
+                'is_crew' => false,
+                'email' => 'vp.office@nykfil.com',
+                'password' => Hash::make('password'),
+                'first_name' => 'Juan',
+                'middle_name' => 'Dela',
+                'last_name' => 'Cruz',
+                'date_of_birth' => '1975-03-20',
+                'gender' => 'Male',
+                'mobile_number' => '+639189876543',
+                'job_designation_id' => $vpDesignation?->id,
+                'company_id' => $company?->id,
+            ],
+        ];
+
+        foreach ($nonCrewUsers as $userData) {
+            User::firstOrCreate([
+                'email' => $userData['email'],
+            ], $userData);
         }
     }
 
