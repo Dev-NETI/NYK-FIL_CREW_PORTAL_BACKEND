@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AlloteeController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
@@ -19,16 +20,48 @@ use App\Http\Controllers\JobDescriptionRequestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Temporary public routes for testing job description requests
-// Route::post('job-description-requests', [JobDescriptionRequestController::class, 'store']);
-// Route::get('job-description-requests', [JobDescriptionRequestController::class, 'index']);
-Route::apiResource('job-description-requests', JobDescriptionRequestController::class);
-
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
+// Authentication routes (public)
+Route::prefix('auth')->group(function () {
+    Route::post('login', [AuthController::class, 'initiateLogin']);
+    Route::post('verify', [AuthController::class, 'verifyOtpAndLogin']);
+    Route::post('resend-otp', [AuthController::class, 'resendOtp']);
 });
 
+// Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
+    // User info and auth management
+    Route::get('/user', [AuthController::class, 'me']);
+    Route::post('auth/logout', [AuthController::class, 'logout']);
+});
+
+// Crew-only routes (requires is_crew = 1)
+Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
+    // Crew-specific endpoints
+    Route::get('/dashboard', function () {
+        return response()->json([
+            'success' => true,
+            'message' => 'Welcome to crew dashboard!',
+            'redirect_to' => '/home'
+        ]);
+    });
+
+    // Crew can view their own data
+    Route::apiResource('contracts', ContractController::class)->only(['index', 'show']);
+    Route::apiResource('crew-allotees', CrewAlloteeController::class)->only(['index', 'show']);
+});
+
+// Admin-only routes (requires is_crew = 0)
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    // Admin dashboard
+    Route::get('/dashboard', function () {
+        return response()->json([
+            'success' => true,
+            'message' => 'Welcome to admin dashboard!',
+            'redirect_to' => '/admin'
+        ]);
+    });
+
+    // Admin has full CRUD access to all resources
     Route::apiResource('vessel-types', VesselTypeController::class);
     Route::apiResource('universities', UniversityController::class);
     Route::apiResource('rank-categories', RankCategoryController::class);
