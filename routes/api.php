@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
+use App\Http\Controllers\Api\EmploymentDocumentController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\IslandController;
 use App\Http\Controllers\Api\ProgramController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Api\RankCategoryController;
 use App\Http\Controllers\Api\RankController;
 use App\Http\Controllers\Api\RankGroupController;
 use App\Http\Controllers\Api\RegionController;
+use App\Http\Controllers\Api\TravelDocumentController;
 use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VesselController;
@@ -30,6 +32,10 @@ Route::prefix('auth')->group(function () {
     Route::post('resend-otp', [AuthController::class, 'resendOtp']);
 });
 
+Route::apiResource('employment-documents', EmploymentDocumentController::class)->only(['index', 'show']);
+Route::apiResource('travel-documents', TravelDocumentController::class)->only(['index', 'show']);
+
+// VERY NICE
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
     // User info and auth management
@@ -40,6 +46,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/crew/{crewId}/profile', [UserController::class, 'getProfile']);
 });
 
+// VERY NICE
 // Crew-only routes (requires is_crew = 1)
 Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
     // Crew-specific endpoints
@@ -56,6 +63,7 @@ Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
     Route::apiResource('crew-allotees', CrewAlloteeController::class)->only(['index', 'show']);
 });
 
+// VERY NICE
 // Admin-only routes (requires is_crew = 0)
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     // Admin dashboard
@@ -81,6 +89,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('allotees', AlloteeController::class);
     Route::apiResource('contracts', ContractController::class);
     Route::apiResource('crew-allotees', CrewAlloteeController::class);
+    Route::apiResource('employment-documents', EmploymentDocumentController::class);
+    Route::apiResource('travel-documents', TravelDocumentController::class);
     Route::apiResource('programs', ProgramController::class);
 
     // User employment records
