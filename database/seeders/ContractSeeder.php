@@ -93,19 +93,25 @@ class ContractSeeder extends Seeder
         ];
 
         foreach ($contractsData as $data) {
-            $user = User::where('crew_id', $data['crew_id'])->first();
+            // Since crew_id is in user_profiles table, query through the relationship
+            $user = User::whereHas('profile', function($query) use ($data) {
+                $query->where('crew_id', $data['crew_id']);
+            })->first();
             $vessel = Vessel::where('vessel_id', $data['vessel_id'])->first();
 
             if ($user && $vessel) {
                 $departureDate = Carbon::parse($data['departure_date']);
                 $arrivalDate = Carbon::parse($data['arrival_date']);
 
+                // Get crew_id from user profile since that's where it's stored
+                $crewId = $user->profile->crew_id ?? $data['crew_id'];
+                
                 Contract::firstOrCreate([
                     'user_id' => $user->id,
                     'vessel_id' => $vessel->id,
                     'departure_date' => $departureDate,
                 ], [
-                    'contract_number' => 'CNT-' . $user->crew_id . '-' . $departureDate->format('Y'),
+                    'contract_number' => 'CNT-' . $crewId . '-' . $departureDate->format('Y') . '-' . $vessel->id,
                     'arrival_date' => $arrivalDate,
                     'duration_months' => $data['duration'],
                     'contract_start_date' => $departureDate,

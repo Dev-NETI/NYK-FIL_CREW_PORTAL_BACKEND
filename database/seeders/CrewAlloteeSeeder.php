@@ -88,7 +88,10 @@ class CrewAlloteeSeeder extends Seeder
         ];
 
         foreach ($relationships as $data) {
-            $user = User::where('crew_id', $data['crew_id'])->first();
+            // Since crew_id is in user_profiles table, query through the relationship
+            $user = User::whereHas('profile', function($query) use ($data) {
+                $query->where('crew_id', $data['crew_id']);
+            })->first();
             $allotee = Allotee::where('name', $data['allotee_name'])->first();
 
             if ($user && $allotee) {
@@ -104,9 +107,9 @@ class CrewAlloteeSeeder extends Seeder
                     'is_emergency_contact' => true, // Assuming all are emergency contacts for now
                 ]);
 
-                // Update the user's primary_allotee_id if this is primary
-                if ($isPrimary && !$user->primary_allotee_id) {
-                    $user->update(['primary_allotee_id' => $allotee->id]);
+                // Update the user's employment primary_allotee_id if this is primary
+                if ($isPrimary && $user->employment && !$user->employment->primary_allotee_id) {
+                    $user->employment->update(['primary_allotee_id' => $allotee->id]);
                 }
             }
         }
