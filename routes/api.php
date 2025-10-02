@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CertificateDocumentController;
 use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
@@ -32,8 +33,10 @@ Route::prefix('auth')->group(function () {
     Route::post('resend-otp', [AuthController::class, 'resendOtp']);
 });
 
+//no middleware for testing
 Route::apiResource('employment-documents', EmploymentDocumentController::class)->only(['index', 'show']);
 Route::apiResource('travel-documents', TravelDocumentController::class)->only(['index', 'show']);
+Route::apiResource('certificate-documents', CertificateDocumentController::class);
 
 // VERY NICE
 // Protected routes (common for both crew and admin)
