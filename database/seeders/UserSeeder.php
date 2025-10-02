@@ -7,9 +7,12 @@ use App\Models\Fleet;
 use App\Models\Rank;
 use App\Models\University;
 use App\Models\User;
+use App\Models\UserProfile;
+use App\Models\UserContact;
+use App\Models\UserEmployment;
+use App\Models\UserEducation;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
@@ -1206,44 +1209,116 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($crewData as $data) {
-            // Parse the name
-            $nameParts = $this->parseName($data['name']);
+            try {
+                // Parse the name
+                $nameParts = $this->parseName($data['name']);
 
-            // Find fleet
-            $fleet = Fleet::where('name', $data['fleet'])->first();
+                // Find fleet
+                $fleet = Fleet::where('name', $data['fleet'])->first();
 
-            // Find rank
-            $rank = Rank::where('name', $data['rank'])->first();
+                // Find rank
+                $rank = Rank::where('name', $data['rank'])->first();
 
-            // Find university
-            $university = University::where('name', $data['school'])->first();
+                // Find university
+                $university = University::where('name', $data['school'])->first();
 
-            // Find address
-            $address = Address::where('street_address', 'LIKE', '%' . $data['permanent_address'] . '%')->first();
+                // Find address
+                $address = Address::where('street_address', 'LIKE', '%' . $data['permanent_address'] . '%')->first();
 
-            // Create user
-            User::firstOrCreate([
-                'crew_id' => $data['personnel_id'],
-            ], [
-                'is_crew' => true,
-                'email' => strtolower($data['email']),
-                'password' => Hash::make('password'), // Default password
-                // 'first_name' => $nameParts['first_name'],
-                // 'middle_name' => $nameParts['middle_name'],
-                // 'last_name' => $nameParts['last_name'],
-                // 'suffix' => $nameParts['suffix'],
-                // 'date_of_birth' => Carbon::parse($data['dob']),
-                // 'gender' => 'Male', // Assuming male from the data
-                // 'mobile_number' => $data['mobile'],
-                // 'crew_status' => strtolower(str_replace(' ', '_', $data['crew_status'])),
-                // 'hire_status' => strtolower(str_replace('-', '_', $data['hire_status'])),
-                // 'fleet_id' => $fleet?->id,
-                // 'rank_id' => $rank?->id,
-                // 'graduated_school_id' => $university?->id,
-                // 'date_graduated' => $data['date_graduated'] ? Carbon::parse($data['date_graduated']) : null,
-                // 'permanent_address_id' => $address?->id,
-            ]);
+
+                // Check if user already exists by email (not crew_id since it's in user_profiles table)
+                $user = User::where('email', strtolower($data['email']))->first();
+                
+                if (!$user) {
+                    // Create user (base authentication record - only fields from migration)
+                    $user = User::create([
+                        'email' => strtolower($data['email']),
+                        'is_crew' => 1, // integer field as per migration
+                        'email_verified_at' => now()->toDateTimeString(), // string field as per migration
+                    ]);
+                    
+                    $this->command->info("Created user: {$data['email']}");
+                }
+
+                // Check if profile already exists, if not create it
+                $profile = UserProfile::where('user_id', $user->id)->first();
+                
+                if (!$profile) {
+                    // Check if crew_id is already taken by another profile
+                    $existingProfile = UserProfile::where('crew_id', $data['personnel_id'])->first();
+                    
+                    if (!$existingProfile) {
+                        UserProfile::create([
+                            'user_id' => $user->id,
+                            'crew_id' => $data['personnel_id'],
+                            'first_name' => $nameParts['first_name'],
+                            'middle_name' => $nameParts['middle_name'],
+                            'last_name' => $nameParts['last_name'],
+                            'suffix' => $nameParts['suffix'],
+                            'date_of_birth' => Carbon::parse($data['dob'])->format('Y-m-d'), // date field
+                            'age' => $data['age'],
+                            'gender' => $this->determineGender($nameParts['first_name']),
+                        ]);
+                    } else {
+                        $this->command->warn("Skipping duplicate crew_id: {$data['personnel_id']} for {$data['name']}");
+                        continue; // Skip this record if crew_id already exists
+                    }
+                }
+
+                // Only create related data if we have a valid user and profile
+                if ($user && ($profile || UserProfile::where('user_id', $user->id)->exists())) {
+                    // Create user contacts using Eloquent model
+                    UserContact::updateOrCreate([
+                        'user_id' => $user->id,
+                    ], [
+                        'mobile_number' => $data['mobile'],
+                        'alternate_phone' => $data['tel'] ?: null,
+                        'permanent_address_id' => $address?->id,
+                        'emergency_contact_name' => 'Emergency Contact', // Placeholder
+                        'emergency_contact_phone' => $data['mobile'],
+                        'emergency_contact_relationship' => 'family',
+                    ]);
+
+                    // Create user employment (only for crew members)
+                    if ($user->is_crew) {
+                        UserEmployment::updateOrCreate([
+                            'user_id' => $user->id,
+                        ], [
+                            'fleet_id' => $fleet?->id,
+                            'rank_id' => $rank?->id,
+                            'crew_status' => strtolower(str_replace(' ', '_', $data['crew_status'])),
+                            'hire_status' => strtolower(str_replace('-', '_', $data['hire_status'])),
+                            'hire_date' => now()->subYears(rand(1, 10)),
+                            'basic_salary' => $this->getSalaryByRank($data['rank']),
+                            'passport_number' => 'P' . str_pad(rand(1000000, 9999999), 8, '0', STR_PAD_LEFT),
+                            'passport_expiry' => now()->addYears(rand(3, 8)),
+                            'seaman_book_number' => 'SB' . str_pad(rand(10000000, 99999999), 8, '0', STR_PAD_LEFT),
+                            'seaman_book_expiry' => now()->addYears(rand(2, 5)),
+                        ]);
+                    }
+
+                    // Create user education
+                    if ($university || isset($data['date_graduated'])) {
+                        UserEducation::updateOrCreate([
+                            'user_id' => $user->id,
+                        ], [
+                            'graduated_school_id' => $university?->id,
+                            'date_graduated' => $data['date_graduated'] ? Carbon::parse($data['date_graduated']) : null,
+                            'degree' => $this->getMaritimeDegree(),
+                            'field_of_study' => 'Maritime Studies',
+                            'education_level' => 'bachelor',
+                            'certifications' => $this->getMaritimeCertifications(),
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                $this->command->error("Error processing {$data['name']} ({$data['email']}): " . $e->getMessage());
+                continue; // Skip this record and continue with the next
+            }
+
         }
+        
+        $this->command->info('UserSeeder completed successfully!');
     }
 
     /**
@@ -1285,5 +1360,151 @@ class UserSeeder extends Seeder
             'last_name' => $lastName ?: null,
             'suffix' => $suffix,
         ];
+    }
+
+    /**
+     * Determine gender based on first name
+     */
+    private function determineGender(string $firstName): string
+    {
+        $maleNames = [
+            'RONITO',
+            'GIREMEL',
+            'HAROLD',
+            'HECTOR',
+            'LEONARD',
+            'HILARIO',
+            'RONIE',
+            'ROMEO',
+            'STEPHEN',
+            'FRANCIS',
+            'RAFAEL',
+            'DANNE',
+            'LEONIDES',
+            'PEARL',
+            'ROMMEL',
+            'DENNIS',
+            'EUGINE',
+            'FRANK',
+            'YSMAEL',
+            'RENATO',
+            'ROEL',
+            'DOMINGO',
+            'FRANNEL',
+            'JOSEPH',
+            'JULIUS',
+            'ARVIN',
+            'GIOVANNI',
+            'ARNOL',
+            'LINGEL',
+            'MARLON',
+            'EFREN',
+            'DELFIN',
+            'ROMMEL',
+            'ROBINSON',
+            'DANILO',
+            'JERRY',
+            'ALDEN',
+            'NATHANIEL',
+            'JOEBEN',
+            'RODEL',
+            'JOEL',
+            'CLIFFTON',
+            'WILFREDO',
+            'FELIX',
+            'JIMMY',
+            'MANUEL',
+            'RAYMUNDO',
+            'TOMAS',
+            'JOAN',
+            'MANUEL',
+            'FLORENCIO',
+            'MAYDAN',
+            'GEMELO',
+            'ANGELITO',
+            'VALENTIN',
+            'ARMANDO',
+            'RIZAL',
+            'ARTURO',
+            'LUCIANO',
+            'ENGIEMAR',
+            'FELIMON',
+            'JOSE'
+        ];
+
+        return in_array(strtoupper($firstName), $maleNames) ? 'male' : 'female';
+    }
+
+    /**
+     * Get salary based on rank
+     */
+    private function getSalaryByRank(string $rank): int
+    {
+        $salaryRanges = [
+            'MSTR' => [3500, 4500],
+            'C/M' => [2800, 3800],
+            'C/E' => [2800, 3800],
+            '1/AE' => [2200, 2800],
+            '2/AE' => [1800, 2400],
+            '2/M' => [2200, 2800],
+            'BSN' => [1500, 2000],
+            'AB' => [1200, 1600],
+            'OLR' => [1400, 1800],
+            'FTR' => [1300, 1700],
+            'C/CK' => [1200, 1600],
+            'ELECT' => [2000, 2600],
+            'ENG' => [1800, 2200],
+        ];
+
+        // Extract base rank from full rank string
+        foreach ($salaryRanges as $baseRank => $range) {
+            if (str_contains($rank, $baseRank)) {
+                return rand($range[0], $range[1]);
+            }
+        }
+
+        return rand(1000, 1500); // Default range
+    }
+
+    /**
+     * Get random maritime degree
+     */
+    private function getMaritimeDegree(): string
+    {
+        $degrees = [
+            'Bachelor of Science in Marine Transportation',
+            'Bachelor of Science in Marine Engineering',
+            'Bachelor of Maritime Technology',
+            'Associate in Marine Transportation',
+            'Marine Engineering Technology',
+            'Bachelor of Science in Naval Architecture'
+        ];
+
+        return $degrees[array_rand($degrees)];
+    }
+
+    /**
+     * Get maritime certifications
+     */
+    private function getMaritimeCertifications(): string
+    {
+        $certifications = [
+            'STCW Basic Safety Training (BST)',
+            'Standards of Training, Certification and Watchkeeping (STCW)',
+            'Certificate of Competency (COC)',
+            'Radio Operator Certificate',
+            'Medical First Aid Certificate',
+            'Fire Fighting and Fire Prevention',
+            'Personal Survival Techniques',
+            'Personal Safety and Social Responsibilities'
+        ];
+
+        $selectedCerts = array_rand($certifications, rand(3, 6));
+        $result = [];
+        foreach ((array)$selectedCerts as $index) {
+            $result[] = $certifications[$index];
+        }
+
+        return implode(', ', $result);
     }
 }

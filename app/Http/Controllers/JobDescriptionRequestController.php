@@ -41,7 +41,11 @@ class JobDescriptionRequestController extends Controller
             $validated = $request->validated();
 
             // For now, get the user with crew_id 219454 as specified
-            $user = \App\Models\User::where('crew_id', '219454')->first();
+            // Since crew_id is in user_profiles table, we need to query through the relationship
+            $user = \App\Models\User::whereHas('profile', function($query) {
+                $query->where('crew_id', '219454');
+            })->first();
+            
             if (!$user) {
                 throw new \Exception('Crew member not found');
             }

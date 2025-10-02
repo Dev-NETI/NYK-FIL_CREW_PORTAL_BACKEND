@@ -87,7 +87,10 @@ class AlloteeSeeder extends Seeder
         ];
 
         foreach ($alloteeData as $data) {
-            $user = User::where('crew_id', $data['crew_id'])->first();
+            // Since crew_id is in user_profiles table, query through the relationship
+            $user = User::whereHas('profile', function($query) use ($data) {
+                $query->where('crew_id', $data['crew_id']);
+            })->first();
 
             if ($user) {
                 // Clean and truncate mobile number to fit database constraints

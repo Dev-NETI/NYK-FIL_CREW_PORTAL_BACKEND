@@ -55,6 +55,6 @@ class Allotee extends Model
      */
     public function primaryFor(): HasMany
     {
-        return $this->hasMany(User::class, 'primary_allotee_id');
+        return $this->hasMany(UserEmployment::class, 'primary_allotee_id');
     }
 }
