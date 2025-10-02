@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('travel_documents', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('crew_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('crew_id')->constrained('user_profiles')->onDelete('cascade');
             $table->string('id_no')->nullable();
             $table->foreignId('travel_document_type_id')->constrained('travel_document_types')->onDelete('cascade');
             $table->text('place_of_issue')->nullable();

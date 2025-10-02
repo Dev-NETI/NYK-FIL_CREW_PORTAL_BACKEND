@@ -29,7 +29,7 @@ class CertificateDocument extends Model
 
     public function crew(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'crew_id');
+        return $this->belongsTo(UserProfile::class, 'crew_id');
     }
 
     public function certificateDocumentType(): BelongsTo

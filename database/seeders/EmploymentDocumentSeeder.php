@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\EmploymentDocument;
 use App\Models\EmploymentDocumentType;
-use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,15 +15,15 @@ class EmploymentDocumentSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get sample crew users and document types
-        $crewUsers = User::where('is_crew', 1)->take(10)->get();
+        // Get sample crew profiles and document types
+        $crewProfiles = UserProfile::take(10)->get();
         $documentTypes = EmploymentDocumentType::all();
 
-        if ($crewUsers->isEmpty() || $documentTypes->isEmpty()) {
-            return; // Skip seeding if no crew users or document types exist
+        if ($crewProfiles->isEmpty() || $documentTypes->isEmpty()) {
+            return; // Skip seeding if no crew profiles or document types exist
         }
 
-        foreach ($crewUsers as $crew) {
+        foreach ($crewProfiles as $crew) {
             // Create TIN for each crew member
             $tinType = $documentTypes->where('name', 'TIN')->first();
             if ($tinType) {

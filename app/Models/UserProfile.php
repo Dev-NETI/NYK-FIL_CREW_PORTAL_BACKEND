@@ -6,6 +6,7 @@ use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -50,7 +51,22 @@ class UserProfile extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+
+    public function employmentDocuments(): HasMany
+    {
+        return $this->hasMany(EmploymentDocument::class, 'crew_id');
+    }
+
+    public function travelDocuments(): HasMany
+    {
+        return $this->hasMany(TravelDocument::class, 'crew_id');
+    }
+
+    public function certificateDocuments(): HasMany
+    {
+        return $this->hasMany(CertificateDocument::class, 'crew_id');
+    }
+
     public function getFullNameAttribute(): string
     {
         $nameParts = array_filter([
@@ -59,7 +75,7 @@ class UserProfile extends Model
             $this->last_name,
             $this->suffix,
         ]);
-        
+
         return implode(' ', $nameParts);
     }
 }

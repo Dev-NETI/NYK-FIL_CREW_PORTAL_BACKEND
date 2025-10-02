@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\TravelDocument;
 use App\Models\TravelDocumentType;
-use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,15 +15,15 @@ class TravelDocumentSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get sample crew users and document types
-        $crewUsers = User::where('is_crew', 1)->take(5)->get();
+        // Get sample crew profiles and document types
+        $crewProfiles = UserProfile::take(5)->get();
         $documentTypes = TravelDocumentType::all();
 
-        if ($crewUsers->isEmpty() || $documentTypes->isEmpty()) {
-            return; // Skip seeding if no crew users or document types exist
+        if ($crewProfiles->isEmpty() || $documentTypes->isEmpty()) {
+            return; // Skip seeding if no crew profiles or document types exist
         }
 
-        foreach ($crewUsers as $crew) {
+        foreach ($crewProfiles as $crew) {
             // Create a passport for each crew member
             $passportType = $documentTypes->where('name', 'Passport')->first();
             if ($passportType) {
