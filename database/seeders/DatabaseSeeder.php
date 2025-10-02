@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             ProgramSeeder::class,
             JobDesignationSeeder::class,
             CompanySeeder::class,
+            DepartmentCategorySeeder::class,
+            DepartmentSeeder::class,
 
             // Rank hierarchy (dependencies within rank system)
             RankCategorySeeder::class,
@@ -40,13 +42,6 @@ class DatabaseSeeder extends Seeder
 
             // User data (depends on fleet, rank, university, address)
             UserSeeder::class,
-
-            // User profile data (depends on users)
-            UserProfileSeeder::class,
-            UserContactSeeder::class,
-            UserEmploymentSeeder::class,
-            UserEducationSeeder::class,
-            UserPhysicalTraitSeeder::class,
 
             // Vessel data (depends on vessel types)
             VesselSeeder::class,
@@ -62,6 +57,9 @@ class DatabaseSeeder extends Seeder
 
             EmploymentDocumentTypeSeeder::class,
             TravelDocumentTypeSeeder::class,
+
+            // Document data (depends on users and document types)
+            EmploymentDocumentSeeder::class,
             TravelDocumentSeeder::class,
         ]);
     }

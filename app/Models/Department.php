@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use App\Traits\HasModifiedBy;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Department extends Model
+{
+    use SoftDeletes, HasModifiedBy;
+
+    protected $fillable = [
+        'department_category_id',
+        'name',
+    ];
+
+    public function departmentCategory(): BelongsTo
+    {
+        return $this->belongsTo(DepartmentCategory::class);
+    }
+}
