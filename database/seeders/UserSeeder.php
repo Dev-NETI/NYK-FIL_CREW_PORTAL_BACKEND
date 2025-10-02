@@ -1228,20 +1228,20 @@ class UserSeeder extends Seeder
                 'is_crew' => true,
                 'email' => strtolower($data['email']),
                 'password' => Hash::make('password'), // Default password
-                'first_name' => $nameParts['first_name'],
-                'middle_name' => $nameParts['middle_name'],
-                'last_name' => $nameParts['last_name'],
-                'suffix' => $nameParts['suffix'],
-                'date_of_birth' => Carbon::parse($data['dob']),
-                'gender' => 'Male', // Assuming male from the data
-                'mobile_number' => $data['mobile'],
-                'crew_status' => strtolower(str_replace(' ', '_', $data['crew_status'])),
-                'hire_status' => strtolower(str_replace('-', '_', $data['hire_status'])),
-                'fleet_id' => $fleet?->id,
-                'rank_id' => $rank?->id,
-                'graduated_school_id' => $university?->id,
-                'date_graduated' => $data['date_graduated'] ? Carbon::parse($data['date_graduated']) : null,
-                'permanent_address_id' => $address?->id,
+                // 'first_name' => $nameParts['first_name'],
+                // 'middle_name' => $nameParts['middle_name'],
+                // 'last_name' => $nameParts['last_name'],
+                // 'suffix' => $nameParts['suffix'],
+                // 'date_of_birth' => Carbon::parse($data['dob']),
+                // 'gender' => 'Male', // Assuming male from the data
+                // 'mobile_number' => $data['mobile'],
+                // 'crew_status' => strtolower(str_replace(' ', '_', $data['crew_status'])),
+                // 'hire_status' => strtolower(str_replace('-', '_', $data['hire_status'])),
+                // 'fleet_id' => $fleet?->id,
+                // 'rank_id' => $rank?->id,
+                // 'graduated_school_id' => $university?->id,
+                // 'date_graduated' => $data['date_graduated'] ? Carbon::parse($data['date_graduated']) : null,
+                // 'permanent_address_id' => $address?->id,
             ]);
         }
     }
