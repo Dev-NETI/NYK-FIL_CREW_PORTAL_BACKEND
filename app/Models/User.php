@@ -30,6 +30,7 @@ class User extends Authenticatable
         'email',
         'password',
         'crew_id',
+        'department_id',
         'fleet_id',
         'rank_id',
         'job_designation_id',
@@ -189,6 +190,11 @@ class User extends Authenticatable
         return $this->employment?->rank() ?? $this->belongsTo(Rank::class);
     }
 
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
     /**
      * Get the job designation.
      */
@@ -289,7 +295,7 @@ class User extends Authenticatable
         if ($this->profile) {
             return $this->profile->full_name;
         }
-        
+
         return $this->email; // fallback to email if no profile
     }
 
