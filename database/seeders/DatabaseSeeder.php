@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-
-use App\Models\EmploymentDocumentType;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -27,10 +25,6 @@ class DatabaseSeeder extends Seeder
             FleetSeeder::class,
             UniversitySeeder::class,
             ProgramSeeder::class,
-            JobDesignationSeeder::class,
-            CompanySeeder::class,
-            DepartmentCategorySeeder::class,
-            DepartmentSeeder::class,
 
             // Rank hierarchy (dependencies within rank system)
             RankCategorySeeder::class,
@@ -43,6 +37,13 @@ class DatabaseSeeder extends Seeder
             // User data (depends on fleet, rank, university, address)
             UserSeeder::class,
 
+            // User profile data (depends on users)
+            UserProfileSeeder::class,
+            UserContactSeeder::class,
+            UserEmploymentSeeder::class,
+            UserEducationSeeder::class,
+            UserPhysicalTraitSeeder::class,
+
             // Vessel data (depends on vessel types)
             VesselSeeder::class,
 
@@ -54,13 +55,6 @@ class DatabaseSeeder extends Seeder
 
             // Contract data (depends on users and vessels)
             ContractSeeder::class,
-
-            EmploymentDocumentTypeSeeder::class,
-            TravelDocumentTypeSeeder::class,
-
-            // Document data (depends on users and document types)
-            EmploymentDocumentSeeder::class,
-            TravelDocumentSeeder::class,
         ]);
     }
 }
