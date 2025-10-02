@@ -28,6 +28,7 @@ class User extends Authenticatable
     protected $fillable = [
         'is_crew',
         'email',
+        'department_id',
         'email_verified_at',
         'last_login_at',
         'last_login_ip',
@@ -162,6 +163,11 @@ class User extends Authenticatable
         return $this->employment?->rank() ?? $this->belongsTo(Rank::class);
     }
 
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
     /**
      * Get the job designation.
      */
@@ -262,7 +268,7 @@ class User extends Authenticatable
         if ($this->profile) {
             return $this->profile->full_name;
         }
-        
+
         return $this->email; // fallback to email if no profile
     }
 

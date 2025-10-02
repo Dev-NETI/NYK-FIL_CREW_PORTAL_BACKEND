@@ -1225,6 +1225,7 @@ class UserSeeder extends Seeder
                 // Find address
                 $address = Address::where('street_address', 'LIKE', '%' . $data['permanent_address'] . '%')->first();
 
+
                 // Check if user already exists by email (not crew_id since it's in user_profiles table)
                 $user = User::where('email', strtolower($data['email']))->first();
                 
@@ -1314,6 +1315,7 @@ class UserSeeder extends Seeder
                 $this->command->error("Error processing {$data['name']} ({$data['email']}): " . $e->getMessage());
                 continue; // Skip this record and continue with the next
             }
+
         }
         
         $this->command->info('UserSeeder completed successfully!');

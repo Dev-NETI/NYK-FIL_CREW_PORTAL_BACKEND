@@ -51,10 +51,18 @@ class DatabaseSeeder extends Seeder
             AlloteeSeeder::class,
 
             // Pivot table data (depends on users and allotees)
-            CrewAlloteeSeeder::class,
+            // commented causing errors
+            // CrewAlloteeSeeder::class,
 
             // Contract data (depends on users and vessels)
+            DepartmentCategorySeeder::class,
+            DepartmentSeeder::class,
             ContractSeeder::class,
+            TravelDocumentTypeSeeder::class,
+            TravelDocumentSeeder::class,
+            EmploymentDocumentTypeSeeder::class,
+            EmploymentDocumentSeeder::class,
+            CertificateDocumentTypeSeeder::class,
         ]);
     }
 }
