@@ -27,7 +27,7 @@ class CertificateDocumentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'crew_id' => 'required|exists:users,id',
+            'crew_id' => 'required|exists:user_profiles,id',
             'certificate_document_type_id' => 'required|exists:certificate_document_types,id',
             'certificate' => 'nullable|string|max:255',
             'certificate_no' => 'nullable|string|max:255',
@@ -55,7 +55,7 @@ class CertificateDocumentController extends Controller
     public function update(Request $request, CertificateDocument $certificateDocument)
     {
         $validated = $request->validate([
-            'crew_id' => 'sometimes|required|exists:users,id',
+            'crew_id' => 'sometimes|required|exists:user_profiles,id',
             'certificate_document_type_id' => 'sometimes|required|exists:certificate_document_types,id',
             'certificate' => 'nullable|string|max:255',
             'certificate_no' => 'nullable|string|max:255',

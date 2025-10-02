@@ -19,7 +19,7 @@ class EmploymentDocumentController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'crew_id' => 'required|exists:users,id',
+            'crew_id' => 'required|exists:user_profiles,id',
             'employment_document_type_id' => 'required|exists:employment_document_types,id',
             'document_number' => 'required|string|max:255',
         ]);
@@ -40,7 +40,7 @@ class EmploymentDocumentController extends Controller
     public function update(Request $request, EmploymentDocument $employmentDocument): JsonResponse
     {
         $validated = $request->validate([
-            'crew_id' => 'required|exists:users,id',
+            'crew_id' => 'required|exists:user_profiles,id',
             'employment_document_type_id' => 'required|exists:employment_document_types,id',
             'document_number' => 'required|string|max:255',
         ]);

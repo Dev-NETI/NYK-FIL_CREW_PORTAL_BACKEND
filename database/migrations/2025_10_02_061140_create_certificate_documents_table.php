@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('certificate_documents', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('crew_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('crew_id')->constrained('user_profiles')->onDelete('cascade');
             $table->foreignId('certificate_document_type_id')->constrained('certificate_document_types')->onDelete('cascade');
             $table->string('certificate')->comment('certificate or grade')->nullable();
             $table->string('certificate_no')->comment('certificate_no or license_no')->nullable();

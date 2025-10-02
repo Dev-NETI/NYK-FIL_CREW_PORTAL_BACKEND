@@ -19,7 +19,7 @@ class TravelDocumentController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'crew_id' => 'required|exists:users,id',
+            'crew_id' => 'required|exists:user_profiles,id',
             'id_no' => 'required|string|max:255',
             'travel_document_type_id' => 'required|exists:travel_document_types,id',
             'place_of_issue' => 'required|string|max:255',
@@ -44,7 +44,7 @@ class TravelDocumentController extends Controller
     public function update(Request $request, TravelDocument $travelDocument): JsonResponse
     {
         $validated = $request->validate([
-            'crew_id' => 'required|exists:users,id',
+            'crew_id' => 'required|exists:user_profiles,id',
             'id_no' => 'required|string|max:255',
             'travel_document_type_id' => 'required|exists:travel_document_types,id',
             'place_of_issue' => 'required|string|max:255',
