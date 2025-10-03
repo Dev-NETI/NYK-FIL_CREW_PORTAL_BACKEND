@@ -28,7 +28,7 @@ class EmploymentDocumentSeeder extends Seeder
             $tinType = $documentTypes->where('name', 'TIN')->first();
             if ($tinType) {
                 EmploymentDocument::create([
-                    'crew_id' => $crew->id,
+                    'crew_id' => $crew->crew_id,
                     'employment_document_type_id' => $tinType->id,
                     'document_number' => fake()->numerify('###-###-###-###'),
                     'modified_by' => 'System Seeder',
@@ -39,7 +39,7 @@ class EmploymentDocumentSeeder extends Seeder
             $sssType = $documentTypes->where('name', 'SSS')->first();
             if ($sssType) {
                 EmploymentDocument::create([
-                    'crew_id' => $crew->id,
+                    'crew_id' => $crew->crew_id,
                     'employment_document_type_id' => $sssType->id,
                     'document_number' => fake()->numerify('##-#######-#'),
                     'modified_by' => 'System Seeder',
@@ -51,7 +51,7 @@ class EmploymentDocumentSeeder extends Seeder
                 $pagibigType = $documentTypes->where('name', 'PAG-IBIG')->first();
                 if ($pagibigType) {
                     EmploymentDocument::create([
-                        'crew_id' => $crew->id,
+                        'crew_id' => $crew->crew_id,
                         'employment_document_type_id' => $pagibigType->id,
                         'document_number' => fake()->numerify('####-####-####'),
                         'modified_by' => 'System Seeder',
@@ -64,7 +64,7 @@ class EmploymentDocumentSeeder extends Seeder
                 $philhealthType = $documentTypes->where('name', 'PHILHEALTH')->first();
                 if ($philhealthType) {
                     EmploymentDocument::create([
-                        'crew_id' => $crew->id,
+                        'crew_id' => $crew->crew_id,
                         'employment_document_type_id' => $philhealthType->id,
                         'document_number' => fake()->numerify('##-#########-#'),
                         'modified_by' => 'System Seeder',
@@ -77,7 +77,7 @@ class EmploymentDocumentSeeder extends Seeder
                 $srnType = $documentTypes->where('name', 'SRN')->first();
                 if ($srnType) {
                     EmploymentDocument::create([
-                        'crew_id' => $crew->id,
+                        'crew_id' => $crew->crew_id,
                         'employment_document_type_id' => $srnType->id,
                         'document_number' => 'SRN-' . fake()->numerify('##########'),
                         'modified_by' => 'System Seeder',

@@ -34,7 +34,7 @@ Route::prefix('auth')->group(function () {
 });
 
 //no middleware for testing
-Route::apiResource('employment-documents', EmploymentDocumentController::class)->only(['index', 'show']);
+Route::apiResource('employment-documents', EmploymentDocumentController::class)->only(['index', 'show', 'update']);
 Route::apiResource('travel-documents', TravelDocumentController::class)->only(['index', 'show']);
 Route::apiResource('certificate-documents', CertificateDocumentController::class);
 

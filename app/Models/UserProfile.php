@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 class UserProfile extends Model
 {
     use HasFactory, HasModifiedBy, SoftDeletes;
-    
+
     protected $fillable = [
         'user_id',
         'crew_id',
@@ -25,7 +25,7 @@ class UserProfile extends Model
         'age',
         'gender',
     ];
-    
+
     protected function casts(): array
     {
         return [
@@ -34,11 +34,11 @@ class UserProfile extends Model
             'deleted_at' => 'datetime',
         ];
     }
-    
+
     protected static function boot()
     {
         parent::boot();
-        
+
         static::saving(function ($profile) {
             // Auto-calculate age from date of birth
             if ($profile->date_of_birth) {
@@ -46,7 +46,7 @@ class UserProfile extends Model
             }
         });
     }
-    
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

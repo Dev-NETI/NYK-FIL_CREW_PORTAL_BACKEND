@@ -30,25 +30,28 @@ class EmploymentDocumentController extends Controller
         return response()->json($employmentDocument, 201);
     }
 
-    public function show(EmploymentDocument $employmentDocument): JsonResponse
+    public function show($crewId): JsonResponse
     {
-        $employmentDocument->load(['crew', 'employmentDocumentType']);
+        $employmentDocument = EmploymentDocument::with('employmentDocumentType')->where('crew_id', $crewId)->get();
 
         return response()->json($employmentDocument);
     }
 
-    public function update(Request $request, EmploymentDocument $employmentDocument): JsonResponse
+    public function update(Request $request, $id): JsonResponse
     {
         $validated = $request->validate([
-            'crew_id' => 'required|exists:user_profiles,id',
-            'employment_document_type_id' => 'required|exists:employment_document_types,id',
+            'crew_id' => 'required',
+            'employment_document_type_id' => 'required',
             'document_number' => 'required|string|max:255',
         ]);
 
-        $employmentDocument->update($validated);
-        $employmentDocument->load(['crew', 'employmentDocumentType']);
+        $employmentDocument = EmploymentDocument::findOrFail($id);
+        $updated = $employmentDocument->update($validated);
 
-        return response()->json($employmentDocument);
+        return response()->json([
+            'success' => $updated,
+            'message' => $updated ? 'Employment document updated successfully' : 'Failed to update employment document'
+        ]);
     }
 
     public function destroy(EmploymentDocument $employmentDocument): JsonResponse

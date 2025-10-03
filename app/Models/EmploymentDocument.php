@@ -17,9 +17,9 @@ class EmploymentDocument extends Model
         'document_number',
     ];
 
-    public function crew(): BelongsTo
+    public function userProfile(): BelongsTo
     {
-        return $this->belongsTo(UserProfile::class, 'crew_id');
+        return $this->belongsTo(UserProfile::class, 'crew_id', 'crew_id');
     }
 
     public function employmentDocumentType(): BelongsTo
