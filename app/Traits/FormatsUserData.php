@@ -82,30 +82,6 @@ trait FormatsUserData
                 'distinguishing_marks' => $user->physicalTraits->distinguishing_marks,
                 'medical_conditions' => $user->physicalTraits->medical_conditions,
             ] : null,
-
-            // Backward compatibility fields (flattened for existing clients)
-            'crew_id' => optional($user->profile)->crew_id,
-            'first_name' => optional($user->profile)->first_name,
-            'middle_name' => optional($user->profile)->middle_name,
-            'last_name' => optional($user->profile)->last_name,
-            'suffix' => optional($user->profile)->suffix,
-            'date_of_birth' => optional($user->profile)->date_of_birth,
-            'age' => optional($user->profile)->age,
-            'gender' => optional($user->profile)->gender,
-            'mobile_number' => optional($user->contacts)->mobile_number,
-            'permanent_address_id' => optional($user->contacts)->permanent_address_id,
-            'fleet_name' => optional(optional($user->employment)->fleet)->name,
-            'rank_name' => optional(optional($user->employment)->rank)->name,
-            'crew_status' => optional($user->employment)->crew_status,
-            'hire_status' => optional($user->employment)->hire_status,
-            'hire_date' => optional($user->employment)->hire_date,
-            'passport_number' => optional($user->employment)->passport_number,
-            'passport_expiry' => optional($user->employment)->passport_expiry,
-            'seaman_book_number' => optional($user->employment)->seaman_book_number,
-            'seaman_book_expiry' => optional($user->employment)->seaman_book_expiry,
-            'primary_allotee_id' => optional($user->employment)->primary_allotee_id,
-            'graduated_school_id' => optional($user->education)->graduated_school_id,
-            'date_graduated' => optional($user->education)->date_graduated,
         ];
     }
 }

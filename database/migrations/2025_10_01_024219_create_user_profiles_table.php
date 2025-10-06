@@ -20,14 +20,18 @@ return new class extends Migration
             $table->string('last_name')->nullable();
             $table->string('suffix')->nullable();
             $table->date('date_of_birth')->nullable();
+            $table->date('place_of_birth')->nullable();
             $table->integer('age')->nullable();
-            $table->enum('gender', ['male', 'female', 'other'])->nullable();
-            
+            $table->enum('gender', ['male', 'female'])->nullable();
+            $table->string('nationality')->nullable();
+            $table->string('civil_status')->nullable();
+            $table->string('religion')->nullable();
+
             // Audit fields
             $table->foreignId('modified_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes
             $table->index('user_id');
             $table->index('crew_id');
