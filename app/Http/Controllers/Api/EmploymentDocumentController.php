@@ -19,15 +19,17 @@ class EmploymentDocumentController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'crew_id' => 'required|exists:user_profiles,id',
-            'employment_document_type_id' => 'required|exists:employment_document_types,id',
+            'crew_id' => 'required',
+            'employment_document_type_id' => 'required',
             'document_number' => 'required|string|max:255',
         ]);
 
-        $employmentDocument = EmploymentDocument::create($validated);
-        $employmentDocument->load(['crew', 'employmentDocumentType']);
+        $store = EmploymentDocument::create($validated);
 
-        return response()->json($employmentDocument, 201);
+        return response()->json([
+            'success' => $store ? true : false,
+            'message' => $store ? 'Employment document saved successfully' : 'Failed to save employment document'
+        ]);
     }
 
     public function show($crewId): JsonResponse
