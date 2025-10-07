@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\RankController;
 use App\Http\Controllers\Api\RankGroupController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\TravelDocumentController;
+use App\Http\Controllers\Api\TravelDocumentTypeController;
 use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VesselController;
@@ -37,7 +38,8 @@ Route::prefix('auth')->group(function () {
 //no middleware for testing
 Route::apiResource('employment-documents', EmploymentDocumentController::class)->only(['index', 'show', 'update', 'store']);
 Route::apiResource('employment-document-types', EmploymentDocumentTypeController::class)->only(['index']);
-Route::apiResource('travel-documents', TravelDocumentController::class)->only(['index', 'show']);
+Route::apiResource('travel-documents', TravelDocumentController::class)->only(['index', 'show', 'store']);
+Route::apiResource('travel-document-types', TravelDocumentTypeController::class)->only(['index']);
 Route::apiResource('certificate-documents', CertificateDocumentController::class);
 
 // VERY NICE

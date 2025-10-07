@@ -16,7 +16,7 @@ class TravelDocumentSeeder extends Seeder
     public function run(): void
     {
         // Get sample crew profiles and document types
-        $crewProfiles = UserProfile::take(5)->get();
+        $crewProfiles = UserProfile::take(10)->get();
         $documentTypes = TravelDocumentType::all();
 
         if ($crewProfiles->isEmpty() || $documentTypes->isEmpty()) {
@@ -28,7 +28,7 @@ class TravelDocumentSeeder extends Seeder
             $passportType = $documentTypes->where('name', 'Passport')->first();
             if ($passportType) {
                 TravelDocument::create([
-                    'crew_id' => $crew->id,
+                    'crew_id' => $crew->crew_id,
                     'id_no' => 'P' . fake()->numerify('########'),
                     'travel_document_type_id' => $passportType->id,
                     'place_of_issue' => fake()->city() . ', Philippines',

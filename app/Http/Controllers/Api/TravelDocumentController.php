@@ -19,24 +19,28 @@ class TravelDocumentController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'crew_id' => 'required|exists:user_profiles,id',
-            'id_no' => 'required|string|max:255',
-            'travel_document_type_id' => 'required|exists:travel_document_types,id',
+            'crew_id' => 'required',
+            'id_no' => 'required',
+            'travel_document_type_id' => 'required',
             'place_of_issue' => 'required|string|max:255',
             'date_of_issue' => 'required|date',
             'expiration_date' => 'required|date|after:date_of_issue',
             'remaining_pages' => 'nullable|integer|min:0',
+            'is_US_VISA' => 'required',
+            'visa_type' => 'nullable',
         ]);
 
-        $travelDocument = TravelDocument::create($validated);
-        $travelDocument->load(['crew', 'travelDocumentType']);
+        $store = TravelDocument::create($validated);
 
-        return response()->json($travelDocument, 201);
+        return response()->json([
+            'success' => $store ? true : false,
+            'message' => $store ? 'Travel document saved successfully' : 'Failed to save travel document'
+        ]);
     }
 
-    public function show(TravelDocument $travelDocument): JsonResponse
+    public function show($crewId): JsonResponse
     {
-        $travelDocument->load(['crew', 'travelDocumentType']);
+        $travelDocument = TravelDocument::with('travelDocumentType')->where('crew_id', $crewId)->get();
 
         return response()->json($travelDocument);
     }

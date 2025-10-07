@@ -19,6 +19,8 @@ class TravelDocument extends Model
         'date_of_issue',
         'expiration_date',
         'remaining_pages',
+        'is_US_VISA',
+        'visa_type'
     ];
 
     protected $casts = [
@@ -29,7 +31,7 @@ class TravelDocument extends Model
 
     public function crew(): BelongsTo
     {
-        return $this->belongsTo(UserProfile::class, 'crew_id');
+        return $this->belongsTo(UserProfile::class, 'crew_id', 'crew_id');
     }
 
     public function travelDocumentType(): BelongsTo
