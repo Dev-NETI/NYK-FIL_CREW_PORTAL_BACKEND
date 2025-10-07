@@ -17,16 +17,16 @@ class UserEducationSeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create('en_PH');
-        
+
         // Get all users who don't have education records yet
         $users = User::whereDoesntHave('education')->get();
         $universities = University::pluck('id')->toArray();
-        
+
         // Maritime degrees with different levels
         $maritimeDegrees = [
             'bachelor' => [
                 'Bachelor of Science in Marine Transportation',
-                'Bachelor of Science in Marine Engineering', 
+                'Bachelor of Science in Marine Engineering',
                 'Bachelor of Science in Naval Architecture and Marine Engineering',
                 'Bachelor of Maritime Technology',
                 'Bachelor of Science in Marine Transportation (Deck)',
@@ -48,7 +48,7 @@ class UserEducationSeeder extends Seeder
                 'Ship Operations Certificate'
             ]
         ];
-        
+
         $otherDegrees = [
             'bachelor' => [
                 'Bachelor of Science in Information Technology',
@@ -66,7 +66,7 @@ class UserEducationSeeder extends Seeder
                 'Associate in Electronics Technology'
             ]
         ];
-        
+
         // Comprehensive STCW and maritime certifications
         $stcwCertifications = [
             'STCW Basic Safety Training (BST)',
@@ -90,7 +90,7 @@ class UserEducationSeeder extends Seeder
             'Engine Room Resource Management (ERM)',
             'Electronic Chart Display and Information System (ECDIS)'
         ];
-        
+
         $additionalCertifications = [
             'ISO 9001 Quality Management',
             'ISM Code Certificate',
@@ -101,10 +101,10 @@ class UserEducationSeeder extends Seeder
             'Computer Literacy Certificate',
             'English Proficiency Certificate'
         ];
-        
+
         foreach ($users as $user) {
             $isCrew = $user->is_crew;
-            
+
             // More realistic education level distribution for maritime industry
             if ($isCrew) {
                 $educationLevel = $faker->randomElement([
@@ -123,7 +123,7 @@ class UserEducationSeeder extends Seeder
                     'master' => 0.05
                 ]);
             }
-            
+
             // Select appropriate degree based on education level and crew status
             $degree = null;
             if (in_array($educationLevel, ['bachelor', 'master'])) {
@@ -141,23 +141,7 @@ class UserEducationSeeder extends Seeder
             } elseif ($educationLevel === 'vocational' && $isCrew) {
                 $degree = $faker->randomElement($maritimeDegrees['vocational']);
             }
-            
-            // Generate appropriate field of study
-            $fieldOfStudy = null;
-            if ($isCrew) {
-                $fieldOfStudy = $faker->randomElement([
-                    'Maritime Studies', 'Marine Engineering', 'Navigation Technology', 
-                    'Seamanship', 'Marine Transportation', 'Ship Operations',
-                    'Maritime Technology', 'Naval Architecture', 'Port Management'
-                ]);
-            } else {
-                $fieldOfStudy = $faker->randomElement([
-                    'Business Administration', 'Information Technology', 'Engineering', 
-                    'Liberal Arts', 'Management', 'Finance', 'Human Resources',
-                    'Communications', 'Marketing', 'Operations Management'
-                ]);
-            }
-            
+
             // Generate certifications
             $certifications = '';
             if ($isCrew) {
@@ -166,43 +150,35 @@ class UserEducationSeeder extends Seeder
                 $additionalCerts = $faker->randomElements($stcwCertifications, $faker->numberBetween(2, 6));
                 $otherCerts = $faker->randomElements($additionalCertifications, $faker->numberBetween(0, 3));
                 $allCerts = array_merge($requiredCerts, $additionalCerts, $otherCerts);
-                $certifications = implode(', ', array_unique($allCerts));
             } else {
                 // Non-crew may have some professional certifications
                 if ($faker->boolean(60)) { // 60% chance
                     $nonCrewCerts = $faker->randomElements($additionalCertifications, $faker->numberBetween(1, 3));
-                    $certifications = implode(', ', $nonCrewCerts);
                 }
             }
-            
+
             // Generate realistic graduation date based on user's age
             $userProfile = $user->profile;
             if ($userProfile && $userProfile->age) {
                 $estimatedAge = $userProfile->age;
-                $graduationAge = $educationLevel === 'master' ? 24 : 
-                                ($educationLevel === 'bachelor' ? 22 :
-                                ($educationLevel === 'associate' ? 20 : 18));
+                $graduationAge = $educationLevel === 'master' ? 24 : ($educationLevel === 'bachelor' ? 22 : ($educationLevel === 'associate' ? 20 : 18));
                 $yearsAgo = max(1, $estimatedAge - $graduationAge);
                 $graduationDate = $faker->dateTimeBetween("-{$yearsAgo} years", '-1 year');
             } else {
                 $graduationDate = $faker->dateTimeBetween('-25 years', '-1 year');
             }
-            
+
             UserEducation::create([
                 'user_id' => $user->id,
                 'graduated_school_id' => $faker->optional(0.92)->randomElement($universities), // 92% chance
                 'date_graduated' => $graduationDate->format('Y-m-d'),
                 'degree' => $degree,
-                'field_of_study' => $fieldOfStudy,
-                'gpa' => $faker->optional(0.75)->randomFloat(2, 1.75, 4.0), // 75% chance, realistic GPA range
                 'education_level' => $educationLevel,
-                'certifications' => $certifications ?: null,
-                'additional_training' => $faker->optional(0.6)->sentence(12), // 60% chance
                 'created_at' => $user->created_at,
                 'updated_at' => now(),
             ]);
         }
-        
+
         $this->command->info('User education records seeded successfully!');
     }
 }

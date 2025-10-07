@@ -17,17 +17,13 @@ return new class extends Migration
             $table->foreignId('graduated_school_id')->nullable()->constrained('universities')->onDelete('set null');
             $table->date('date_graduated')->nullable();
             $table->string('degree')->nullable();
-            $table->string('field_of_study')->nullable();
-            $table->decimal('gpa', 3, 2)->nullable();
-            $table->enum('education_level', ['high_school', 'vocational', 'bachelor', 'master', 'doctorate', 'other'])->nullable();
-            $table->text('certifications')->nullable();
-            $table->text('additional_training')->nullable();
-            
+            $table->enum('education_level', ['high_school', 'college', 'higher_educational'])->nullable();
+
             // Audit fields
             $table->foreignId('modified_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes
             $table->index('user_id');
             $table->index('graduated_school_id');

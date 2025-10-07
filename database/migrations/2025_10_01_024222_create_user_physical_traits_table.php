@@ -19,14 +19,12 @@ return new class extends Migration
             $table->string('blood_type', 5)->nullable();
             $table->string('eye_color', 20)->nullable();
             $table->string('hair_color', 20)->nullable();
-            $table->text('distinguishing_marks')->nullable();
-            $table->text('medical_conditions')->nullable();
-            
+
             // Audit fields
             $table->foreignId('modified_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes
             $table->index('user_id');
         });

@@ -1228,7 +1228,7 @@ class UserSeeder extends Seeder
 
                 // Check if user already exists by email (not crew_id since it's in user_profiles table)
                 $user = User::where('email', strtolower($data['email']))->first();
-                
+
                 if (!$user) {
                     // Create user (base authentication record - only fields from migration)
                     $user = User::create([
@@ -1236,17 +1236,17 @@ class UserSeeder extends Seeder
                         'is_crew' => 1, // integer field as per migration
                         'email_verified_at' => now()->toDateTimeString(), // string field as per migration
                     ]);
-                    
+
                     $this->command->info("Created user: {$data['email']}");
                 }
 
                 // Check if profile already exists, if not create it
                 $profile = UserProfile::where('user_id', $user->id)->first();
-                
+
                 if (!$profile) {
                     // Check if crew_id is already taken by another profile
                     $existingProfile = UserProfile::where('crew_id', $data['personnel_id'])->first();
-                    
+
                     if (!$existingProfile) {
                         UserProfile::create([
                             'user_id' => $user->id,
@@ -1305,9 +1305,7 @@ class UserSeeder extends Seeder
                             'graduated_school_id' => $university?->id,
                             'date_graduated' => $data['date_graduated'] ? Carbon::parse($data['date_graduated']) : null,
                             'degree' => $this->getMaritimeDegree(),
-                            'field_of_study' => 'Maritime Studies',
-                            'education_level' => 'bachelor',
-                            'certifications' => $this->getMaritimeCertifications(),
+                            'education_level' => 'college',
                         ]);
                     }
                 }
@@ -1315,9 +1313,8 @@ class UserSeeder extends Seeder
                 $this->command->error("Error processing {$data['name']} ({$data['email']}): " . $e->getMessage());
                 continue; // Skip this record and continue with the next
             }
-
         }
-        
+
         $this->command->info('UserSeeder completed successfully!');
     }
 
