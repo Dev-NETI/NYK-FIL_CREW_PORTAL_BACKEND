@@ -17,6 +17,7 @@ class TravelDocumentTypeSeeder extends Seeder
             'Passport',
             'Seafarer\'s Identification and Record Book (SIRB)',
             'Seafarer\'s Identity Document (SID)',
+            'US VISA',
         ];
 
         foreach ($documentTypes as $type) {
