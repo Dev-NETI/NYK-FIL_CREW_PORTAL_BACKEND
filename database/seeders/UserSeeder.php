@@ -1255,7 +1255,7 @@ class UserSeeder extends Seeder
                             'middle_name' => $nameParts['middle_name'],
                             'last_name' => $nameParts['last_name'],
                             'suffix' => $nameParts['suffix'],
-                            'date_of_birth' => Carbon::parse($data['dob'])->format('Y-m-d'), // date field
+                            'birth_date' => Carbon::parse($data['dob'])->format('Y-m-d'), // date field
                             'age' => $data['age'],
                             'gender' => $this->determineGender($nameParts['first_name']),
                         ]);

@@ -19,13 +19,14 @@ return new class extends Migration
             $table->string('middle_name')->nullable();
             $table->string('last_name')->nullable();
             $table->string('suffix')->nullable();
-            $table->date('date_of_birth')->nullable();
-            $table->date('place_of_birth')->nullable();
+            $table->date('birth_date')->nullable();
+            $table->string('birth_place')->nullable();
             $table->integer('age')->nullable();
-            $table->enum('gender', ['male', 'female'])->nullable();
+            $table->enum('gender', ['Male', 'Female'])->nullable();
             $table->string('nationality')->nullable();
             $table->string('civil_status')->nullable();
             $table->string('religion')->nullable();
+            $table->string('blood_type')->nullable();
 
             // Audit fields
             $table->foreignId('modified_by')->nullable()->constrained('users')->onDelete('set null');

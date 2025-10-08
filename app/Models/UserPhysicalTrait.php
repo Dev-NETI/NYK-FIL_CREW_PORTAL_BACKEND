@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class UserPhysicalTrait extends Model
 {
     use HasFactory, HasModifiedBy, SoftDeletes;
-    
+
     protected $fillable = [
         'user_id',
         'height',
@@ -19,10 +19,8 @@ class UserPhysicalTrait extends Model
         'blood_type',
         'eye_color',
         'hair_color',
-        'distinguishing_marks',
-        'medical_conditions',
     ];
-    
+
     protected function casts(): array
     {
         return [
@@ -31,7 +29,7 @@ class UserPhysicalTrait extends Model
             'deleted_at' => 'datetime',
         ];
     }
-    
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

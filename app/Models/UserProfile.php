@@ -21,9 +21,14 @@ class UserProfile extends Model
         'middle_name',
         'last_name',
         'suffix',
-        'date_of_birth',
+        'birth_date',
+        'birth_place',
         'age',
         'gender',
+        'nationality',
+        'civil_status',
+        'religion',
+        'blood_type'
     ];
 
     protected function casts(): array

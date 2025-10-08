@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon;
 
 class User extends Authenticatable
 {
@@ -32,6 +31,7 @@ class User extends Authenticatable
         'email_verified_at',
         'last_login_at',
         'last_login_ip',
+        'modified_by',
     ];
 
     /**
