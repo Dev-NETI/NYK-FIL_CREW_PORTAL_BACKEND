@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
 
             // Basic entity data (no dependencies)
             VesselTypeSeeder::class,
-            FleetSeeder::class,
+
             UniversitySeeder::class,
             ProgramSeeder::class,
 
@@ -44,8 +44,7 @@ class DatabaseSeeder extends Seeder
             UserEducationSeeder::class,
             UserPhysicalTraitSeeder::class,
 
-            // Vessel data (depends on vessel types)
-            VesselSeeder::class,
+
 
             // Allotee data (independent)
             AlloteeSeeder::class,
@@ -63,6 +62,9 @@ class DatabaseSeeder extends Seeder
             EmploymentDocumentTypeSeeder::class,
             EmploymentDocumentSeeder::class,
             CertificateDocumentTypeSeeder::class,
+            FleetSeeder::class,
+            // Vessel data (depends on vessel types)
+            VesselSeeder::class,
         ]);
     }
 }

@@ -14,13 +14,22 @@ class Vessel extends Model
 
     protected $fillable = [
         'name',
-        'vessel_id', // vessel id from mpip
         'vessel_type_id',
+        'fleet_id',
+        'prefix',
     ];
 
     protected $casts = [
         'deleted_at' => 'datetime',
     ];
+
+    /**
+     * Get the fleet that owns the vessel.
+     */
+    public function fleet(): BelongsTo
+    {
+        return $this->belongsTo(Fleet::class);
+    }
 
     /**
      * Get the vessel type.

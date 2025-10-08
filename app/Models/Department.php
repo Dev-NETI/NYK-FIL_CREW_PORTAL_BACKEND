@@ -26,4 +26,9 @@ class Department extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function fleets(): HasMany
+    {
+        return $this->hasMany(Fleet::class);
+    }
 }
