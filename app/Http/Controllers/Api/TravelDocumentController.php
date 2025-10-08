@@ -45,22 +45,25 @@ class TravelDocumentController extends Controller
         return response()->json($travelDocument);
     }
 
-    public function update(Request $request, TravelDocument $travelDocument): JsonResponse
+    public function update(Request $request, $id): JsonResponse
     {
         $validated = $request->validate([
-            'crew_id' => 'required|exists:user_profiles,id',
-            'id_no' => 'required|string|max:255',
-            'travel_document_type_id' => 'required|exists:travel_document_types,id',
+            'id_no' => 'required',
             'place_of_issue' => 'required|string|max:255',
             'date_of_issue' => 'required|date',
             'expiration_date' => 'required|date|after:date_of_issue',
             'remaining_pages' => 'nullable|integer|min:0',
+            'is_US_VISA' => 'required',
+            'visa_type' => 'nullable',
         ]);
 
-        $travelDocument->update($validated);
-        $travelDocument->load(['crew', 'travelDocumentType']);
+        $travelDocument = TravelDocument::findOrFail($id);
+        $update = $travelDocument->update($validated);
 
-        return response()->json($travelDocument);
+        return response()->json([
+            'success' => $update,
+            'message' => $update ? 'Travel document updated successfully' : 'Failed to update travel document'
+        ]);
     }
 
     public function destroy(TravelDocument $travelDocument): JsonResponse
