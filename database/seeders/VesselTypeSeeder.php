@@ -13,22 +13,23 @@ class VesselTypeSeeder extends Seeder
     public function run(): void
     {
         $vesselTypes = [
-            'TANKER - LPG',
-            'CONTAINER',
-            'TANKER - LNG',
+            'RESEARCH',
+            'DRILL',
+            'BULK CAPE',
+            'BULK OVER PANAMAX',
+            'BULK HANDY',
+            'BULK VLOC',
             'PCTC',
+            'BULK PANAMAX',
+            'BULK WCC',
             'CABLE SHIP',
-            'BULK - VLOC',
-            'DEEP SEA DRILLING VESSEL',
-            'PCC',
-            'BULK - WCC',
-            'BULK - OVERPNMX',
-            'BULK - CAPE',
-            'TANKER - VLCC',
-            'BULK - HANDY',
-            'TANKER - OIL/CHEMICAL',
-            'BULK - PANAMAX',
-            'SEISMIC VESSEL',
+            'VLOC',
+            'LNG',
+            'TANKER VLCC',
+            'OIL/CHEMICAL TANKER',
+            'LPG',
+            'CONTAINER',
+            'PCC'
         ];
 
         foreach ($vesselTypes as $type) {
