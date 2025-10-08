@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
 
             // Address data (depends on geographic data)
             AddressSeeder::class,
+            NationalitySeeder::class,
 
             // User data (depends on fleet, rank, university, address)
             UserSeeder::class,

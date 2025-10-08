@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\EmploymentDocumentController;
 use App\Http\Controllers\Api\EmploymentDocumentTypeController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\IslandController;
+use App\Http\Controllers\Api\NationalityController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ProvinceController;
 use App\Http\Controllers\Api\UserProgramEmploymentController;
@@ -91,6 +92,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('regions', RegionController::class);
     Route::apiResource('provinces', ProvinceController::class);
     Route::apiResource('cities', CityController::class);
+    Route::apiResource('nationalities', NationalityController::class);
     Route::apiResource('vessels', VesselController::class);
     Route::apiResource('addresses', AddressController::class);
     Route::apiResource('allotees', AlloteeController::class);

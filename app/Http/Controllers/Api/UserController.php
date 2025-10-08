@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Traits\FormatsUserData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -197,6 +199,163 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while retrieving the crew profile'
+            ], 500);
+        }
+    }
+
+    public function update($id, Request $request)
+    {
+        try {
+            $currentUser = $request->user();
+
+            // Find the crew member
+            $crew = User::where('id', $id)
+                ->where('is_crew', 1)
+                ->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
+                ->first();
+
+            if (!$crew) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Crew member not found'
+                ], 404);
+            }
+
+            // Validate the request data
+            $validatedData = $request->validate([
+                'email' => [
+                    'sometimes',
+                    'required',
+                    'email',
+                    Rule::unique('users')->ignore($crew->id)
+                ],
+
+                // Profile data
+                'profile.full_name' => 'sometimes|string|max:255',
+                'profile.first_name' => 'sometimes|string|max:255',
+                'profile.middle_name' => 'sometimes|nullable|string|max:255',
+                'profile.last_name' => 'sometimes|string|max:255',
+                'profile.suffix' => 'sometimes|nullable|string|max:50',
+                'profile.nickname' => 'sometimes|nullable|string|max:100',
+                'profile.birth_date' => 'sometimes|nullable|date',
+                'profile.birth_place' => 'sometimes|nullable|string|max:255',
+                'profile.gender' => 'sometimes|nullable|in:Male,Female,Other',
+                'profile.civil_status' => 'sometimes|nullable|string|max:100',
+                'profile.nationality' => 'sometimes|nullable|string|max:100',
+                'profile.religion' => 'sometimes|nullable|string|max:100',
+
+                // Physical traits
+                'physicalTraits.height' => 'sometimes|nullable|numeric|min:0|max:300',
+                'physicalTraits.weight' => 'sometimes|nullable|numeric|min:0|max:500',
+                'physicalTraits.eye_color' => 'sometimes|nullable|string|max:50',
+                'physicalTraits.blood_type' => 'sometimes|nullable|string|max:50',
+                'physicalTraits.hair_color' => 'sometimes|nullable|string|max:50',
+
+                // Contact information
+                'contacts.email' => 'sometimes|nullable|email|max:255',
+                'contacts.phone' => 'sometimes|nullable|string|max:20',
+                'contacts.mobile' => 'sometimes|nullable|string|max:20',
+                'contacts.emergency_contact_name' => 'sometimes|nullable|string|max:255',
+                'contacts.emergency_contact_phone' => 'sometimes|nullable|string|max:20',
+                'contacts.emergency_contact_relationship' => 'sometimes|nullable|string|max:100',
+
+                // Education
+                'education.highest_education' => 'sometimes|nullable|string|max:255',
+                'education.school_name' => 'sometimes|nullable|string|max:255',
+                'education.course' => 'sometimes|nullable|string|max:255',
+                'education.graduation_year' => 'sometimes|nullable|integer|min:1900|max:' . (date('Y') + 10),
+            ]);
+
+            DB::beginTransaction();
+
+            try {
+                // Update main user data
+                if (isset($validatedData['email'])) {
+                    $crew->email = $validatedData['email'];
+                    $crew->save();
+                }
+
+                // Update profile data
+                if (isset($validatedData['profile'])) {
+                    // Normalize gender to proper capitalization
+                    if (isset($validatedData['profile']['gender'])) {
+                        $validatedData['profile']['gender'] = ucfirst(strtolower($validatedData['profile']['gender']));
+                    }
+
+                    if ($crew->profile) {
+                        $crew->profile->update($validatedData['profile']);
+                    } else {
+                        $crew->profile()->create($validatedData['profile']);
+                    }
+                }
+
+                // Update physical traits
+                if (isset($validatedData['physicalTraits'])) {
+                    if ($crew->physicalTraits) {
+                        $crew->physicalTraits->update($validatedData['physicalTraits']);
+                    } else {
+                        $crew->physicalTraits()->create($validatedData['physicalTraits']);
+                    }
+                }
+
+                // Update contact information
+                if (isset($validatedData['contacts'])) {
+                    if ($crew->contacts) {
+                        $crew->contacts->update($validatedData['contacts']);
+                    } else {
+                        $crew->contacts()->create($validatedData['contacts']);
+                    }
+                }
+
+                // Update education information
+                if (isset($validatedData['education'])) {
+                    if ($crew->education) {
+                        $crew->education->update($validatedData['education']);
+                    } else {
+                        $crew->education()->create($validatedData['education']);
+                    }
+                }
+
+                DB::commit();
+
+                // Reload the crew with fresh data
+                $updatedCrew = User::where('id', $id)
+                    ->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
+                    ->first();
+
+                Log::info('Crew profile updated', [
+                    'admin_id' => $currentUser->id,
+                    'crew_id' => $id,
+                    'updated_fields' => array_keys($validatedData),
+                    'ip' => $request->ip()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'user' => $this->formatUserData($updatedCrew),
+                    'message' => 'Crew profile updated successfully'
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error updating crew profile', [
+                'crew_id' => $id,
+                'admin_id' => $currentUser->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating the crew profile'
             ], 500);
         }
     }
