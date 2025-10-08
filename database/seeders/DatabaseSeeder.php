@@ -65,6 +65,8 @@ class DatabaseSeeder extends Seeder
             FleetSeeder::class,
             // Vessel data (depends on vessel types)
             VesselSeeder::class,
+            CertificateTypeSeeder::class,
+            CertificateSeeder::class
         ]);
     }
 }
