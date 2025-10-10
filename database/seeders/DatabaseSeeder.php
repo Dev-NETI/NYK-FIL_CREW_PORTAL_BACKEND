@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Models\RankDepartment;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -26,10 +28,7 @@ class DatabaseSeeder extends Seeder
             UniversitySeeder::class,
             ProgramSeeder::class,
 
-            // Rank hierarchy (dependencies within rank system)
-            RankCategorySeeder::class,
-            RankGroupSeeder::class,
-            RankSeeder::class,
+
 
             // Address data (depends on geographic data)
             AddressSeeder::class,
@@ -62,12 +61,14 @@ class DatabaseSeeder extends Seeder
             TravelDocumentSeeder::class,
             EmploymentDocumentTypeSeeder::class,
             EmploymentDocumentSeeder::class,
-            CertificateDocumentTypeSeeder::class,
             FleetSeeder::class,
             // Vessel data (depends on vessel types)
             VesselSeeder::class,
             CertificateTypeSeeder::class,
-            CertificateSeeder::class
+            CertificateSeeder::class,
+            RankDepartmentSeeder::class,
+            RankTypeSeeder::class,
+            RankSeeder::class,
         ]);
     }
 }
