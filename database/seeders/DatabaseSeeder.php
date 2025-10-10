@@ -69,6 +69,7 @@ class DatabaseSeeder extends Seeder
             RankDepartmentSeeder::class,
             RankTypeSeeder::class,
             RankSeeder::class,
+            RankLevelingSeeder::class,
         ]);
     }
 }
