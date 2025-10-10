@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Rank;
-use App\Models\RankGroup;
 use Illuminate\Database\Seeder;
 
 class RankSeeder extends Seeder
@@ -13,74 +12,45 @@ class RankSeeder extends Seeder
      */
     public function run(): void
     {
-        $ranksData = [
-            // Masters
-            ['group' => 'MASTER', 'rank' => 'MSTR(10)'],
-            ['group' => 'MASTER', 'rank' => 'MSTR'],
-            ['group' => 'MASTER', 'rank' => 'MSTR(9)'],
-            ['group' => 'MASTER', 'rank' => 'MSTR(2)'],
-            ['group' => 'MASTER', 'rank' => 'MSTR(5)'],
-            // Chief Mates
-            ['group' => 'CHIEF MATE', 'rank' => 'C/M(4)'],
-            ['group' => 'CHIEF MATE', 'rank' => 'C/M(6)'],
-            ['group' => 'CHIEF MATE', 'rank' => 'C/M(1)'],
-            // Junior Chief Mates
-            ['group' => 'JUNIOR CHIEF MATE', 'rank' => 'C/M-2(4)'],
-            ['group' => 'JUNIOR CHIEF MATE', 'rank' => 'C/M-2(3)'],
-            // Second Mates
-            ['group' => 'SECOND MATE', 'rank' => '2/M(4)'],
-            // Chief Engineers
-            ['group' => 'CHIEF ENGINEER', 'rank' => 'C/E(10)'],
-            ['group' => 'CHIEF ENGINEER', 'rank' => 'C/E(1)'],
-            ['group' => 'CHIEF ENGINEER', 'rank' => 'C/E(2)'],
-            ['group' => 'CHIEF ENGINEER', 'rank' => 'C/E(4)'],
-            ['group' => 'CHIEF ENGINEER', 'rank' => 'C/E(8)'],
-            // First Assistant Engineers
-            ['group' => 'FIRST ASSISTANT ENGINEER', 'rank' => '1/AE(4)'],
-            ['group' => 'FIRST ASSISTANT ENGINEER', 'rank' => '1/AE(2)'],
-            // Junior First Assistant Engineers
-            ['group' => 'JUNIOR FIRST ASSISTANT ENGINEER', 'rank' => '1/AE-2(4)'],
-            // Second Assistant Engineers
-            ['group' => 'SECOND ASSISTANT ENGINEER', 'rank' => '2/AE(5)'],
-            ['group' => 'SECOND ASSISTANT ENGINEER', 'rank' => '2/AE(2)'],
-            ['group' => 'SECOND ASSISTANT ENGINEER', 'rank' => '2/E(4)'],
-            // Electrical Engineers
-            ['group' => 'ELECTRICAL ENGINEER', 'rank' => 'ELECT ENGR. 10'],
-            // Boatswains
-            ['group' => 'BOATSWAIN', 'rank' => 'BSN(2)'],
-            ['group' => 'BOATSWAIN', 'rank' => 'BSN(1)'],
-            // Able Seamen
-            ['group' => 'ABLE-SEAMAN', 'rank' => 'AB(2)'],
-            ['group' => 'ABLE-SEAMAN', 'rank' => 'AB'],
-            // No. 1 Oilers
-            ['group' => 'NO. 1 OILER', 'rank' => 'OLR NO. 1(2)'],
-            // Oilers
-            ['group' => 'OILER', 'rank' => 'OLR(2)'],
-            ['group' => 'OILER', 'rank' => 'OLR'],
-            // Chief Cooks
-            ['group' => 'CHIEF COOK', 'rank' => 'C/CK(2)'],
-            ['group' => 'CHIEF COOK', 'rank' => 'C/CK'],
-            // Fitters
-            ['group' => 'FITTER', 'rank' => 'FTR(2)'],
-            // Pumpmen
-            ['group' => 'PUMPMAN', 'rank' => 'P/MAN(2)'],
-            // Roustabouts
-            ['group' => 'ROUSTABOUT', 'rank' => 'RABOUT'],
-            // Roustabout - Pushers
-            ['group' => 'ROUSTABOUT - PUSHER', 'rank' => 'RABOUT-PHR'],
-            // Engine Assistants
-            ['group' => 'ENGINE ASSISTANT', 'rank' => 'ENG ASST'],
+        $ranks = [
+            ['name' => 'Master', 'code' => 'MSTR', 'rank_department_id' => 1, 'rank_type_id' => 1],
+            ['name' => 'Chief Mate', 'code' => 'CM', 'rank_department_id' => 1, 'rank_type_id' => 1],
+            ['name' => 'Junior Chief Mate', 'code' => 'CM-2', 'rank_department_id' => 1, 'rank_type_id' => 1],
+            ['name' => 'Second Mate', 'code' => '2M', 'rank_department_id' => 1, 'rank_type_id' => 1],
+            ['name' => 'Third Mate', 'code' => '3M', 'rank_department_id' => 1, 'rank_type_id' => 1],
+            ['name' => 'Chief Engineer', 'code' => 'CE', 'rank_department_id' => 2, 'rank_type_id' => 1],
+            ['name' => 'First Assistant Engineer', 'code' => '1AE', 'rank_department_id' => 2, 'rank_type_id' => 1],
+            ['name' => 'Junior First Assistant Engineer', 'code' => '1AE-2', 'rank_department_id' => 2, 'rank_type_id' => 1],
+            ['name' => 'Second Assistant Engineer', 'code' => '2AE', 'rank_department_id' => 2, 'rank_type_id' => 1],
+            ['name' => 'Third Assistant Engineer', 'code' => '3AE', 'rank_department_id' => 2, 'rank_type_id' => 1],
+            ['name' => 'Electrical Engineer', 'code' => 'E/E', 'rank_department_id' => 2, 'rank_type_id' => 1],
+            ['name' => 'Boatswain', 'code' => 'BSN', 'rank_department_id' => 1, 'rank_type_id' => 2],
+            ['name' => 'Pumpman', 'code' => 'PMN', 'rank_department_id' => 1, 'rank_type_id' => 2],
+            ['name' => 'Able Bodies Seaman', 'code' => 'AB', 'rank_department_id' => 1, 'rank_type_id' => 2],
+            ['name' => 'Ordinary Seaman', 'code' => 'OS', 'rank_department_id' => 1, 'rank_type_id' => 2],
+            ['name' => 'Deck Boy', 'code' => 'DBOY', 'rank_department_id' => 1, 'rank_type_id' => 2],
+            ['name' => 'Fitter', 'code' => 'FTR', 'rank_department_id' => 2, 'rank_type_id' => 2],
+            ['name' => 'Oiler', 'code' => 'OLR', 'rank_department_id' => 2, 'rank_type_id' => 2],
+            ['name' => 'Wiper', 'code' => 'WPR', 'rank_department_id' => 2, 'rank_type_id' => 2],
+            ['name' => 'Engine Boy', 'code' => 'EBOY', 'rank_department_id' => 2, 'rank_type_id' => 2],
+            ['name' => 'Electrician', 'code' => 'ELECT', 'rank_department_id' => 2, 'rank_type_id' => 2],
+            ['name' => 'Chief Cook', 'code' => 'CCK', 'rank_department_id' => 3, 'rank_type_id' => 2],
+            ['name' => 'Second Cook', 'code' => '2CK', 'rank_department_id' => 3, 'rank_type_id' => 2],
+            ['name' => 'Messman', 'code' => 'MSM', 'rank_department_id' => 3, 'rank_type_id' => 2],
+            ['name' => 'Catering Boy', 'code' => 'CBOY', 'rank_department_id' => 3, 'rank_type_id' => 2],
+            ['name' => 'Junior Third Mate', 'code' => 'JR3M', 'rank_department_id' => 1, 'rank_type_id' => 3],
+            ['name' => 'Deck Cadet', 'code' => 'D/CDT', 'rank_department_id' => 1, 'rank_type_id' => 3],
+            ['name' => 'Deck Maintenance Assistant', 'code' => 'DMA', 'rank_department_id' => 1, 'rank_type_id' => 3],
+            ['name' => 'Junior Third Assistant Engineer', 'code' => 'JR3AE', 'rank_department_id' => 2, 'rank_type_id' => 3],
+            ['name' => 'Engine Cadet', 'code' => 'E/CDT', 'rank_department_id' => 2, 'rank_type_id' => 3],
+            ['name' => 'Assistant Electrician', 'code' => 'A/ELECT', 'rank_department_id' => 2, 'rank_type_id' => 3],
+            ['name' => 'Helper Electrician', 'code' => 'H/E', 'rank_department_id' => 2, 'rank_type_id' => 3],
+            ['name' => 'Engine Maintenance Assistant', 'code' => 'EMA', 'rank_department_id' => 2, 'rank_type_id' => 3],
+            ['name' => 'Fitter Maintenance Assistant', 'code' => 'FMA', 'rank_department_id' => 2, 'rank_type_id' => 3],
         ];
 
-        foreach ($ranksData as $data) {
-            $group = RankGroup::where('name', $data['group'])->first();
-
-            if ($group) {
-                Rank::firstOrCreate([
-                    'name' => $data['rank'],
-                    'rank_group_id' => $group->id,
-                ]);
-            }
+        foreach ($ranks as $rank) {
+            Rank::create($rank);
         }
     }
 }

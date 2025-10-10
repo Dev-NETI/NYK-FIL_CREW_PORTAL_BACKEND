@@ -13,8 +13,10 @@ class Rank extends Model
     use HasModifiedBy, SoftDeletes;
 
     protected $fillable = [
-        'rank_group_id',
+        'rank_department_id',
+        'rank_type_id',
         'name',
+        'code',
     ];
 
     protected $casts = [
@@ -22,19 +24,19 @@ class Rank extends Model
     ];
 
     /**
-     * Get the rank group that owns this rank.
+     * Get the rank department that owns this rank.
      */
-    public function rankGroup(): BelongsTo
+    public function rankDepartment(): BelongsTo
     {
-        return $this->belongsTo(RankGroup::class);
+        return $this->belongsTo(RankDepartment::class);
     }
 
     /**
-     * Get the rank category through the rank group.
+     * Get the rank type that owns this rank.
      */
-    public function rankCategory()
+    public function rankType(): BelongsTo
     {
-        return $this->rankGroup->rankCategory();
+        return $this->belongsTo(RankType::class);
     }
 
     /**
