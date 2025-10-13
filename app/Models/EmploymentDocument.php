@@ -15,6 +15,8 @@ class EmploymentDocument extends Model
         'crew_id',
         'employment_document_type_id',
         'document_number',
+        'file_path',
+        'file_ext',
     ];
 
     public function userProfile(): BelongsTo

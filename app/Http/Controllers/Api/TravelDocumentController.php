@@ -28,7 +28,16 @@ class TravelDocumentController extends Controller
             'remaining_pages' => 'nullable|integer|min:0',
             'is_US_VISA' => 'required',
             'visa_type' => 'nullable',
+            'file' => 'nullable|file|max:5120', // 5MB max
         ]);
+
+        // Handle file upload if present
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('travel_documents', 'public');
+            $validated['file_path'] = $path;
+            $validated['file_ext'] = $file->getClientOriginalExtension();
+        }
 
         $store = TravelDocument::create($validated);
 
@@ -55,9 +64,19 @@ class TravelDocumentController extends Controller
             'remaining_pages' => 'nullable|integer|min:0',
             'is_US_VISA' => 'required',
             'visa_type' => 'nullable',
+            'file' => 'nullable|file|max:5120', // 5MB max
         ]);
 
         $travelDocument = TravelDocument::findOrFail($id);
+
+        // Handle file upload if present
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('travel_documents', 'public');
+            $validated['file_path'] = $path;
+            $validated['file_ext'] = $file->getClientOriginalExtension();
+        }
+
         $update = $travelDocument->update($validated);
 
         return response()->json([
