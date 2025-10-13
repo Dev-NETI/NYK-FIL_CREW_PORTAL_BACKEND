@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\TravelDocument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TravelDocumentController extends Controller
 {
@@ -38,6 +40,9 @@ class TravelDocumentController extends Controller
             $validated['file_path'] = $path;
             $validated['file_ext'] = $file->getClientOriginalExtension();
         }
+
+        // Remove 'file' from validated data before creating record
+        unset($validated['file']);
 
         $store = TravelDocument::create($validated);
 
@@ -77,6 +82,9 @@ class TravelDocumentController extends Controller
             $validated['file_ext'] = $file->getClientOriginalExtension();
         }
 
+        // Remove 'file' from validated data before updating record
+        unset($validated['file']);
+
         $update = $travelDocument->update($validated);
 
         return response()->json([
@@ -85,10 +93,45 @@ class TravelDocumentController extends Controller
         ]);
     }
 
-    public function destroy(TravelDocument $travelDocument): JsonResponse
+    public function destroy($id): JsonResponse
     {
-        $travelDocument->delete();
+        $travelDocument = TravelDocument::findOrFail($id);
+        $softDelete = $travelDocument->delete();
 
-        return response()->json(['message' => 'Travel document deleted successfully']);
+        return response()->json([
+            'success' => $softDelete,
+            'message' => $softDelete ? 'Travel document deleted successfully' : 'Failed to delete travel document'
+        ]);
+    }
+
+    /**
+     * View/download travel document file
+     */
+    public function viewFile($id): StreamedResponse|JsonResponse
+    {
+        $travelDocument = TravelDocument::findOrFail($id);
+
+        // Check if file exists
+        if (!$travelDocument->file_path || !Storage::disk('public')->exists($travelDocument->file_path)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found'
+            ], 404);
+        }
+
+        $filePath = $travelDocument->file_path;
+        $mimeType = Storage::disk('public')->mimeType($filePath);
+
+        // Return file for viewing in browser
+        return response()->stream(function () use ($filePath) {
+            $stream = Storage::disk('public')->readStream($filePath);
+            fpassthru($stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }, 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline',
+        ]);
     }
 }
