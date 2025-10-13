@@ -37,7 +37,8 @@ Route::prefix('auth')->group(function () {
 });
 
 //no middleware for testing
-Route::apiResource('employment-documents', EmploymentDocumentController::class)->only(['index', 'show', 'update', 'store']);
+Route::apiResource('employment-documents', EmploymentDocumentController::class)->only(['index', 'show', 'update', 'store', 'destroy']);
+Route::get('employment-documents/{id}/view-file', [EmploymentDocumentController::class, 'viewFile']);
 Route::apiResource('employment-document-types', EmploymentDocumentTypeController::class)->only(['index']);
 Route::apiResource('travel-documents', TravelDocumentController::class)->only(['index', 'show', 'store', 'update']);
 Route::apiResource('travel-document-types', TravelDocumentTypeController::class)->only(['index']);

@@ -20,7 +20,9 @@ class TravelDocument extends Model
         'expiration_date',
         'remaining_pages',
         'is_US_VISA',
-        'visa_type'
+        'visa_type',
+        'file_path',
+        'file_ext',
     ];
 
     protected $casts = [

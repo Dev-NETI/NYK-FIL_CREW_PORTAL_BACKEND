@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\EmploymentDocument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmploymentDocumentController extends Controller
 {
@@ -22,7 +24,19 @@ class EmploymentDocumentController extends Controller
             'crew_id' => 'required',
             'employment_document_type_id' => 'required',
             'document_number' => 'required|string|max:255',
+            'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,gif,webp|max:5120', // 5MB max
         ]);
+
+        // Handle file upload if present
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('employment_documents', 'public');
+            $validated['file_path'] = $path;
+            $validated['file_ext'] = $file->getClientOriginalExtension();
+        }
+
+        // Remove 'file' from validated data before creating record
+        unset($validated['file']);
 
         $store = EmploymentDocument::create($validated);
 
@@ -45,9 +59,22 @@ class EmploymentDocumentController extends Controller
             'crew_id' => 'required',
             'employment_document_type_id' => 'required',
             'document_number' => 'required|string|max:255',
+            'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,gif,webp|max:5120', // 5MB max
         ]);
 
         $employmentDocument = EmploymentDocument::findOrFail($id);
+
+        // Handle file upload if present
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('employment_documents', 'public');
+            $validated['file_path'] = $path;
+            $validated['file_ext'] = $file->getClientOriginalExtension();
+        }
+
+        // Remove 'file' from validated data before updating record
+        unset($validated['file']);
+
         $updated = $employmentDocument->update($validated);
 
         return response()->json([
@@ -56,10 +83,45 @@ class EmploymentDocumentController extends Controller
         ]);
     }
 
-    public function destroy(EmploymentDocument $employmentDocument): JsonResponse
+    public function destroy($id): JsonResponse
     {
-        $employmentDocument->delete();
+        $employmentDocument = EmploymentDocument::findOrFail($id);
+        $softDelete = $employmentDocument->delete();
 
-        return response()->json(['message' => 'Employment document deleted successfully']);
+        return response()->json([
+            'success' => $softDelete,
+            'message' => $softDelete ? 'Employment document deleted successfully' : 'Failed to deleted employment document'
+        ]);
+    }
+
+    /**
+     * View/download employment document file
+     */
+    public function viewFile($id): StreamedResponse|JsonResponse
+    {
+        $employmentDocument = EmploymentDocument::findOrFail($id);
+
+        // Check if file exists
+        if (!$employmentDocument->file_path || !Storage::disk('public')->exists($employmentDocument->file_path)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found'
+            ], 404);
+        }
+
+        $filePath = $employmentDocument->file_path;
+        $mimeType = Storage::disk('public')->mimeType($filePath);
+
+        // Return file for viewing in browser
+        return response()->stream(function () use ($filePath) {
+            $stream = Storage::disk('public')->readStream($filePath);
+            fpassthru($stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }, 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline',
+        ]);
     }
 }
