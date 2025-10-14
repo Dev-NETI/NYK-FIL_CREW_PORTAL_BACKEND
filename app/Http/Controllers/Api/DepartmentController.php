@@ -23,6 +23,26 @@ class DepartmentController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
+                'message' =>  $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Display departments by department category.
+     */
+    public function show($departmentCategoryId)
+    {
+        try {
+            $departments = Department::with('departmentCategory')
+                ->where('department_category_id', $departmentCategoryId)
+                ->orderBy('name', 'asc')
+                ->get();
+
+            return response()->json($departments);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
                 'message' => $e->getMessage()
             ], 500);
         }
