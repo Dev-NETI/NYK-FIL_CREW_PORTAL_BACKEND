@@ -47,10 +47,9 @@ Route::apiResource('travel-documents', TravelDocumentController::class)->only(['
 Route::get('travel-documents/{id}/view-file', [TravelDocumentController::class, 'viewFile']);
 Route::apiResource('travel-document-types', TravelDocumentTypeController::class)->only(['index']);
 Route::apiResource('certificate-documents', CertificateDocumentController::class);
-Route::apiResource('admins', AdminController::class);
 Route::apiResource('department-categories', DepartmentCategoryController::class)->only(['index']);
-Route::apiResource('departments', DepartmentController::class)->only(['index']);
-
+Route::apiResource('departments', DepartmentController::class)->only(['index', 'show']);
+Route::apiResource('admins', AdminController::class);
 // VERY NICE
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
