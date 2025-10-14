@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\Api\AddressController;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CertificateDocumentController;
 use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
+use App\Http\Controllers\Api\DepartmentCategoryController;
+use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\EmploymentDocumentController;
 use App\Http\Controllers\Api\EmploymentDocumentTypeController;
 use App\Http\Controllers\Api\FleetController;
@@ -44,6 +47,9 @@ Route::apiResource('travel-documents', TravelDocumentController::class)->only(['
 Route::get('travel-documents/{id}/view-file', [TravelDocumentController::class, 'viewFile']);
 Route::apiResource('travel-document-types', TravelDocumentTypeController::class)->only(['index']);
 Route::apiResource('certificate-documents', CertificateDocumentController::class);
+Route::apiResource('admins', AdminController::class);
+Route::apiResource('department-categories', DepartmentCategoryController::class)->only(['index']);
+Route::apiResource('departments', DepartmentController::class)->only(['index']);
 
 // VERY NICE
 // Protected routes (common for both crew and admin)
@@ -113,5 +119,4 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
     Route::apiResource('crew', UserController::class);
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
-    // Route::apiResource('job-description-requests', JobDescriptionRequestController::class);
 });
