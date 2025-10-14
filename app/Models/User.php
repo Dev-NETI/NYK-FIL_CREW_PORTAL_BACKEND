@@ -75,6 +75,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the admin's profile information.
+     */
+    public function adminProfile(): HasOne
+    {
+        return $this->hasOne(AdminProfile::class);
+    }
+
+    /**
      * Get the user's physical traits.
      */
     public function physicalTraits(): HasOne
