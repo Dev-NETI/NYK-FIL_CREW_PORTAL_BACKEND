@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CertificateDocumentController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Api\RankCategoryController;
 use App\Http\Controllers\Api\RankController;
 use App\Http\Controllers\Api\RankGroupController;
 use App\Http\Controllers\Api\RegionController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TravelDocumentController;
 use App\Http\Controllers\Api\TravelDocumentTypeController;
 use App\Http\Controllers\Api\UniversityController;
@@ -50,6 +52,9 @@ Route::apiResource('certificate-documents', CertificateDocumentController::class
 Route::apiResource('department-categories', DepartmentCategoryController::class)->only(['index']);
 Route::apiResource('departments', DepartmentController::class)->only(['index', 'show']);
 Route::apiResource('admins', AdminController::class);
+Route::apiResource('admin-roles', AdminRoleController::class)->only(['index', 'store', 'destroy']);
+Route::get('admin-roles/user/{userId}', [AdminRoleController::class, 'getByUserId']);
+Route::apiResource('roles', RoleController::class)->only(['index']);
 // VERY NICE
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {

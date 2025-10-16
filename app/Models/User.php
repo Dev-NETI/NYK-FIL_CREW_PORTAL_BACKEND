@@ -383,4 +383,22 @@ class User extends Authenticatable
     {
         return $this->otpVerifications()->valid();
     }
+
+    /**
+     * Get all admin role assignments for this user.
+     */
+    public function adminRoles(): HasMany
+    {
+        return $this->hasMany(AdminRole::class);
+    }
+
+    /**
+     * Get all roles assigned to this user through admin_roles pivot table.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'admin_roles')
+            ->withPivot(['modified_by'])
+            ->withTimestamps();
+    }
 }

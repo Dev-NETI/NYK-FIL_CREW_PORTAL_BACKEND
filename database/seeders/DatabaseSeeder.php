@@ -71,7 +71,8 @@ class DatabaseSeeder extends Seeder
             RankSeeder::class,
             RankLevelingSeeder::class,
             AdminProfileSeeder::class,
-            RoleSeeder::class
+            RoleSeeder::class,
+            AdminRoleSeeder::class,
         ]);
     }
 }
