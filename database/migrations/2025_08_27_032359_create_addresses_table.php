@@ -17,11 +17,14 @@ return new class extends Migration
             $table->string('full_address')->nullable();
             $table->string('street_address')->nullable();
             $table->string('barangay')->nullable();
-            $table->foreignId('city_id')->constrained('cities')->onDelete('restrict');
             $table->string('zip_code', 10)->nullable();
             $table->string('landmark')->nullable();
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
+            $table->integer('brgy_id')->nullable();
+            $table->integer('city_id')->nullable();
+            $table->integer('province_id')->nullable();
+            $table->integer('region_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

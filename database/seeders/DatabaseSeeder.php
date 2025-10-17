@@ -17,10 +17,8 @@ class DatabaseSeeder extends Seeder
         // Run seeders in the correct order to respect foreign key constraints
         $this->call([
             // Geographic data (no dependencies)
-            IslandSeeder::class,
             RegionSeeder::class,
             ProvinceSeeder::class,
-            CitySeeder::class,
 
             // Basic entity data (no dependencies)
             VesselTypeSeeder::class,
