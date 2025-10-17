@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('inquiry_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->text('message');
-            $table->boolean('is_staff_reply')->default(false);
+            $table->boolean('is_staff_reply')->nullable()->default(false);
             $table->timestamp('read_at')->nullable();
             $table->string('modified_by')->nullable();
             $table->timestamps();

@@ -11,9 +11,11 @@ use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
 use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\api\DepartmentTypesController;
 use App\Http\Controllers\Api\EmploymentDocumentController;
 use App\Http\Controllers\Api\EmploymentDocumentTypeController;
 use App\Http\Controllers\Api\FleetController;
+use App\Http\Controllers\api\InquiryController;
 use App\Http\Controllers\Api\IslandController;
 use App\Http\Controllers\Api\NationalityController;
 use App\Http\Controllers\Api\ProgramController;
@@ -31,6 +33,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
 use App\Http\Controllers\JobDescriptionRequestController;
+use App\Models\Inquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +58,12 @@ Route::apiResource('admins', AdminController::class);
 Route::apiResource('admin-roles', AdminRoleController::class)->only(['index', 'store', 'destroy']);
 Route::get('admin-roles/user/{userId}', [AdminRoleController::class, 'getByUserId']);
 Route::apiResource('roles', RoleController::class)->only(['index']);
+
+//For Inquiry
+Route::apiResource('departmentTypes', DepartmentTypesController::class)->only(['index']);
+Route::get('department/{id}', [DepartmentTypesController::class, 'viewDepartments']);
+Route::apiResource('inquiry', InquiryController::class)->only(['show', 'store']);
+
 // VERY NICE
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {

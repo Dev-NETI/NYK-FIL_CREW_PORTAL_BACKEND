@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('crew_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('department_id')->constrained()->onDelete('cascade');
             $table->string('subject');
-            $table->enum('status', ['open', 'in_progress', 'closed'])->default('open');
+            $table->enum('status', ['open', 'in_progress', 'closed'])->nullable()->default('open');
             $table->string('modified_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
