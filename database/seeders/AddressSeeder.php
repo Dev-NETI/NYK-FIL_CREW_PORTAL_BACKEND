@@ -94,20 +94,20 @@ class AddressSeeder extends Seeder
         ];
 
         foreach ($addressesData as $data) {
-            $island = Island::where('name', $data['island'])->first();
-            $region = Region::where('name', $data['region'])->first();
-            $province = Province::where('name', $data['province'])->first();
-            $city = City::where('name', $data['city'])->first();
+            // $island = Island::where('name', $data['island'])->first();
+            // $region = Region::where('name', $data['region'])->first();
+            // $province = Province::where('name', $data['province'])->first();
+            // $city = City::where('name', $data['city'])->first();
 
-            if ($island && $region && $province && $city) {
-                Address::firstOrCreate([
-                    'street_address' => $data['street'],
-                    'city_id' => $city->id,
-                    'province_id' => $province->id,
-                    'region_id' => $region->id,
-                    'island_id' => $island->id,
-                ]);
-            }
+            // if ($island && $region && $province && $city) {
+            //     Address::firstOrCreate([
+            //         'street_address' => $data['street'],
+            //         'city_id' => $city->id,
+            //         'province_id' => $province->id,
+            //         'region_id' => $region->id,
+            //         'island_id' => $island->id,
+            //     ]);
+            // }
         }
     }
 }

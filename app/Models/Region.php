@@ -4,36 +4,15 @@ namespace App\Models;
 
 use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Region extends Model
 {
-    use HasModifiedBy, SoftDeletes;
+    use SoftDeletes, HasModifiedBy;
 
     protected $fillable = [
-        'island_id',
-        'name',
+        'psgc_code',
+        'reg_desc',
+        'reg_code',
     ];
-
-    protected $casts = [
-        'deleted_at' => 'datetime',
-    ];
-
-    /**
-     * Get the island that owns the region.
-     */
-    public function island(): BelongsTo
-    {
-        return $this->belongsTo(Island::class);
-    }
-
-    /**
-     * Get the provinces for the region.
-     */
-    public function provinces(): HasMany
-    {
-        return $this->hasMany(Province::class);
-    }
 }
