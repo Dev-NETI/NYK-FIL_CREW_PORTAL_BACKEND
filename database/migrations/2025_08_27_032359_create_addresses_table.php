@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('addresses', function (Blueprint $table) {
             $table->id();
             $table->string('type'); // 'permanent', 'allotee', 'temporary', etc.
-            $table->string('street_address');
+            $table->string('full_address')->nullable();
+            $table->string('street_address')->nullable();
             $table->string('barangay')->nullable();
             $table->foreignId('city_id')->constrained('cities')->onDelete('restrict');
             $table->string('zip_code', 10)->nullable();
