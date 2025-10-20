@@ -19,8 +19,10 @@ class DatabaseSeeder extends Seeder
             // Geographic data (no dependencies)
             RegionSeeder::class,
             ProvinceSeeder::class,
+            CitySeeder::class,
+            BarangaySeeder::class,
 
-            // Basic entity data (no dependencies)
+            // Basic entity data (no dependencies) 
             VesselTypeSeeder::class,
 
             UniversitySeeder::class,
