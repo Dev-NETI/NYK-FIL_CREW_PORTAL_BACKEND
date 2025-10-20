@@ -70,6 +70,7 @@ Route::prefix('geography')->group(function () {
     Route::get('city/{cityCode}', [GeographyController::class, 'getCityByCode']);
     Route::get('barangay/{brgyCode}', [GeographyController::class, 'getBarangayByCode']);
 });
+
 Route::apiResource('admin-roles', AdminRoleController::class)->only(['index', 'store', 'destroy']);
 Route::get('admin-roles/user/{userId}', [AdminRoleController::class, 'getByUserId']);
 Route::apiResource('roles', RoleController::class)->only(['index']);
