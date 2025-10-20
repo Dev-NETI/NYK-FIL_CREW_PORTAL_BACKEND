@@ -14,26 +14,56 @@ class CitySeeder extends Seeder
      */
     public function run(): void
     {
-        $cities = [
-            // JSON data for Philippine cities/municipalities should be added here
-            // Each city should have: id, psgcCode, citymunDesc, regDesc, provCode, citymunCode
-        ];
+        $jsonPath = public_path('refcitymun_202510171334.json');
+
+        if (!file_exists($jsonPath)) {
+            $this->command->error('City JSON file not found at: ' . $jsonPath);
+            return;
+        }
+
+        $jsonContent = file_get_contents($jsonPath);
+        $data = json_decode($jsonContent, true);
+
+        if (!$data || !isset($data['refcitymun'])) {
+            $this->command->error('Invalid JSON format in city file');
+            return;
+        }
+
+        $cities = $data['refcitymun'];
+        $total = count($cities);
+        $this->command->info("Processing {$total} cities/municipalities...");
+
+        $processed = 0;
+        $errors = 0;
 
         foreach ($cities as $cityData) {
-            $region = Region::where('reg_code', $cityData['reg_code'])->first();
-            $province = Province::where('prov_code', $cityData['prov_code'])->first();
+            try {
+                $region = Region::where('reg_code', $cityData['regDesc'])->first();
+                $province = Province::where('prov_code', $cityData['provCode'])->first();
 
-            if ($region && $province) {
-                City::create([
-                    'psgc_code' => $cityData['psgc_code'],
-                    'citymun_desc' => $cityData['citymun_desc'],
-                    'reg_code' => $cityData['reg_code'],
-                    'prov_code' => $cityData['prov_code'],
-                    'citymun_code' => $cityData['citymun_code'],
-                    'region_id' => $region->id,
-                    'province_id' => $province->id,
-                ]);
+                if ($region && $province) {
+                    City::create([
+                        'psgc_code' => $cityData['psgcCode'],
+                        'citymun_desc' => $cityData['citymunDesc'],
+                        'reg_code' => $cityData['regDesc'],
+                        'prov_code' => $cityData['provCode'],
+                        'citymun_code' => $cityData['citymunCode'],
+                    ]);
+                    $processed++;
+                } else {
+                    $errors++;
+                    $this->command->warn("Missing parent record for city: {$cityData['citymunDesc']} (Code: {$cityData['citymunCode']})");
+                }
+            } catch (\Exception $e) {
+                $errors++;
+                $this->command->error("Error processing city {$cityData['citymunDesc']}: " . $e->getMessage());
+            }
+
+            if (($processed + $errors) % 100 == 0) {
+                $this->command->info("Processed: {$processed}, Errors: {$errors}");
             }
         }
+
+        $this->command->info("City seeding completed. Processed: {$processed}, Errors: {$errors}");
     }
 }

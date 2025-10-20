@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\EmploymentDocumentApprovalController;
 use App\Http\Controllers\Api\EmploymentDocumentController;
 use App\Http\Controllers\Api\EmploymentDocumentTypeController;
 use App\Http\Controllers\Api\FleetController;
+use App\Http\Controllers\Api\GeographyController;
 use App\Http\Controllers\api\InquiryController;
 use App\Http\Controllers\Api\IslandController;
 use App\Http\Controllers\Api\NationalityController;
@@ -56,6 +57,19 @@ Route::apiResource('certificate-documents', CertificateDocumentController::class
 Route::apiResource('department-categories', DepartmentCategoryController::class)->only(['index']);
 Route::apiResource('departments', DepartmentController::class)->only(['index', 'show']);
 Route::apiResource('admins', AdminController::class);
+
+// Geography API routes (public access)
+Route::prefix('geography')->group(function () {
+    Route::get('regions', [GeographyController::class, 'getRegions']);
+    Route::get('provinces', [GeographyController::class, 'getProvincesByRegion']);
+    Route::get('cities', [GeographyController::class, 'getCitiesByProvince']);
+    Route::get('barangays', [GeographyController::class, 'getBarangaysByCity']);
+
+    Route::get('region/{regCode}', [GeographyController::class, 'getRegionByCode']);
+    Route::get('province/{provCode}', [GeographyController::class, 'getProvinceByCode']);
+    Route::get('city/{cityCode}', [GeographyController::class, 'getCityByCode']);
+    Route::get('barangay/{brgyCode}', [GeographyController::class, 'getBarangayByCode']);
+});
 Route::apiResource('admin-roles', AdminRoleController::class)->only(['index', 'store', 'destroy']);
 Route::get('admin-roles/user/{userId}', [AdminRoleController::class, 'getByUserId']);
 Route::apiResource('roles', RoleController::class)->only(['index']);
@@ -72,8 +86,6 @@ Route::post('employment-document-updates/{id}/approve', [EmploymentDocumentAppro
 Route::post('employment-document-updates/{id}/reject', [EmploymentDocumentApprovalController::class, 'reject']);
 Route::get('employment-document-updates/history/{documentId}', [EmploymentDocumentApprovalController::class, 'history']);
 
-
-// VERY NICE
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
     // User info and auth management
@@ -84,7 +96,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/crew/{crewId}/profile', [UserController::class, 'getProfile']);
 });
 
-// VERY NICE
 // Crew-only routes (requires is_crew = 1)
 Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
     // Crew-specific endpoints
@@ -95,6 +106,9 @@ Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
             'redirect_to' => '/home'
         ]);
     });
+
+    // Crew can manage their own addresses
+    Route::apiResource('addresses', AddressController::class);
 
     // Crew can view their own data
     Route::apiResource('contracts', ContractController::class)->only(['index', 'show']);
@@ -118,10 +132,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('rank-groups', RankGroupController::class);
     Route::apiResource('ranks', RankController::class);
     Route::apiResource('fleets', FleetController::class);
-    Route::apiResource('islands', IslandController::class);
-    Route::apiResource('regions', RegionController::class);
-    Route::apiResource('provinces', ProvinceController::class);
-    Route::apiResource('cities', CityController::class);
     Route::apiResource('nationalities', NationalityController::class);
     Route::apiResource('vessels', VesselController::class);
     Route::apiResource('addresses', AddressController::class);

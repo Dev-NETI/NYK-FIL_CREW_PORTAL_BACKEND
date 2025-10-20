@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('prov_desc');
             $table->string('reg_code', 10);
             $table->string('prov_code', 10);
-            $table->foreignId('region_id')->constrained()->onDelete('cascade');
             $table->string('modified_by')->nullable();
             $table->timestamps();
             $table->softDeletes();

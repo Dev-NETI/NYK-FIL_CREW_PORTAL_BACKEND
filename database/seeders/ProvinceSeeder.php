@@ -634,7 +634,7 @@ class ProvinceSeeder extends Seeder
 
         foreach ($provinces as $provinceData) {
             $region = Region::where('reg_code', $provinceData['reg_code'])->first();
-            
+
             if ($region) {
                 Province::create([
                     'id' => $provinceData['id'],
@@ -642,7 +642,6 @@ class ProvinceSeeder extends Seeder
                     'prov_desc' => $provinceData['prov_desc'],
                     'reg_code' => $provinceData['reg_code'],
                     'prov_code' => $provinceData['prov_code'],
-                    'region_id' => $region->id,
                 ]);
             }
         }

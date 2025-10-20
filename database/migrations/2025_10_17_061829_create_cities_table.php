@@ -18,8 +18,6 @@ return new class extends Migration
             $table->string('reg_code', 10);
             $table->string('prov_code', 10);
             $table->string('citymun_code', 10);
-            $table->foreignId('region_id')->constrained()->onDelete('cascade');
-            $table->foreignId('province_id')->constrained()->onDelete('cascade');
             $table->string('modified_by')->nullable();
             $table->timestamps();
             $table->softDeletes();

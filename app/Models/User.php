@@ -140,6 +140,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the permanent address.
+     */
+    public function cureentAddress(): BelongsTo
+    {
+        return $this->contacts?->permanentAddress() ?? $this->belongsTo(Address::class, 'current_address_id');
+    }
+
+    /**
      * Get the graduated university.
      */
     public function graduatedUniversity(): BelongsTo

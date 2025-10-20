@@ -13,25 +13,19 @@ class Address extends Model
     use HasModifiedBy, SoftDeletes;
 
     protected $fillable = [
+        'user_id',
+        'full_address',
         'street_address',
-        'island_id',
-        'region_id',
-        'province_id',
+        'brgy_id',
         'city_id',
+        'province_id',
+        'region_id',
         'zip_code'
     ];
 
     protected $casts = [
         'deleted_at' => 'datetime',
     ];
-
-    /**
-     * Get the island where this address is located.
-     */
-    public function island(): BelongsTo
-    {
-        return $this->belongsTo(Island::class);
-    }
 
     /**
      * Get the region where this address is located.
