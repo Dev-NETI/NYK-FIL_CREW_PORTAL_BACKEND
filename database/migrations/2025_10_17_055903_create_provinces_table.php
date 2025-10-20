@@ -13,10 +13,14 @@ return new class extends Migration
     {
         Schema::create('provinces', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('region_id')->constrained('regions')->onDelete('restrict');
-            $table->string('name');
-            $table->string('code', 10)->unique(); // Province codes
+            $table->string('psgc_code', 20);
+            $table->string('prov_desc');
+            $table->string('reg_code', 10);
+            $table->string('prov_code', 10);
+            $table->foreignId('region_id')->constrained()->onDelete('cascade');
+            $table->string('modified_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\api\DepartmentTypesController;
+use App\Http\Controllers\Api\EmploymentDocumentApprovalController;
 use App\Http\Controllers\Api\EmploymentDocumentController;
 use App\Http\Controllers\Api\EmploymentDocumentTypeController;
 use App\Http\Controllers\Api\FleetController;
@@ -63,6 +64,14 @@ Route::apiResource('roles', RoleController::class)->only(['index']);
 Route::apiResource('departmentTypes', DepartmentTypesController::class)->only(['index']);
 Route::get('department/{id}', [DepartmentTypesController::class, 'viewDepartments']);
 Route::apiResource('inquiry', InquiryController::class)->only(['show', 'store']);
+// Employment document approvals
+Route::get('employment-document-updates', [EmploymentDocumentApprovalController::class, 'index']);
+Route::get('employment-document-updates/all', [EmploymentDocumentApprovalController::class, 'all']);
+Route::get('employment-document-updates/{id}', [EmploymentDocumentApprovalController::class, 'show']);
+Route::post('employment-document-updates/{id}/approve', [EmploymentDocumentApprovalController::class, 'approve']);
+Route::post('employment-document-updates/{id}/reject', [EmploymentDocumentApprovalController::class, 'reject']);
+Route::get('employment-document-updates/history/{documentId}', [EmploymentDocumentApprovalController::class, 'history']);
+
 
 // VERY NICE
 // Protected routes (common for both crew and admin)
@@ -130,6 +139,9 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'update']);
     Route::delete('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'destroy']);
 
-    Route::apiResource('crew', UserController::class);
+
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
 });
+
+// recruitment post api
+Route::post('crew/recruitment', [UserController::class, 'store']);

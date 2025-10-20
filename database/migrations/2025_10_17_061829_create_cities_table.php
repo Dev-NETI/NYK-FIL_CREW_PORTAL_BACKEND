@@ -13,11 +13,16 @@ return new class extends Migration
     {
         Schema::create('cities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('province_id')->constrained('provinces')->onDelete('restrict');
-            $table->string('name');
-            $table->string('type')->default('city'); // city, municipality
-            $table->string('zip_code', 10)->nullable();
+            $table->string('psgc_code', 20);
+            $table->string('citymun_desc');
+            $table->string('reg_code', 10);
+            $table->string('prov_code', 10);
+            $table->string('citymun_code', 10);
+            $table->foreignId('region_id')->constrained()->onDelete('cascade');
+            $table->foreignId('province_id')->constrained()->onDelete('cascade');
+            $table->string('modified_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

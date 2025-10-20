@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('islands', function (Blueprint $table) {
+        Schema::create('regions', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // luzon, visayas, mindanao
-            $table->string('code', 5)->unique(); // LUZ, VIS, MIN
+            $table->string('psgc_code', 20);
+            $table->string('reg_desc');
+            $table->string('reg_code', 10);
+            $table->string('modified_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('islands');
+        Schema::dropIfExists('regions');
     }
 };

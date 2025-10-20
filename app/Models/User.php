@@ -115,6 +115,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all user's education records.
+     */
+    public function educations(): HasMany
+    {
+        return $this->hasMany(UserEducation::class);
+    }
+
+    /**
      * Get the user's program employment records.
      */
     public function programEmployments(): HasMany

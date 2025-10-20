@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('addresses', function (Blueprint $table) {
-            $table->dropColumn(['type', 'zip_code', 'landmark', 'latitude', 'longitude']);
+            $table->dropColumn(['type', 'landmark', 'latitude', 'longitude']);
         });
     }
 
@@ -23,7 +23,6 @@ return new class extends Migration
     {
         Schema::table('addresses', function (Blueprint $table) {
             $table->string('type')->nullable();
-            $table->string('zip_code')->nullable();
             $table->string('landmark')->nullable();
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();

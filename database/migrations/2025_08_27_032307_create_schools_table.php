@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->string('type')->nullable(); // university, college, technical, maritime, etc.
             $table->string('address')->nullable();
-            $table->foreignId('city_id')->nullable()->constrained('cities')->onDelete('set null');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
