@@ -115,6 +115,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all user's education records.
+     */
+    public function educations(): HasMany
+    {
+        return $this->hasMany(UserEducation::class);
+    }
+
+    /**
      * Get the user's program employment records.
      */
     public function programEmployments(): HasMany
@@ -390,5 +398,23 @@ class User extends Authenticatable
     public function validOtpVerifications()
     {
         return $this->otpVerifications()->valid();
+    }
+
+    /**
+     * Get all admin role assignments for this user.
+     */
+    public function adminRoles(): HasMany
+    {
+        return $this->hasMany(AdminRole::class);
+    }
+
+    /**
+     * Get all roles assigned to this user through admin_roles pivot table.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'admin_roles')
+            ->withPivot(['modified_by'])
+            ->withTimestamps();
     }
 }

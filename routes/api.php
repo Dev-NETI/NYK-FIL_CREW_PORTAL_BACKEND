@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CertificateDocumentController;
@@ -10,10 +11,13 @@ use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
 use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\api\DepartmentTypesController;
+use App\Http\Controllers\Api\EmploymentDocumentApprovalController;
 use App\Http\Controllers\Api\EmploymentDocumentController;
 use App\Http\Controllers\Api\EmploymentDocumentTypeController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\GeographyController;
+use App\Http\Controllers\api\InquiryController;
 use App\Http\Controllers\Api\IslandController;
 use App\Http\Controllers\Api\NationalityController;
 use App\Http\Controllers\Api\ProgramController;
@@ -23,6 +27,7 @@ use App\Http\Controllers\Api\RankCategoryController;
 use App\Http\Controllers\Api\RankController;
 use App\Http\Controllers\Api\RankGroupController;
 use App\Http\Controllers\Api\RegionController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TravelDocumentController;
 use App\Http\Controllers\Api\TravelDocumentTypeController;
 use App\Http\Controllers\Api\UniversityController;
@@ -30,6 +35,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
 use App\Http\Controllers\JobDescriptionRequestController;
+use App\Models\Inquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -64,7 +70,22 @@ Route::prefix('geography')->group(function () {
     Route::get('city/{cityCode}', [GeographyController::class, 'getCityByCode']);
     Route::get('barangay/{brgyCode}', [GeographyController::class, 'getBarangayByCode']);
 });
-// VERY NICE
+Route::apiResource('admin-roles', AdminRoleController::class)->only(['index', 'store', 'destroy']);
+Route::get('admin-roles/user/{userId}', [AdminRoleController::class, 'getByUserId']);
+Route::apiResource('roles', RoleController::class)->only(['index']);
+
+//For Inquiry
+Route::apiResource('departmentTypes', DepartmentTypesController::class)->only(['index']);
+Route::get('department/{id}', [DepartmentTypesController::class, 'viewDepartments']);
+Route::apiResource('inquiry', InquiryController::class)->only(['show', 'store']);
+// Employment document approvals
+Route::get('employment-document-updates', [EmploymentDocumentApprovalController::class, 'index']);
+Route::get('employment-document-updates/all', [EmploymentDocumentApprovalController::class, 'all']);
+Route::get('employment-document-updates/{id}', [EmploymentDocumentApprovalController::class, 'show']);
+Route::post('employment-document-updates/{id}/approve', [EmploymentDocumentApprovalController::class, 'approve']);
+Route::post('employment-document-updates/{id}/reject', [EmploymentDocumentApprovalController::class, 'reject']);
+Route::get('employment-document-updates/history/{documentId}', [EmploymentDocumentApprovalController::class, 'history']);
+
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
     // User info and auth management
@@ -75,7 +96,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/crew/{crewId}/profile', [UserController::class, 'getProfile']);
 });
 
-// VERY NICE
 // Crew-only routes (requires is_crew = 1)
 Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
     // Crew-specific endpoints
@@ -129,6 +149,9 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'update']);
     Route::delete('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'destroy']);
 
-    Route::apiResource('crew', UserController::class);
+
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
 });
+
+// recruitment post api
+Route::post('crew/recruitment', [UserController::class, 'store']);

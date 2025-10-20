@@ -64,6 +64,151 @@ class UserController extends Controller
         }
     }
 
+    public function store(Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'crew_id' => 'required',
+                'firstname' => 'required',
+                'middlename' => 'nullable',
+                'lastname' => 'required|string',
+                'suffix' => 'nullable|string',
+                'age' => 'nullable|integer',
+                'gender' => 'required',
+                'civil_status' => 'required',
+                'birthdate' => 'required|date',
+                'place_of_birth' => 'required|string|max:255',
+                'mobile_number' => 'required|string|max:20',
+                'email' => 'required|email',
+                'height' => 'nullable|numeric|min:0|max:300',
+                'weight' => 'nullable|numeric|min:0|max:500',
+                'educational_attainments' => 'nullable|array',
+                'educational_attainments.*.education_level' => 'required',
+                'educational_attainments.*.degree' => 'required|string|max:255',
+                'educational_attainments.*.date_graduated' => 'required|string|max:4',
+                'employment_documents' => 'nullable|array',
+                'employment_documents.*.employment_document_type_id' => 'required',
+                'employment_documents.*.document_number' => 'nullable|string',
+                'employment_documents.*.file_path' => 'nullable|string',
+                'travel_documents' => 'nullable|array',
+                'travel_documents.*.travel_document_type_id' => 'required',
+                'travel_documents.*.id_no' => 'nullable|string',
+                'travel_documents.*.file_path' => 'nullable|string',
+            ]);
+
+            DB::beginTransaction();
+
+            try {
+                // Create the user
+                $user = User::create([
+                    'email' => $validatedData['email'],
+                    'is_crew' => true,
+                    'modified_by' => 'RECRUITMENT API',
+                ]);
+
+                // Create user profile
+                $profile = $user->profile()->create([
+                    'crew_id' => $validatedData['crew_id'],
+                    'first_name' => $validatedData['firstname'],
+                    'middle_name' => $validatedData['middlename'] ?? null,
+                    'last_name' => $validatedData['lastname'],
+                    'suffix' => $validatedData['suffix'] ?? null,
+                    'birth_date' => $validatedData['birthdate'],
+                    'birth_place' => $validatedData['place_of_birth'],
+                    'age' => $validatedData['age'],
+                    'gender' => $validatedData['gender'],
+                    'civil_status' => $validatedData['civil_status'],
+                    'modified_by' => 'RECRUITMENT API',
+                ]);
+
+                // Create user contact information
+                $user->contacts()->create([
+                    'mobile_number' => $validatedData['mobile_number'],
+                    'email_personal' => $validatedData['email'],
+                    'modified_by' => 'RECRUITMENT API',
+                ]);
+
+                // Create user physical traits
+                if (isset($validatedData['height']) || isset($validatedData['weight'])) {
+                    $user->physicalTraits()->create([
+                        'height' => $validatedData['height'] ?? null,
+                        'weight' => $validatedData['weight'] ?? null,
+                        'modified_by' => 'RECRUITMENT API',
+                    ]);
+                }
+
+                // Create educational attainments
+                if (isset($validatedData['educational_attainments'])) {
+                    foreach ($validatedData['educational_attainments'] as $education) {
+                        $user->educations()->create([
+                            'education_level' => $education['education_level'],
+                            'degree' => $education['degree'],
+                            'date_graduated' => $education['date_graduated'],
+                            'modified_by' => 'RECRUITMENT API',
+                        ]);
+                    }
+                }
+
+                // Retrieve the crew_id from the created profile
+                $createdCrewId = $profile->crew_id;
+
+                // Create employment documents using retrieved crew_id
+                if (isset($validatedData['employment_documents'])) {
+                    foreach ($validatedData['employment_documents'] as $document) {
+                        $profile->employmentDocuments()->create([
+                            'crew_id' => $createdCrewId,
+                            'employment_document_type_id' => $document['employment_document_type_id'],
+                            'document_number' => $document['document_number'] ?? null,
+                            'file_path' => $document['file_path'] ?? null,
+                            'modified_by' => 'RECRUITMENT API',
+                        ]);
+                    }
+                }
+
+                // Create travel documents using retrieved crew_id
+                if (isset($validatedData['travel_documents'])) {
+                    foreach ($validatedData['travel_documents'] as $document) {
+                        $profile->travelDocuments()->create([
+                            'crew_id' => $createdCrewId,
+                            'travel_document_type_id' => $document['travel_document_type_id'],
+                            'id_no' => $document['id_no'] ?? null,
+                            'file_path' => $document['file_path'] ?? null,
+                            'modified_by' => 'RECRUITMENT API',
+                        ]);
+                    }
+                }
+
+                DB::commit();
+
+                // Reload the user with all relations
+                $createdUser = User::with([
+                    'profile',
+                    'contacts',
+                    'physicalTraits',
+                    'educations',
+                    'profile.employmentDocuments.employmentDocumentType',
+                    'profile.travelDocuments.travelDocumentType'
+                ])->find($user->id);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Crew member created successfully'
+                ], 201);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function index(Request $request)
     {
         try {

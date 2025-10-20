@@ -15,20 +15,14 @@ class Inquiry extends Model
     protected $fillable = [
         'crew_id',
         'department_id',
-        'assigned_to',
         'subject',
         'status',
-        'last_message_at',
         'modified_by',
-    ];
-
-    protected $casts = [
-        'last_message_at' => 'datetime',
     ];
 
     public function crew(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'crew_id');
+        return $this->belongsTo(User::class);
     }
 
     public function department(): BelongsTo
@@ -36,13 +30,13 @@ class Inquiry extends Model
         return $this->belongsTo(Department::class);
     }
 
-    public function assignedTo(): BelongsTo
+    public function departmentCategory(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(DepartmentCategory::class);
     }
 
     public function messages(): HasMany
     {
-        return $this->hasMany(InquiryMessage::class)->orderBy('created_at', 'asc');
+        return $this->hasMany(InquiryMessage::class, 'inquiry_id');
     }
 }
