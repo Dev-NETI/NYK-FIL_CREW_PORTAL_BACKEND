@@ -58,7 +58,7 @@ class EmploymentDocumentController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $validated = $request->validate([
-            'crew_id' => 'required',
+            'crew_id' => 'nullable|string',
             'employment_document_type_id' => 'required',
             'document_number' => 'required|string|max:255',
             'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,gif,webp|max:5120', // 5MB max
@@ -66,39 +66,32 @@ class EmploymentDocumentController extends Controller
 
         $employmentDocument = EmploymentDocument::findOrFail($id);
 
-        // Check if request is from crew (requires approval) or admin (direct update)
-        $user = Auth::guard('sanctum')->user();
-        $isCrew = $user && $user->is_crew == 1;
-
-        if ($isCrew) {
+        if ($validated['crew_id']) {
             // Crew update: Create pending approval request
-            // Verify crew owns this document
-            if ($employmentDocument->crew_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized'
-                ], 403);
-            }
+            $updatedData = [
+                'employment_document_type_id' => $validated['employment_document_type_id'],
+                'document_number' => $validated['document_number'],
+            ];
 
             // Handle file upload if present
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
                 $path = $file->store('employment_documents_pending', 'public');
-                $validated['file_path'] = $path;
-                $validated['file_ext'] = $file->getClientOriginalExtension();
+                $updatedData['file_path'] = $path;
+                $updatedData['file_ext'] = $file->getClientOriginalExtension();
             }
-
-            // Remove 'file' from validated data
-            unset($validated['file']);
 
             // Create pending update
             $update = EmploymentDocumentUpdate::create([
                 'employment_document_id' => $employmentDocument->id,
-                'crew_id' => $user->id,
+                'crew_id' => $validated['crew_id'],
                 'original_data' => $employmentDocument->only(['crew_id', 'employment_document_type_id', 'document_number', 'file_path', 'file_ext']),
-                'updated_data' => $validated,
+                'updated_data' => $updatedData,
                 'status' => 'pending',
             ]);
+
+            // Load the relationship for the response
+            $update->load('userProfile');
 
             return response()->json([
                 'success' => true,
@@ -107,18 +100,25 @@ class EmploymentDocumentController extends Controller
             ]);
         } else {
             // Admin update: Direct update without approval
+            $updateData = [
+                'employment_document_type_id' => $validated['employment_document_type_id'],
+                'document_number' => $validated['document_number'],
+            ];
+
             // Handle file upload if present
             if ($request->hasFile('file')) {
+                // Delete old file if it exists and we're replacing it
+                if ($employmentDocument->file_path && Storage::disk('public')->exists($employmentDocument->file_path)) {
+                    Storage::disk('public')->delete($employmentDocument->file_path);
+                }
+
                 $file = $request->file('file');
                 $path = $file->store('employment_documents', 'public');
-                $validated['file_path'] = $path;
-                $validated['file_ext'] = $file->getClientOriginalExtension();
+                $updateData['file_path'] = $path;
+                $updateData['file_ext'] = $file->getClientOriginalExtension();
             }
 
-            // Remove 'file' from validated data before updating record
-            unset($validated['file']);
-
-            $updated = $employmentDocument->update($validated);
+            $updated = $employmentDocument->update($updateData);
 
             return response()->json([
                 'success' => $updated,

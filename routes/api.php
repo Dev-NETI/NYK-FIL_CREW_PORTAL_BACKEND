@@ -135,4 +135,5 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
 });
 
+// recruitment post api
 Route::post('crew/recruitment', [UserController::class, 'store']);

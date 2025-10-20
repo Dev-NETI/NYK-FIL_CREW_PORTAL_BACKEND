@@ -18,27 +18,20 @@ class EmploymentDocumentApprovalController extends Controller
     {
         try {
             $updates = EmploymentDocumentUpdate::with([
-                'employmentDocument.crew.crewProfile',
-                'employmentDocument.position',
-                'employmentDocument.vessel',
-                'crew.crewProfile',
+                'employmentDocument.userProfile',
+                'employmentDocument.employmentDocumentType',
+                'userProfile',
             ])
                 ->where('status', 'pending')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            return response()->json([
-                'success' => true,
-                'data' => $updates,
-            ]);
+            return response()->json($updates);
         } catch (\Exception $e) {
-            Log::error('Error fetching pending updates', [
-                'error' => $e->getMessage(),
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch pending updates',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -50,27 +43,19 @@ class EmploymentDocumentApprovalController extends Controller
     {
         try {
             $updates = EmploymentDocumentUpdate::with([
-                'employmentDocument.crew.crewProfile',
-                'employmentDocument.position',
-                'employmentDocument.vessel',
-                'crew.crewProfile',
-                'reviewer.adminProfile',
+                'employmentDocument.userProfile',
+                'employmentDocument.employmentDocumentType',
+                'userProfile',
             ])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            return response()->json([
-                'success' => true,
-                'data' => $updates,
-            ]);
+            return response()->json($updates);
         } catch (\Exception $e) {
-            Log::error('Error fetching all updates', [
-                'error' => $e->getMessage(),
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch updates',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -82,21 +67,17 @@ class EmploymentDocumentApprovalController extends Controller
     {
         try {
             $update = EmploymentDocumentUpdate::with([
-                'employmentDocument.crew.crewProfile',
-                'employmentDocument.position',
-                'employmentDocument.vessel',
-                'crew.crewProfile',
-                'reviewer.adminProfile',
+                'employmentDocument.userProfile',
+                'employmentDocument.employmentDocumentType',
+                'userProfile',
             ])->findOrFail($id);
 
-            return response()->json([
-                'success' => true,
-                'data' => $update,
-            ]);
+            return response()->json($update);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Update request not found',
+                'error' => $e->getMessage(),
             ], 404);
         }
     }
@@ -118,13 +99,18 @@ class EmploymentDocumentApprovalController extends Controller
                 ], 400);
             }
 
+            $user = Auth::guard('sanctum')->user();
+            $reviewerName = $user->adminProfile
+                ? "{$user->adminProfile->firstname} {$user->adminProfile->lastname}"
+                : $user->email;
+
             // Apply changes to actual document
             $update->employmentDocument->update($update->updated_data);
 
             // Mark as approved
             $update->update([
                 'status' => 'approved',
-                'reviewed_by' => Auth::guard('sanctum')->user()->id,
+                'reviewed_by' => $reviewerName,
                 'reviewed_at' => now(),
             ]);
 
@@ -139,11 +125,13 @@ class EmploymentDocumentApprovalController extends Controller
             Log::error('Error approving update', [
                 'error' => $e->getMessage(),
                 'update_id' => $id,
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to approve update',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -167,9 +155,14 @@ class EmploymentDocumentApprovalController extends Controller
                 ], 400);
             }
 
+            $user = Auth::guard('sanctum')->user();
+            $reviewerName = $user->adminProfile
+                ? "{$user->adminProfile->firstname} {$user->adminProfile->lastname}"
+                : $user->email;
+
             $update->update([
                 'status' => 'rejected',
-                'reviewed_by' => Auth::guard('sanctum')->user()->id,
+                'reviewed_by' => $reviewerName,
                 'reviewed_at' => now(),
                 'rejection_reason' => $validated['rejection_reason'],
             ]);
@@ -182,11 +175,13 @@ class EmploymentDocumentApprovalController extends Controller
             Log::error('Error rejecting update', [
                 'error' => $e->getMessage(),
                 'update_id' => $id,
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to reject update',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -197,7 +192,11 @@ class EmploymentDocumentApprovalController extends Controller
     public function history($documentId)
     {
         try {
-            $updates = EmploymentDocumentUpdate::with(['reviewer.adminProfile'])
+            $updates = EmploymentDocumentUpdate::with([
+                'employmentDocument.userProfile',
+                'employmentDocument.employmentDocumentType',
+                'userProfile',
+            ])
                 ->where('employment_document_id', $documentId)
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -210,11 +209,13 @@ class EmploymentDocumentApprovalController extends Controller
             Log::error('Error fetching update history', [
                 'error' => $e->getMessage(),
                 'document_id' => $documentId,
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch update history',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

@@ -32,13 +32,13 @@ class EmploymentDocumentUpdate extends Model
         return $this->belongsTo(EmploymentDocument::class);
     }
 
-    public function crew()
+    public function userProfile()
     {
-        return $this->belongsTo(User::class, 'crew_id');
+        return $this->belongsTo(UserProfile::class, 'crew_id', 'crew_id');
     }
 
-    public function reviewer()
+    public function crew()
     {
-        return $this->belongsTo(User::class, 'reviewed_by');
+        return $this->belongsTo(UserProfile::class, 'crew_id', 'crew_id');
     }
 }
