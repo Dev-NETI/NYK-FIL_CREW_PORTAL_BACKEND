@@ -13,12 +13,20 @@ return new class extends Migration
     {
         Schema::create('employment_document_updates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('employment_document_id')->constrained()->onDelete('cascade');
-            $table->foreignId('crew_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('employment_document_id')
+                ->constrained('employment_documents')
+                ->onDelete('cascade');
+
+            $table->string('crew_id')->nullable();
+            $table->foreign('crew_id')
+                ->references('crew_id')
+                ->on('user_profiles')
+                ->onDelete('cascade');
+
             $table->json('original_data');
             $table->json('updated_data');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->foreignId('reviewed_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->text('reviewed_by')->nullable();
             $table->timestamp('reviewed_at')->nullable();
             $table->text('rejection_reason')->nullable();
             $table->string('modified_by')->nullable();

@@ -62,6 +62,11 @@ class UserProfile extends Model
         return $this->hasMany(EmploymentDocument::class, 'crew_id', 'crew_id');
     }
 
+    public function employmentDocumentUpdates(): HasMany
+    {
+        return $this->hasMany(EmploymentDocumentUpdate::class, 'crew_id', 'crew_id');
+    }
+
     public function travelDocuments(): HasMany
     {
         return $this->hasMany(TravelDocument::class, 'crew_id', 'crew_id');
