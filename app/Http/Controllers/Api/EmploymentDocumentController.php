@@ -15,7 +15,7 @@ class EmploymentDocumentController extends Controller
 {
     public function index(): JsonResponse
     {
-        $employmentDocuments = EmploymentDocument::with(['crew', 'employmentDocumentType'])->get();
+        $employmentDocuments = EmploymentDocument::with(['userProfile', 'employmentDocumentType'])->get();
 
         return response()->json($employmentDocuments);
     }
