@@ -13,15 +13,15 @@ trait HasModifiedBy
     {
         static::creating(function ($model) {
             if (Auth::check()) {
-                $user = Auth::user();
-                $model->modified_by = $user->first_name . ' ' . $user->last_name || '';
+                $user = Auth::guard('sanctum')->user();
+                $model->modified_by = "{$user->adminProfile->firstname} {$user->adminProfile->lastname}" || '';
             }
         });
 
         static::updating(function ($model) {
             if (Auth::check()) {
-                $user = Auth::user();
-                $model->modified_by = $user->first_name . ' ' . $user->last_name || '';
+                $user = Auth::guard('sanctum')->user();
+                $model->modified_by = "{$user->adminProfile->firstname} {$user->adminProfile->lastname}" || '';
             }
         });
     }

@@ -29,23 +29,68 @@ class EmploymentDocumentController extends Controller
             'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,gif,webp|max:5120', // 5MB max
         ]);
 
-        // Handle file upload if present
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $path = $file->store('employment_documents', 'public');
-            $validated['file_path'] = $path;
-            $validated['file_ext'] = $file->getClientOriginalExtension();
+        if (Auth::guard('sanctum')->user()->is_crew == 1) {
+            // Crew creating new document: Create pending approval request
+            // First, create a temporary employment document to hold the reference
+            $tempData = [
+                'crew_id' => $validated['crew_id'],
+                'employment_document_type_id' => $validated['employment_document_type_id'],
+                'document_number' => 'PENDING_' . time(), // Temporary placeholder
+            ];
+
+            $employmentDocument = EmploymentDocument::create($tempData);
+
+            // Prepare data for approval
+            $newData = [
+                'employment_document_type_id' => $validated['employment_document_type_id'],
+                'document_number' => $validated['document_number'],
+            ];
+
+            // Handle file upload if present
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $path = $file->store('employment_documents_pending', 'public');
+                $newData['file_path'] = $path;
+                $newData['file_ext'] = $file->getClientOriginalExtension();
+            }
+
+            // Create pending update request
+            $update = EmploymentDocumentUpdate::create([
+                'employment_document_id' => $employmentDocument->id,
+                'crew_id' => $validated['crew_id'],
+                'original_data' => $tempData,
+                'updated_data' => $newData,
+                'status' => 'pending',
+            ]);
+
+            // Load the relationship for the response
+            $update->load('userProfile', 'employmentDocument.employmentDocumentType');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'New employment document submitted for admin approval',
+                'data' => $update
+            ]);
+        } else {
+            // Admin creating document: Direct creation without approval
+            // Handle file upload if present
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $path = $file->store('employment_documents', 'public');
+                $validated['file_path'] = $path;
+                $validated['file_ext'] = $file->getClientOriginalExtension();
+            }
+
+            // Remove 'file' from validated data before creating record
+            unset($validated['file']);
+
+            $store = EmploymentDocument::create($validated);
+
+            return response()->json([
+                'success' => $store ? true : false,
+                'message' => $store ? 'Employment document saved successfully' : 'Failed to save employment document'
+            ]);
         }
-
-        // Remove 'file' from validated data before creating record
-        unset($validated['file']);
-
-        $store = EmploymentDocument::create($validated);
-
-        return response()->json([
-            'success' => $store ? true : false,
-            'message' => $store ? 'Employment document saved successfully' : 'Failed to save employment document'
-        ]);
     }
 
     public function show($crewId): JsonResponse
