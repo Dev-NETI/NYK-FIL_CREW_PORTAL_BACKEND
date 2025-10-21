@@ -142,6 +142,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('employment-documents', EmploymentDocumentController::class);
     Route::apiResource('travel-documents', TravelDocumentController::class);
     Route::apiResource('programs', ProgramController::class);
+    Route::apiResource('crew', UserController::class);
 
     // User employment records
     Route::get('crew/{userId}/employment', [UserProgramEmploymentController::class, 'index']);

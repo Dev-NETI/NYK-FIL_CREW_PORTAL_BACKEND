@@ -180,16 +180,6 @@ class UserController extends Controller
 
                 DB::commit();
 
-                // Reload the user with all relations
-                $createdUser = User::with([
-                    'profile',
-                    'contacts',
-                    'physicalTraits',
-                    'educations',
-                    'profile.employmentDocuments.employmentDocumentType',
-                    'profile.travelDocuments.travelDocumentType'
-                ])->find($user->id);
-
                 return response()->json([
                     'success' => true,
                     'message' => 'Crew member created successfully'
@@ -403,6 +393,8 @@ class UserController extends Controller
                 'contacts.emergency_contact_name' => 'sometimes|nullable|string|max:255',
                 'contacts.emergency_contact_phone' => 'sometimes|nullable|string|max:20',
                 'contacts.emergency_contact_relationship' => 'sometimes|nullable|string|max:100',
+                'contacts.permanent_address_id' => 'sometimes|nullable|integer',
+                'contacts.current_address_id' => 'sometimes|nullable|integer',
 
                 // Education
                 'education.highest_education' => 'sometimes|nullable|string|max:255',

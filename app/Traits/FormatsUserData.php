@@ -46,6 +46,28 @@ trait FormatsUserData
                 'emergency_contact_relationship' => $user->contacts->emergency_contact_relationship,
             ] : null,
 
+            'permanent_address' => $user->contacts?->permanentAddress ? [
+                'id' => $user->contacts->permanentAddress->id,
+                'full_address' => $user->contacts->permanentAddress->full_address,
+                'brgy_id' => $user->contacts->permanentAddress->brgy_id,
+                'city_id' => $user->contacts->permanentAddress->city_id,
+                'province_id' => $user->contacts->permanentAddress->province_id,
+                'region_id' => $user->contacts->permanentAddress->region_id,
+                'zip_code' => $user->contacts->permanentAddress->zip_code,
+                'street_address' => $user->contacts->permanentAddress->street_address,
+            ] : null,
+
+            'current_address' => $user->contacts?->currentAddress ? [
+                'id' => $user->contacts->currentAddress->id,
+                'full_address' => $user->contacts->currentAddress->full_address,
+                'brgy_id' => $user->contacts->currentAddress->brgy_id,
+                'city_id' => $user->contacts->currentAddress->city_id,
+                'province_id' => $user->contacts->currentAddress->province_id,
+                'region_id' => $user->contacts->currentAddress->region_id,
+                'zip_code' => $user->contacts->currentAddress->zip_code,
+                'street_address' => $user->contacts->currentAddress->street_address,
+            ] : null,
+
             // Employment information
             'employment' => $user->employment ? [
                 'fleet_id' => $user->employment->fleet_id,
