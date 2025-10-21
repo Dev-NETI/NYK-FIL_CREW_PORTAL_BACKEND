@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\RankController;
 use App\Http\Controllers\Api\RankGroupController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\TravelDocumentApprovalController;
 use App\Http\Controllers\Api\TravelDocumentController;
 use App\Http\Controllers\Api\TravelDocumentTypeController;
 use App\Http\Controllers\Api\UniversityController;
@@ -86,6 +87,14 @@ Route::get('employment-document-updates/{id}', [EmploymentDocumentApprovalContro
 Route::post('employment-document-updates/{id}/approve', [EmploymentDocumentApprovalController::class, 'approve']);
 Route::post('employment-document-updates/{id}/reject', [EmploymentDocumentApprovalController::class, 'reject']);
 Route::get('employment-document-updates/history/{documentId}', [EmploymentDocumentApprovalController::class, 'history']);
+
+// Travel document approvals
+Route::get('travel-document-updates', [TravelDocumentApprovalController::class, 'index']);
+Route::get('travel-document-updates/all', [TravelDocumentApprovalController::class, 'all']);
+Route::get('travel-document-updates/{id}', [TravelDocumentApprovalController::class, 'show']);
+Route::post('travel-document-updates/{id}/approve', [TravelDocumentApprovalController::class, 'approve']);
+Route::post('travel-document-updates/{id}/reject', [TravelDocumentApprovalController::class, 'reject']);
+Route::get('travel-document-updates/history/{documentId}', [TravelDocumentApprovalController::class, 'history']);
 
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
