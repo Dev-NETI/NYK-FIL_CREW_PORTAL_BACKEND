@@ -387,9 +387,9 @@ class UserController extends Controller
                 'physicalTraits.hair_color' => 'sometimes|nullable|string|max:50',
 
                 // Contact information
-                'contacts.email' => 'sometimes|nullable|email|max:255',
-                'contacts.phone' => 'sometimes|nullable|string|max:20',
-                'contacts.mobile' => 'sometimes|nullable|string|max:20',
+                'contacts.email_personal' => 'sometimes|nullable|email|max:255',
+                'contacts.mobile_number' => 'sometimes|nullable|string|max:20',
+                'contacts.alternate_phone' => 'sometimes|nullable|string|max:20',
                 'contacts.emergency_contact_name' => 'sometimes|nullable|string|max:255',
                 'contacts.emergency_contact_phone' => 'sometimes|nullable|string|max:20',
                 'contacts.emergency_contact_relationship' => 'sometimes|nullable|string|max:100',
