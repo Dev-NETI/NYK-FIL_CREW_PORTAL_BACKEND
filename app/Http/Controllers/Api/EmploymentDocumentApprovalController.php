@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class EmploymentDocumentApprovalController extends Controller
 {
@@ -104,8 +105,25 @@ class EmploymentDocumentApprovalController extends Controller
                 ? "{$user->adminProfile->firstname} {$user->adminProfile->lastname}"
                 : $user->email;
 
+            // Check if this is a new document creation (original document_number starts with PENDING_)
+            $isNewDocument = isset($update->original_data['document_number']) &&
+                str_starts_with($update->original_data['document_number'], 'PENDING_');
+
             // Apply changes to actual document
-            $update->employmentDocument->update($update->updated_data);
+            $updateData = $update->updated_data;
+
+            // If there's a pending file, move it to the permanent location
+            if (isset($updateData['file_path']) && str_contains($updateData['file_path'], 'employment_documents_pending')) {
+                $oldPath = $updateData['file_path'];
+                $newPath = str_replace('employment_documents_pending', 'employment_documents', $oldPath);
+
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->move($oldPath, $newPath);
+                    $updateData['file_path'] = $newPath;
+                }
+            }
+
+            $update->employmentDocument->update($updateData);
 
             // Mark as approved
             $update->update([
@@ -116,18 +134,16 @@ class EmploymentDocumentApprovalController extends Controller
 
             DB::commit();
 
+            $message = $isNewDocument
+                ? 'New employment document approved and created successfully'
+                : 'Update approved and applied successfully';
+
             return response()->json([
                 'success' => true,
-                'message' => 'Update approved and applied successfully',
+                'message' => $message,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error approving update', [
-                'error' => $e->getMessage(),
-                'update_id' => $id,
-                'trace' => $e->getTraceAsString(),
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to approve update',
@@ -141,12 +157,14 @@ class EmploymentDocumentApprovalController extends Controller
      */
     public function reject(Request $request, $id)
     {
+        DB::beginTransaction();
+
         try {
             $validated = $request->validate([
                 'rejection_reason' => 'required|string|max:500',
             ]);
 
-            $update = EmploymentDocumentUpdate::findOrFail($id);
+            $update = EmploymentDocumentUpdate::with('employmentDocument')->findOrFail($id);
 
             if ($update->status !== 'pending') {
                 return response()->json([
@@ -160,6 +178,24 @@ class EmploymentDocumentApprovalController extends Controller
                 ? "{$user->adminProfile->firstname} {$user->adminProfile->lastname}"
                 : $user->email;
 
+            // Check if this is a new document creation (original document_number starts with PENDING_)
+            $isNewDocument = isset($update->original_data['document_number']) &&
+                str_starts_with($update->original_data['document_number'], 'PENDING_');
+
+            // If rejecting a new document creation, delete the temporary document and pending file
+            if ($isNewDocument) {
+                // Delete pending file if exists
+                if (isset($update->updated_data['file_path'])) {
+                    $filePath = $update->updated_data['file_path'];
+                    if (Storage::disk('public')->exists($filePath)) {
+                        Storage::disk('public')->delete($filePath);
+                    }
+                }
+
+                // Delete the temporary employment document
+                $update->employmentDocument->forceDelete();
+            }
+
             $update->update([
                 'status' => 'rejected',
                 'reviewed_by' => $reviewerName,
@@ -167,11 +203,18 @@ class EmploymentDocumentApprovalController extends Controller
                 'rejection_reason' => $validated['rejection_reason'],
             ]);
 
+            DB::commit();
+
+            $message = $isNewDocument
+                ? 'New document creation rejected and removed'
+                : 'Update rejected';
+
             return response()->json([
                 'success' => true,
-                'message' => 'Update rejected',
+                'message' => $message,
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Error rejecting update', [
                 'error' => $e->getMessage(),
                 'update_id' => $id,
