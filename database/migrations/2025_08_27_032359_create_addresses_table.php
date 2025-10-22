@@ -22,10 +22,10 @@ return new class extends Migration
             $table->string('landmark')->nullable();
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
-            $table->integer('brgy_id')->nullable();
-            $table->integer('city_id')->nullable();
-            $table->integer('province_id')->nullable();
-            $table->integer('region_id')->nullable();
+            $table->string('brgy_id')->nullable();
+            $table->string('city_id')->nullable();
+            $table->string('province_id')->nullable();
+            $table->string('region_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

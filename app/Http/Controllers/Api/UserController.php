@@ -208,40 +208,133 @@ class UserController extends Controller
             Log::info('Crew list access attempt', [
                 'user_id' => $currentUser->id,
                 'is_crew' => $currentUser->is_crew,
-                'email' => $currentUser->email
+                'email' => $currentUser->email,
+                'params' => $request->all()
             ]);
 
-            // Get all crew members (is_crew = 1) with their related data
-            $crew = User::where('is_crew', 1)
-                ->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
-                ->orderBy('created_at', 'desc')
-                ->get();
+            // Validate pagination and search parameters
+            $validatedData = $request->validate([
+                'page' => 'sometimes|integer|min:1|max:1000',
+                'per_page' => 'sometimes|integer|min:1|max:100',
+                'search' => 'sometimes|nullable|string|max:255',
+                'status' => 'sometimes|string|in:all,active,inactive,on_leave',
+                'sort_by' => 'sometimes|string|in:first_name,email',
+                'sort_order' => 'sometimes|string|in:asc,desc'
+            ]);
 
-            $formattedCrew = $crew->map(function ($user) {
+            // Set defaults
+            $perPage = $validatedData['per_page'] ?? 10;
+            $search = $validatedData['search'] ?? '';
+            $status = $validatedData['status'] ?? 'all';
+            $sortBy = $validatedData['sort_by'] ?? 'first_name';
+            $sortOrder = $validatedData['sort_order'] ?? 'asc';
+
+            // Build query for crew members (is_crew = 1) with their related data
+            $query = User::where('is_crew', 1)
+                ->with(['profile', 'contacts', 'employment', 'education', 'physicalTraits']);
+
+            // Apply search filter
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('email', 'like', "%{$search}%")
+                        ->orWhereHas('profile', function ($profileQuery) use ($search) {
+                            $profileQuery->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            // Apply status filter
+            if ($status !== 'all') {
+                $query->whereHas('employment', function ($employmentQuery) use ($status) {
+                    $employmentQuery->where('crew_status', $status);
+                });
+            }
+
+            // Apply sorting with proper joins when needed
+            switch ($sortBy) {
+                case 'first_name':
+                    $query->leftJoin('user_profiles as up', 'users.id', '=', 'up.user_id')
+                        ->orderByRaw("COALESCE(CONCAT(up.first_name, ' ', up.last_name), users.email) {$sortOrder}")
+                        ->select('users.*');
+                    break;
+                case 'email':
+                default:
+                    $query->orderBy('users.email', $sortOrder);
+                    break;
+            }
+
+            // Get paginated results
+            $paginatedCrew = $query->paginate($perPage);
+
+            // Format the crew data
+            $formattedCrew = $paginatedCrew->getCollection()->map(function ($user) {
                 return $this->formatUserData($user);
             });
 
-            Log::info('Crew list accessed', [
+            // Update the collection with formatted data
+            $paginatedCrew->setCollection($formattedCrew);
+
+            Log::info('Crew list accessed successfully', [
                 'admin_id' => $currentUser->id,
-                'total_crew' => $crew->count(),
+                'total_crew' => $paginatedCrew->total(),
+                'page' => $paginatedCrew->currentPage(),
+                'per_page' => $paginatedCrew->perPage(),
+                'search' => $search,
+                'status' => $status,
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
                 'ip' => $request->ip()
             ]);
 
             return response()->json([
                 'success' => true,
                 'crew' => $formattedCrew,
-                'total' => $crew->count(),
+                'pagination' => [
+                    'current_page' => $paginatedCrew->currentPage(),
+                    'per_page' => $paginatedCrew->perPage(),
+                    'total' => $paginatedCrew->total(),
+                    'last_page' => $paginatedCrew->lastPage(),
+                    'from' => $paginatedCrew->firstItem(),
+                    'to' => $paginatedCrew->lastItem(),
+                    'has_more_pages' => $paginatedCrew->hasMorePages(),
+                ],
+                'filters' => [
+                    'search' => $search,
+                    'status' => $status,
+                    'sort_by' => $sortBy,
+                    'sort_order' => $sortOrder,
+                ],
                 'message' => 'Crew list retrieved successfully'
             ]);
-        } catch (\Exception $e) {
-            Log::error('Error retrieving crew list', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation error in crew list', [
+                'errors' => $e->errors(),
+                'input' => $request->all()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while retrieving the crew list'
+                'message' => 'Invalid parameters provided',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error retrieving crew list', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'input' => $request->all(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving the crew list',
+                'debug' => config('app.debug') ? [
+                    'message' => $e->getMessage(),
+                    'line' => $e->getLine(),
+                    'file' => basename($e->getFile())
+                ] : null
             ], 500);
         }
     }
