@@ -86,17 +86,16 @@ trait FormatsUserData
                 'employment_notes' => $user->employment->employment_notes,
             ] : null,
 
-            // Education information
-            'education' => $user->education ? [
-                'graduated_school_id' => $user->education->graduated_school_id,
-                'date_graduated' => $user->education->date_graduated,
-                'degree' => $user->education->degree,
-                'field_of_study' => $user->education->field_of_study,
-                'gpa' => $user->education->gpa,
-                'education_level' => $user->education->education_level,
-                'certifications' => $user->education->certifications,
-                'additional_training' => $user->education->additional_training,
-            ] : null,
+            // Education information (all education records)
+            'education' => $user->educations ? $user->educations->map(function ($education) {
+                return [
+                    'id' => $education->id,
+                    'school_name' => $education->school_name,
+                    'date_graduated' => $education->date_graduated,
+                    'degree' => $education->degree,
+                    'education_level' => $education->education_level,
+                ];
+            })->toArray() : [],
 
             // Physical traits
             'physical_traits' => $user->physicalTraits ? [

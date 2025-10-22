@@ -20,7 +20,6 @@ class UserEducationSeeder extends Seeder
 
         // Get all users who don't have education records yet
         $users = User::whereDoesntHave('education')->get();
-        $universities = University::pluck('id')->toArray();
 
         // Maritime degrees with different levels
         $maritimeDegrees = [
@@ -170,7 +169,7 @@ class UserEducationSeeder extends Seeder
 
             UserEducation::create([
                 'user_id' => $user->id,
-                'graduated_school_id' => $faker->optional(0.92)->randomElement($universities), // 92% chance
+                'school_name' => $faker->name(),
                 'date_graduated' => $graduationDate->format('Y-m-d'),
                 'degree' => $degree,
                 'education_level' => $educationLevel,

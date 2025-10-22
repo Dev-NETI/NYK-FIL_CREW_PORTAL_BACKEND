@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\TravelDocumentController;
 use App\Http\Controllers\Api\TravelDocumentTypeController;
 use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
 use App\Http\Controllers\JobDescriptionRequestController;
@@ -114,6 +115,23 @@ Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
     // Crew can view their own data
     Route::apiResource('contracts', ContractController::class)->only(['index', 'show']);
     Route::apiResource('crew-allotees', CrewAlloteeController::class)->only(['index', 'show']);
+    
+    // Crew education management (crew can only access their own education)
+    Route::get('/education', function(Request $request) {
+        return app(UserEducationController::class)->index(auth()->id());
+    });
+    Route::post('/education', function(Request $request) {
+        return app(UserEducationController::class)->store($request, auth()->id());
+    });
+    Route::get('/education/{educationId}', function(Request $request, $educationId) {
+        return app(UserEducationController::class)->show(auth()->id(), $educationId);
+    });
+    Route::put('/education/{educationId}', function(Request $request, $educationId) {
+        return app(UserEducationController::class)->update($request, auth()->id(), $educationId);
+    });
+    Route::delete('/education/{educationId}', function(Request $request, $educationId) {
+        return app(UserEducationController::class)->destroy(auth()->id(), $educationId);
+    });
 });
 
 // VERY NICE
@@ -151,6 +169,12 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'update']);
     Route::delete('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'destroy']);
 
+    // User education management (admin can manage any user's education)
+    Route::get('crew/{userId}/education', [UserEducationController::class, 'index']);
+    Route::post('crew/{userId}/education', [UserEducationController::class, 'store']);
+    Route::get('crew/{userId}/education/{educationId}', [UserEducationController::class, 'show']);
+    Route::put('crew/{userId}/education/{educationId}', [UserEducationController::class, 'update']);
+    Route::delete('crew/{userId}/education/{educationId}', [UserEducationController::class, 'destroy']);
 
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
 });

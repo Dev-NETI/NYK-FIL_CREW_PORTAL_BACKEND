@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('user_education', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('graduated_school_id')->nullable()->constrained('universities')->onDelete('set null');
+            $table->string('school_name')->nullable();
             $table->date('date_graduated')->nullable();
             $table->string('degree')->nullable();
             $table->enum('education_level', ['high_school', 'college', 'higher_educational'])->nullable();
@@ -26,8 +26,6 @@ return new class extends Migration
 
             // Indexes
             $table->index('user_id');
-            $table->index('graduated_school_id');
-            $table->index('education_level');
         });
     }
 

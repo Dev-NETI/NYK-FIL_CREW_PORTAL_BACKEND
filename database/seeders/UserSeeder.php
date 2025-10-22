@@ -1219,9 +1219,6 @@ class UserSeeder extends Seeder
                 // Find rank
                 $rank = Rank::where('name', $data['rank'])->first();
 
-                // Find university
-                $university = University::where('name', $data['school'])->first();
-
                 // Find address
                 $address = Address::where('street_address', 'LIKE', '%' . $data['permanent_address'] . '%')->first();
 
@@ -1298,11 +1295,11 @@ class UserSeeder extends Seeder
                     }
 
                     // Create user education
-                    if ($university || isset($data['date_graduated'])) {
+                    if (isset($data['date_graduated'])) {
                         UserEducation::updateOrCreate([
                             'user_id' => $user->id,
                         ], [
-                            'graduated_school_id' => $university?->id,
+                            'school_name' => fake()->company() . ' University',
                             'date_graduated' => $data['date_graduated'] ? Carbon::parse($data['date_graduated']) : null,
                             'degree' => $this->getMaritimeDegree(),
                             'education_level' => 'college',
