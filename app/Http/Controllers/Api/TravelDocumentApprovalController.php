@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\EmploymentDocumentUpdate;
+use App\Models\TravelDocumentUpdate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-class EmploymentDocumentApprovalController extends Controller
+class TravelDocumentApprovalController extends Controller
 {
     /**
      * Get all pending updates
@@ -18,9 +18,9 @@ class EmploymentDocumentApprovalController extends Controller
     public function index()
     {
         try {
-            $updates = EmploymentDocumentUpdate::with([
-                'employmentDocument.userProfile',
-                'employmentDocument.employmentDocumentType',
+            $updates = TravelDocumentUpdate::with([
+                'travelDocument.userProfile',
+                'travelDocument.travelDocumentType',
                 'userProfile',
             ])
                 ->where('status', 'pending')
@@ -43,9 +43,9 @@ class EmploymentDocumentApprovalController extends Controller
     public function all()
     {
         try {
-            $updates = EmploymentDocumentUpdate::with([
-                'employmentDocument.userProfile',
-                'employmentDocument.employmentDocumentType',
+            $updates = TravelDocumentUpdate::with([
+                'travelDocument.userProfile',
+                'travelDocument.travelDocumentType',
                 'userProfile',
             ])
                 ->orderBy('created_at', 'desc')
@@ -67,9 +67,9 @@ class EmploymentDocumentApprovalController extends Controller
     public function show($id)
     {
         try {
-            $update = EmploymentDocumentUpdate::with([
-                'employmentDocument.userProfile',
-                'employmentDocument.employmentDocumentType',
+            $update = TravelDocumentUpdate::with([
+                'travelDocument.userProfile',
+                'travelDocument.travelDocumentType',
                 'userProfile',
             ])->findOrFail($id);
 
@@ -91,7 +91,7 @@ class EmploymentDocumentApprovalController extends Controller
         DB::beginTransaction();
 
         try {
-            $update = EmploymentDocumentUpdate::with('employmentDocument')->findOrFail($id);
+            $update = TravelDocumentUpdate::with('travelDocument')->findOrFail($id);
 
             if ($update->status !== 'pending') {
                 return response()->json([
@@ -105,17 +105,17 @@ class EmploymentDocumentApprovalController extends Controller
                 ? "{$user->adminProfile->firstname} {$user->adminProfile->lastname}"
                 : $user->email;
 
-            // Check if this is a new document creation (original document_number starts with PENDING_)
-            $isNewDocument = isset($update->original_data['document_number']) &&
-                str_starts_with($update->original_data['document_number'], 'PENDING_');
+            // Check if this is a new document creation (original id_no starts with PENDING_)
+            $isNewDocument = isset($update->original_data['id_no']) &&
+                str_starts_with($update->original_data['id_no'], 'PENDING_');
 
             // Apply changes to actual document
             $updateData = $update->updated_data;
 
             // If there's a pending file, move it to the permanent location
-            if (isset($updateData['file_path']) && str_contains($updateData['file_path'], 'employment_documents_pending')) {
+            if (isset($updateData['file_path']) && str_contains($updateData['file_path'], 'travel_documents_pending')) {
                 $oldPath = $updateData['file_path'];
-                $newPath = str_replace('employment_documents_pending', 'employment_documents', $oldPath);
+                $newPath = str_replace('travel_documents_pending', 'travel_documents', $oldPath);
 
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->move($oldPath, $newPath);
@@ -123,7 +123,7 @@ class EmploymentDocumentApprovalController extends Controller
                 }
             }
 
-            $update->employmentDocument->update($updateData);
+            $update->travelDocument->update($updateData);
 
             // Mark as approved
             $update->update([
@@ -135,7 +135,7 @@ class EmploymentDocumentApprovalController extends Controller
             DB::commit();
 
             $message = $isNewDocument
-                ? 'New employment document approved and created successfully'
+                ? 'New travel document approved and created successfully'
                 : 'Update approved and applied successfully';
 
             return response()->json([
@@ -164,7 +164,7 @@ class EmploymentDocumentApprovalController extends Controller
                 'rejection_reason' => 'required|string|max:500',
             ]);
 
-            $update = EmploymentDocumentUpdate::with('employmentDocument')->findOrFail($id);
+            $update = TravelDocumentUpdate::with('travelDocument')->findOrFail($id);
 
             if ($update->status !== 'pending') {
                 return response()->json([
@@ -178,9 +178,9 @@ class EmploymentDocumentApprovalController extends Controller
                 ? "{$user->adminProfile->firstname} {$user->adminProfile->lastname}"
                 : $user->email;
 
-            // Check if this is a new document creation (original document_number starts with PENDING_)
-            $isNewDocument = isset($update->original_data['document_number']) &&
-                str_starts_with($update->original_data['document_number'], 'PENDING_');
+            // Check if this is a new document creation (original id_no starts with PENDING_)
+            $isNewDocument = isset($update->original_data['id_no']) &&
+                str_starts_with($update->original_data['id_no'], 'PENDING_');
 
             // If rejecting a new document creation, delete the temporary document and pending file
             if ($isNewDocument) {
@@ -192,8 +192,8 @@ class EmploymentDocumentApprovalController extends Controller
                     }
                 }
 
-                // Delete the temporary employment document
-                $update->employmentDocument->forceDelete();
+                // Delete the temporary travel document
+                $update->travelDocument->forceDelete();
             }
 
             $update->update([
@@ -235,12 +235,12 @@ class EmploymentDocumentApprovalController extends Controller
     public function history($documentId)
     {
         try {
-            $updates = EmploymentDocumentUpdate::with([
-                'employmentDocument.userProfile',
-                'employmentDocument.employmentDocumentType',
+            $updates = TravelDocumentUpdate::with([
+                'travelDocument.userProfile',
+                'travelDocument.travelDocumentType',
                 'userProfile',
             ])
-                ->where('employment_document_id', $documentId)
+                ->where('travel_document_id', $documentId)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
