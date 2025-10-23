@@ -489,6 +489,63 @@ class UserController extends Controller
                 'contacts.emergency_contact_relationship' => 'sometimes|nullable|string|max:100',
                 'contacts.permanent_address_id' => 'sometimes|nullable|integer',
                 'contacts.current_address_id' => 'sometimes|nullable|integer',
+            ], [
+                // Custom validation messages
+                'email.required' => 'Email address is required.',
+                'email.email' => 'Please enter a valid email address.',
+                'email.unique' => 'This email address is already in use.',
+
+                // Profile validation messages
+                'profile.first_name.required' => 'First name is required.',
+                'profile.first_name.string' => 'First name must be text.',
+                'profile.first_name.max' => 'First name cannot exceed 255 characters.',
+                'profile.last_name.required' => 'Last name is required.',
+                'profile.last_name.string' => 'Last name must be text.',
+                'profile.last_name.max' => 'Last name cannot exceed 255 characters.',
+                'profile.middle_name.string' => 'Middle name must be text.',
+                'profile.middle_name.max' => 'Middle name cannot exceed 255 characters.',
+                'profile.suffix.string' => 'Suffix must be text.',
+                'profile.suffix.max' => 'Suffix cannot exceed 50 characters.',
+                'profile.birth_date.date' => 'Please enter a valid birth date.',
+                'profile.birth_place.string' => 'Birth place must be text.',
+                'profile.birth_place.max' => 'Birth place cannot exceed 255 characters.',
+                'profile.gender.in' => 'Please select a valid gender option.',
+                'profile.civil_status.string' => 'Civil status must be text.',
+                'profile.civil_status.max' => 'Civil status cannot exceed 100 characters.',
+                'profile.nationality.string' => 'Nationality must be text.',
+                'profile.nationality.max' => 'Nationality cannot exceed 100 characters.',
+                'profile.religion.string' => 'Religion must be text.',
+                'profile.religion.max' => 'Religion cannot exceed 100 characters.',
+
+                // Physical traits validation messages
+                'physicalTraits.height.numeric' => 'Height must be a number.',
+                'physicalTraits.height.min' => 'Height cannot be negative.',
+                'physicalTraits.height.max' => 'Height cannot exceed 300 cm.',
+                'physicalTraits.weight.numeric' => 'Weight must be a number.',
+                'physicalTraits.weight.min' => 'Weight cannot be negative.',
+                'physicalTraits.weight.max' => 'Weight cannot exceed 500 kg.',
+                'physicalTraits.blood_type.string' => 'Blood type must be text.',
+                'physicalTraits.blood_type.max' => 'Blood type cannot exceed 50 characters.',
+                'physicalTraits.eye_color.string' => 'Eye color must be text.',
+                'physicalTraits.eye_color.max' => 'Eye color cannot exceed 50 characters.',
+                'physicalTraits.hair_color.string' => 'Hair color must be text.',
+                'physicalTraits.hair_color.max' => 'Hair color cannot exceed 50 characters.',
+
+                // Contact validation messages
+                'contacts.email_personal.email' => 'Please enter a valid personal email address.',
+                'contacts.email_personal.max' => 'Personal email cannot exceed 255 characters.',
+                'contacts.mobile_number.string' => 'Mobile number must be text.',
+                'contacts.mobile_number.max' => 'Mobile number cannot exceed 20 characters.',
+                'contacts.alternate_phone.string' => 'Alternate phone must be text.',
+                'contacts.alternate_phone.max' => 'Alternate phone cannot exceed 20 characters.',
+                'contacts.emergency_contact_name.string' => 'Emergency contact name must be text.',
+                'contacts.emergency_contact_name.max' => 'Emergency contact name cannot exceed 255 characters.',
+                'contacts.emergency_contact_phone.string' => 'Emergency contact phone must be text.',
+                'contacts.emergency_contact_phone.max' => 'Emergency contact phone cannot exceed 20 characters.',
+                'contacts.emergency_contact_relationship.string' => 'Emergency contact relationship must be text.',
+                'contacts.emergency_contact_relationship.max' => 'Emergency contact relationship cannot exceed 100 characters.',
+                'contacts.permanent_address_id.integer' => 'Permanent address ID must be a number.',
+                'contacts.current_address_id.integer' => 'Current address ID must be a number.',
             ]);
 
             DB::beginTransaction();
