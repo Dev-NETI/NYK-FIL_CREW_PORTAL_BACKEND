@@ -54,7 +54,38 @@ class AdminRoleSeeder extends Seeder
 
         $createdCount = 0;
 
+        // Special handling: Assign ALL roles to NOC admin (noc@neti.com.ph)
+        $nocAdmin = User::where('email', 'noc@neti.com.ph')->first();
+        if ($nocAdmin) {
+            $nocAssignedCount = 0;
+            foreach ($roles as $role) {
+                $existing = AdminRole::where('user_id', $nocAdmin->id)
+                    ->where('role_id', $role->id)
+                    ->first();
+
+                if (!$existing) {
+                    AdminRole::create([
+                        'user_id' => $nocAdmin->id,
+                        'role_id' => $role->id,
+                        'modified_by' => $nocAdmin->id,
+                    ]);
+                    $nocAssignedCount++;
+                    $this->command->info("✅ Assigned role '{$role->name}' to NOC admin (noc@neti.com.ph)");
+                }
+            }
+
+            if ($nocAssignedCount > 0) {
+                $this->command->info("✅ Total roles assigned to NOC admin: {$nocAssignedCount}");
+            } else {
+                $this->command->info("ℹ️  NOC admin already has all roles assigned");
+            }
+        }
+
         foreach ($adminUsers as $index => $user) {
+            // Skip NOC admin as it already has all roles
+            if ($user->email === 'noc@neti.com.ph') {
+                continue;
+            }
             // Select pattern based on user index
             $patternIndex = $index % count($assignmentPatterns);
             $pattern = $assignmentPatterns[$patternIndex];
