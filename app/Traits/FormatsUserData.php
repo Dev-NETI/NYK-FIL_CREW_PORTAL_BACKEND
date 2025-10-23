@@ -17,6 +17,19 @@ trait FormatsUserData
             'is_crew' => $user->is_crew,
             'role' => $user->is_crew ? 'crew' : 'admin',
 
+            // Admin roles (only for non-crew users)
+            'admin_roles' => !$user->is_crew ? $user->adminRoles()
+                ->with('role')
+                ->get()
+                ->map(function ($adminRole) {
+                    return [
+                        'id' => $adminRole->id,
+                        'role_id' => $adminRole->role_id,
+                        'role_name' => $adminRole->role?->name,
+                    ];
+                })
+                ->toArray() : null,
+
             // Profile information
             'profile' => $user->profile ? [
                 'crew_id' => $user->profile->crew_id,
