@@ -20,7 +20,6 @@ return new class extends Migration
             'ranks',
             'rank_categories',
             'rank_groups',
-            'schools',
             'vessels',
             'vessel_types',
         ];
@@ -55,7 +54,6 @@ return new class extends Migration
             'ranks',
             'rank_categories',
             'rank_groups',
-            'schools',
             'vessels',
             'vessel_types',
         ];

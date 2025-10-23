@@ -27,10 +27,11 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TravelDocumentApprovalController;
 use App\Http\Controllers\Api\TravelDocumentController;
 use App\Http\Controllers\Api\TravelDocumentTypeController;
-use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Authentication routes (public)
@@ -130,7 +131,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
         ]);
     });
     Route::apiResource('vessel-types', VesselTypeController::class);
-    Route::apiResource('universities', UniversityController::class);
     Route::apiResource('rank-categories', RankCategoryController::class);
     Route::apiResource('rank-groups', RankGroupController::class);
     Route::apiResource('ranks', RankController::class);
@@ -153,6 +153,16 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'update']);
     Route::delete('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'destroy']);
 
+    // User education management (admin can manage any user's education)
+    Route::get('crew/{userId}/education', [UserEducationController::class, 'index']);
+    Route::post('crew/{userId}/education', [UserEducationController::class, 'store']);
+    Route::get('crew/{userId}/education/{educationId}', [UserEducationController::class, 'show']);
+    Route::put('crew/{userId}/education/{educationId}', [UserEducationController::class, 'update']);
+    Route::delete('crew/{userId}/education/{educationId}', [UserEducationController::class, 'destroy']);
+
+    // Education information management (admin can manage education by level)
+    Route::post('crew/{id}/education-info', [UserController::class, 'storeEducationInformation']);
+    Route::put('crew/{id}/education-info', [UserController::class, 'updateEducationInformation']);
 
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
 });

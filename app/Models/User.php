@@ -148,14 +148,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the graduated university.
-     */
-    public function graduatedUniversity(): BelongsTo
-    {
-        return $this->education?->graduatedUniversity() ?? $this->belongsTo(University::class, 'graduated_school_id');
-    }
-
-    /**
      * Alias for graduatedUniversity() for backward compatibility.
      */
     public function graduatedSchool(): BelongsTo
