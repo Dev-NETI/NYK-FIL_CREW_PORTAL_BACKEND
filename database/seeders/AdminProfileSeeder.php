@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\AdminProfile;
+use App\Models\AdminRole;
 use App\Models\Department;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -155,6 +157,14 @@ class AdminProfileSeeder extends Seeder
                 'lastname' => 'Lopez',
                 'department_name' => 'NTMA',
             ],
+            [
+                'email' => 'noc@neti.com.ph',
+                'firstname' => 'Network Operations',
+                'middlename' => 'Center',
+                'lastname' => 'Administrator',
+                'department_name' => 'A',
+                'assign_all_roles' => true, // Special flag for NOC admin
+            ],
         ];
 
         foreach ($adminData as $data) {
@@ -201,6 +211,34 @@ class AdminProfileSeeder extends Seeder
                 $this->command->info("Created admin profile for: {$data['email']}");
             } else {
                 $this->command->warn("Admin profile already exists for: {$data['email']}");
+            }
+
+            // Assign all roles if specified (for NOC admin)
+            if (isset($data['assign_all_roles']) && $data['assign_all_roles']) {
+                $allRoles = Role::all();
+                $assignedCount = 0;
+
+                foreach ($allRoles as $role) {
+                    // Check if role is already assigned
+                    $existingRole = AdminRole::where('user_id', $user->id)
+                        ->where('role_id', $role->id)
+                        ->first();
+
+                    if (!$existingRole) {
+                        AdminRole::create([
+                            'user_id' => $user->id,
+                            'role_id' => $role->id,
+                            'modified_by' => $user->id,
+                        ]);
+                        $assignedCount++;
+                    }
+                }
+
+                if ($assignedCount > 0) {
+                    $this->command->info("Assigned {$assignedCount} roles to: {$data['email']}");
+                } else {
+                    $this->command->warn("All roles already assigned to: {$data['email']}");
+                }
             }
         }
 
