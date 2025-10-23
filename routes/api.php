@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CertificateDocumentController;
-use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
@@ -18,26 +17,20 @@ use App\Http\Controllers\Api\EmploymentDocumentTypeController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\GeographyController;
 use App\Http\Controllers\Api\InquiryController;
-use App\Http\Controllers\Api\IslandController;
 use App\Http\Controllers\Api\NationalityController;
 use App\Http\Controllers\Api\ProgramController;
-use App\Http\Controllers\Api\ProvinceController;
 use App\Http\Controllers\Api\UserProgramEmploymentController;
 use App\Http\Controllers\Api\RankCategoryController;
 use App\Http\Controllers\Api\RankController;
 use App\Http\Controllers\Api\RankGroupController;
-use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TravelDocumentApprovalController;
 use App\Http\Controllers\Api\TravelDocumentController;
 use App\Http\Controllers\Api\TravelDocumentTypeController;
-use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
-use App\Http\Controllers\JobDescriptionRequestController;
-use App\Models\Inquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -124,23 +117,6 @@ Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
     // Crew can view their own data
     Route::apiResource('contracts', ContractController::class)->only(['index', 'show']);
     Route::apiResource('crew-allotees', CrewAlloteeController::class)->only(['index', 'show']);
-    
-    // Crew education management (crew can only access their own education)
-    Route::get('/education', function(Request $request) {
-        return app(UserEducationController::class)->index(auth()->id());
-    });
-    Route::post('/education', function(Request $request) {
-        return app(UserEducationController::class)->store($request, auth()->id());
-    });
-    Route::get('/education/{educationId}', function(Request $request, $educationId) {
-        return app(UserEducationController::class)->show(auth()->id(), $educationId);
-    });
-    Route::put('/education/{educationId}', function(Request $request, $educationId) {
-        return app(UserEducationController::class)->update($request, auth()->id(), $educationId);
-    });
-    Route::delete('/education/{educationId}', function(Request $request, $educationId) {
-        return app(UserEducationController::class)->destroy(auth()->id(), $educationId);
-    });
 });
 
 // VERY NICE
@@ -155,7 +131,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
         ]);
     });
     Route::apiResource('vessel-types', VesselTypeController::class);
-    Route::apiResource('universities', UniversityController::class);
     Route::apiResource('rank-categories', RankCategoryController::class);
     Route::apiResource('rank-groups', RankGroupController::class);
     Route::apiResource('ranks', RankController::class);
@@ -184,6 +159,10 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('crew/{userId}/education/{educationId}', [UserEducationController::class, 'show']);
     Route::put('crew/{userId}/education/{educationId}', [UserEducationController::class, 'update']);
     Route::delete('crew/{userId}/education/{educationId}', [UserEducationController::class, 'destroy']);
+
+    // Education information management (admin can manage education by level)
+    Route::post('crew/{id}/education-info', [UserController::class, 'storeEducationInformation']);
+    Route::put('crew/{id}/education-info', [UserController::class, 'updateEducationInformation']);
 
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
 });

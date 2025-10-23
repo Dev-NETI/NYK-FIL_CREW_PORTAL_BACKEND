@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\FormatsUserData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
@@ -488,12 +489,6 @@ class UserController extends Controller
                 'contacts.emergency_contact_relationship' => 'sometimes|nullable|string|max:100',
                 'contacts.permanent_address_id' => 'sometimes|nullable|integer',
                 'contacts.current_address_id' => 'sometimes|nullable|integer',
-
-                // Education
-                'education.highest_education' => 'sometimes|nullable|string|max:255',
-                'education.school_name' => 'sometimes|nullable|string|max:255',
-                'education.course' => 'sometimes|nullable|string|max:255',
-                'education.graduation_year' => 'sometimes|nullable|integer|min:1900|max:' . (date('Y') + 10),
             ]);
 
             DB::beginTransaction();
@@ -537,15 +532,6 @@ class UserController extends Controller
                     }
                 }
 
-                // Update education information
-                if (isset($validatedData['education'])) {
-                    if ($crew->education) {
-                        $crew->education->update($validatedData['education']);
-                    } else {
-                        $crew->education()->create($validatedData['education']);
-                    }
-                }
-
                 DB::commit();
 
                 // Reload the crew with fresh data
@@ -586,6 +572,271 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while updating the crew profile'
+            ], 500);
+        }
+    }
+
+    public function storeEducationInformation(Request $request, $id)
+    {
+        try {
+            $currentUser = Auth::user();
+
+            // Find the crew member
+            $crew = User::where('id', $id)
+                ->where('is_crew', 1)
+                ->with(['educations'])
+                ->first();
+
+            if (!$crew) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Crew member not found'
+                ], 404);
+            }
+
+            // Validate education data for high school, college, and higher education
+            $validatedData = $request->validate([
+                'high_school.school_name' => 'sometimes|required|string|max:255',
+                'high_school.date_graduated' => 'sometimes|nullable|date',
+                'high_school.degree' => 'sometimes|nullable|string|max:255',
+
+                'college.school_name' => 'sometimes|required|string|max:255',
+                'college.date_graduated' => 'sometimes|nullable|date',
+                'college.degree' => 'sometimes|nullable|string|max:255',
+
+                'higher_education.school_name' => 'sometimes|required|string|max:255',
+                'higher_education.date_graduated' => 'sometimes|nullable|date',
+                'higher_education.degree' => 'sometimes|nullable|string|max:255',
+            ]);
+
+            DB::beginTransaction();
+
+            try {
+                $educationRecords = [];
+
+                // Create high school education record
+                if (isset($validatedData['high_school'])) {
+                    $highSchool = $crew->educations()->create([
+                        'school_name' => $validatedData['high_school']['school_name'],
+                        'date_graduated' => $validatedData['high_school']['date_graduated'] ?? null,
+                        'degree' => $validatedData['high_school']['degree'] ?? null,
+                        'education_level' => 'high_school',
+                        'modified_by' => $currentUser->id ?? 'System',
+                    ]);
+                    $educationRecords['high_school'] = $highSchool;
+                }
+
+                // Create college education record
+                if (isset($validatedData['college'])) {
+                    $college = $crew->educations()->create([
+                        'school_name' => $validatedData['college']['school_name'],
+                        'date_graduated' => $validatedData['college']['date_graduated'] ?? null,
+                        'degree' => $validatedData['college']['degree'] ?? null,
+                        'education_level' => 'college',
+                        'modified_by' => $currentUser->id ?? 'System',
+                    ]);
+                    $educationRecords['college'] = $college;
+                }
+
+                // Create higher education record
+                if (isset($validatedData['higher_education'])) {
+                    $higherEducation = $crew->educations()->create([
+                        'school_name' => $validatedData['higher_education']['school_name'],
+                        'date_graduated' => $validatedData['higher_education']['date_graduated'] ?? null,
+                        'degree' => $validatedData['higher_education']['degree'] ?? null,
+                        'education_level' => 'higher_educational',
+                        'modified_by' => $currentUser->id ?? 'System',
+                    ]);
+                    $educationRecords['higher_education'] = $higherEducation;
+                }
+
+                DB::commit();
+
+                Log::info('Education information created', [
+                    'admin_id' => $currentUser->id,
+                    'crew_id' => $id,
+                    'education_levels' => array_keys($educationRecords),
+                    'ip' => $request->ip()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $educationRecords,
+                    'message' => 'Education information created successfully'
+                ], 201);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error creating education information', [
+                'crew_id' => $id,
+                'admin_id' => $currentUser->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while creating education information'
+            ], 500);
+        }
+    }
+
+    public function updateEducationInformation(Request $request, $id)
+    {
+        try {
+            $currentUser = Auth::user();
+
+            // Find the crew member
+            $crew = User::where('id', $id)
+                ->where('is_crew', 1)
+                ->with(['educations'])
+                ->first();
+
+            if (!$crew) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Crew member not found'
+                ], 404);
+            }
+
+            // Validate education data for high school, college, and higher education
+            $validatedData = $request->validate([
+                'high_school.school_name' => 'sometimes|required|string|max:255',
+                'high_school.date_graduated' => 'sometimes|nullable|date',
+                'high_school.degree' => 'sometimes|nullable|string|max:255',
+
+                'college.school_name' => 'sometimes|required|string|max:255',
+                'college.date_graduated' => 'sometimes|nullable|date',
+                'college.degree' => 'sometimes|nullable|string|max:255',
+
+                'higher_education.school_name' => 'sometimes|required|string|max:255',
+                'higher_education.date_graduated' => 'sometimes|nullable|date',
+                'higher_education.degree' => 'sometimes|nullable|string|max:255',
+            ]);
+
+            DB::beginTransaction();
+
+            try {
+                $updatedRecords = [];
+
+                // Handle high school education update (creates new record if doesn't exist)
+                if (isset($validatedData['high_school'])) {
+                    $existingHighSchool = $crew->educations()->where('education_level', 'high_school')->first();
+
+                    if ($existingHighSchool) {
+                        $existingHighSchool->update([
+                            'school_name' => $validatedData['high_school']['school_name'],
+                            'date_graduated' => $validatedData['high_school']['date_graduated'] ?? null,
+                            'degree' => $validatedData['high_school']['degree'] ?? null,
+                            'modified_by' => 2,
+                        ]);
+                        $updatedRecords['high_school'] = $existingHighSchool->fresh();
+                    } else {
+                        // Create new record if doesn't exist
+                        $highSchool = $crew->educations()->create([
+                            'school_name' => $validatedData['high_school']['school_name'],
+                            'date_graduated' => $validatedData['high_school']['date_graduated'] ?? null,
+                            'degree' => $validatedData['high_school']['degree'] ?? null,
+                            'education_level' => 'high_school',
+                            'modified_by' => 2,
+                        ]);
+                        $updatedRecords['high_school'] = $highSchool;
+                    }
+                }
+
+                // Handle college education update (creates new record if doesn't exist)
+                if (isset($validatedData['college'])) {
+                    $existingCollege = $crew->educations()->where('education_level', 'college')->first();
+
+                    if ($existingCollege) {
+                        $existingCollege->update([
+                            'school_name' => $validatedData['college']['school_name'],
+                            'date_graduated' => $validatedData['college']['date_graduated'] ?? null,
+                            'degree' => $validatedData['college']['degree'] ?? null,
+                            'modified_by' => 2,
+                        ]);
+                        $updatedRecords['college'] = $existingCollege->fresh();
+                    } else {
+                        // Create new record if doesn't exist
+                        $college = $crew->educations()->create([
+                            'school_name' => $validatedData['college']['school_name'],
+                            'date_graduated' => $validatedData['college']['date_graduated'] ?? null,
+                            'degree' => $validatedData['college']['degree'] ?? null,
+                            'education_level' => 'college',
+                            'modified_by' => 2,
+                        ]);
+                        $updatedRecords['college'] = $college;
+                    }
+                }
+
+                // Handle higher education update (creates new record if doesn't exist)
+                if (isset($validatedData['higher_education'])) {
+                    $existingHigherEducation = $crew->educations()->where('education_level', 'higher_educational')->first();
+
+                    if ($existingHigherEducation) {
+                        $existingHigherEducation->update([
+                            'school_name' => $validatedData['higher_education']['school_name'],
+                            'date_graduated' => $validatedData['higher_education']['date_graduated'] ?? null,
+                            'degree' => $validatedData['higher_education']['degree'] ?? null,
+                            'modified_by' => 2,
+                        ]);
+                        $updatedRecords['higher_education'] = $existingHigherEducation->fresh();
+                    } else {
+                        // Create new record if doesn't exist
+                        $higherEducation = $crew->educations()->create([
+                            'school_name' => $validatedData['higher_education']['school_name'],
+                            'date_graduated' => $validatedData['higher_education']['date_graduated'] ?? null,
+                            'degree' => $validatedData['higher_education']['degree'] ?? null,
+                            'education_level' => 'higher_educational',
+                            'modified_by' => 2,
+                        ]);
+                        $updatedRecords['higher_education'] = $higherEducation;
+                    }
+                }
+
+                DB::commit();
+
+                Log::info('Education information updated', [
+                    'admin_id' => $currentUser->id,
+                    'crew_id' => $id,
+                    'education_levels' => array_keys($updatedRecords),
+                    'ip' => $request->ip()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $updatedRecords,
+                    'message' => 'Education information updated successfully'
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error updating education information', [
+                'crew_id' => $id,
+                'admin_id' => $currentUser->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating education information'
             ], 500);
         }
     }

@@ -20,13 +20,13 @@ class UserEducation extends Model
         'date_graduated',
         'degree',
         'education_level',
+        'modified_by'
     ];
 
     protected function casts(): array
     {
         return [
             'date_graduated' => 'date',
-            'gpa' => 'decimal:2',
             'deleted_at' => 'datetime',
         ];
     }
@@ -34,10 +34,5 @@ class UserEducation extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function graduatedUniversity(): BelongsTo
-    {
-        return $this->graduatedSchool();
     }
 }
