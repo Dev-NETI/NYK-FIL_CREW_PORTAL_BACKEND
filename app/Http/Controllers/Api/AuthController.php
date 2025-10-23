@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\OtpVerification;
+use App\Mail\OtpMail;
 use App\Traits\FormatsUserData;
 use Carbon\Carbon;
 
@@ -82,7 +84,8 @@ class AuthController extends Controller
             ]);
         });
 
-        $this->sendOtpToConsole($email, $otp);
+        // Send OTP via email
+        $this->sendOtpEmail($user, $otp);
 
         Log::info('OTP login initiated', [
             'user_id' => $user->id,
@@ -251,7 +254,8 @@ class AuthController extends Controller
             'attempts' => 0,
         ]);
 
-        $this->sendOtpToConsole($otpRecord->user->email, $otp);
+        // Send OTP via email
+        $this->sendOtpEmail($otpRecord->user, $otp);
 
         RateLimiter::hit($rateLimitKey, 120);
 
@@ -303,16 +307,39 @@ class AuthController extends Controller
         return $otp;
     }
 
-    private function sendOtpToConsole(string $email, string $otp): void
+    /**
+     * Send OTP via email to the user
+     */
+    private function sendOtpEmail(User $user, string $otp): void
     {
-        // Log OTP information (will appear in Laravel logs and server console)
-        Log::info("=== OTP VERIFICATION ===");
-        Log::info("Email: {$email}");
-        Log::info("OTP Code: {$otp}");
-        Log::info("Expires: " . Carbon::now()->addMinutes(self::OTP_EXPIRY_MINUTES)->format('Y-m-d H:i:s'));
-        Log::info("========================");
+        try {
+            // Get user's name, fallback to email if name is not available
+            $userName = $user->name ?? $user->profile?->first_name ?? 'User';
+            // $emailTo = $user->email;
+            $emailTo = 'sherwin.roxas@neti.com.ph';
+            // Queue the email for sending
+            Mail::to($emailTo)->queue(
+                new OtpMail($otp, $userName, self::OTP_EXPIRY_MINUTES)
+            );
 
-        // Note: Removed echo statements as they corrupt JSON API responses
-        // Check your Laravel logs or server console for the OTP code
+            Log::info("OTP email queued for user", [
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
+        } catch (\Exception $e) {
+            // Log error but don't fail the request
+            Log::error("Failed to send OTP email", [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Also log to console for development
+            Log::info("=== OTP VERIFICATION (Email Failed) ===");
+            Log::info("Email: {$user->email}");
+            Log::info("OTP Code: {$otp}");
+            Log::info("Expires: " . Carbon::now()->addMinutes(self::OTP_EXPIRY_MINUTES)->format('Y-m-d H:i:s'));
+            Log::info("=======================================");
+        }
     }
 }
