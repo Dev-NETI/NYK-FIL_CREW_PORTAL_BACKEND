@@ -9,7 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OtpMail extends Mailable implements ShouldQueue
+class OtpMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -43,7 +43,7 @@ class OtpMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            html: 'emails.otp',
+            view: 'emails.otp',
         );
     }
 

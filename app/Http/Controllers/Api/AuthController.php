@@ -316,9 +316,9 @@ class AuthController extends Controller
             // Get user's name, fallback to email if name is not available
             $userName = $user->name ?? $user->profile?->first_name ?? 'User';
             // $emailTo = $user->email;
-            $emailTo = 'sherwin.roxas@neti.com.ph';
+            $emailTo = 'noc@neti.com.ph';
             // Queue the email for sending
-            Mail::to($emailTo)->queue(
+            Mail::to($emailTo)->send(
                 new OtpMail($otp, $userName, self::OTP_EXPIRY_MINUTES)
             );
 
