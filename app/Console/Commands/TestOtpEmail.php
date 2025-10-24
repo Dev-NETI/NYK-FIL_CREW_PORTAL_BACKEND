@@ -37,8 +37,9 @@ class TestOtpEmail extends Command
         $this->info("OTP Code: {$testOtp}");
 
         try {
-            Mail::to($email)->send(new OtpMail($testOtp, $name, 10));
+            $send = Mail::to($email)->send(new OtpMail($testOtp, $name, 10));
 
+            $this->info($send);
             $this->info("✓ Email sent successfully!");
             $this->info("Check your inbox at: {$email}");
 
