@@ -37,6 +37,6 @@ class Inquiry extends Model
 
     public function messages(): HasMany
     {
-        return $this->hasMany(InquiryMessage::class, 'inquiry_id');
+        return $this->hasMany(InquiryMessage::class, 'inquiry_id')->orderBy('created_at', 'DESC');
     }
 }

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\api\AdminInquiryController;
+use App\Http\Controllers\api\AdminMessageContoller;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
@@ -18,6 +20,7 @@ use App\Http\Controllers\Api\EmploymentDocumentTypeController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\GeographyController;
 use App\Http\Controllers\Api\InquiryController;
+use App\Http\Controllers\api\InquiryMessageController;
 use App\Http\Controllers\Api\IslandController;
 use App\Http\Controllers\Api\NationalityController;
 use App\Http\Controllers\Api\ProgramController;
@@ -37,6 +40,7 @@ use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
 use App\Http\Controllers\JobDescriptionRequestController;
 use App\Models\Inquiry;
+use App\Models\InquiryMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -72,14 +76,23 @@ Route::prefix('geography')->group(function () {
     Route::get('barangay/{brgyCode}', [GeographyController::class, 'getBarangayByCode']);
 });
 
+//For Inquiry
+//CREW
+Route::get('department/{id}', [DepartmentTypesController::class, 'viewDepartments']);
+Route::apiResource('inquiry', InquiryController::class)->only(['show', 'store']);
+Route::apiResource('crew-inquiry-messages', InquiryMessageController::class)->only(['show', 'store']);
+Route::apiResource('departmentTypes', DepartmentTypesController::class)->only(['index']);
+
+//ADMIN
+Route::apiResource('admin-inquiry-messages', AdminInquiryController::class)->only(['show', 'store', 'update']);
+Route::apiResource('admin-messages', AdminMessageContoller::class)->only(['show', 'store', 'update']);
+Route::patch('admin-messages/{id}/mark-read', [AdminMessageContoller::class, 'markRead']);
+
+
 Route::apiResource('admin-roles', AdminRoleController::class)->only(['index', 'store', 'destroy']);
 Route::get('admin-roles/user/{userId}', [AdminRoleController::class, 'getByUserId']);
 Route::apiResource('roles', RoleController::class)->only(['index']);
 
-//For Inquiry
-Route::apiResource('departmentTypes', DepartmentTypesController::class)->only(['index']);
-Route::get('department/{id}', [DepartmentTypesController::class, 'viewDepartments']);
-Route::apiResource('inquiry', InquiryController::class)->only(['show', 'store']);
 // Employment document approvals
 Route::get('employment-document-updates', [EmploymentDocumentApprovalController::class, 'index']);
 Route::get('employment-document-updates/all', [EmploymentDocumentApprovalController::class, 'all']);
