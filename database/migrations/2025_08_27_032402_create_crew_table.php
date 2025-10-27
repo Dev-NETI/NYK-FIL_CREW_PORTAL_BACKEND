@@ -29,11 +29,6 @@ return new class extends Migration
             // Address relationship
             $table->foreignId('permanent_address_id')->nullable()->constrained('addresses')->onDelete('set null');
 
-            // Education
-            $table->foreignId('graduated_school_id')->nullable()->constrained('schools')->onDelete('set null');
-            $table->date('date_graduated')->nullable();
-            $table->string('course_degree')->nullable();
-
             // Employment Status
             $table->enum('crew_status', ['active', 'on_leave', 'resigned', 'terminated', 'retired'])->default('active');
             $table->enum('hire_status', ['hired', 'candidate', 'interview', 'rejected', 'on_hold'])->default('candidate');

@@ -75,8 +75,6 @@ class AddressController extends Controller
                 'zip_code' => $validated['zip_code'],
             ]);
 
-            $address->load(['region', 'province', 'city']);
-
             return response()->json([
                 'success' => true,
                 'data' => $address,
@@ -96,8 +94,8 @@ class AddressController extends Controller
      */
     public function show(Address $address): JsonResponse
     {
-        // Ensure user can only view their own addresses
-        if ($address->user_id !== Auth::id()) {
+        // Ensure user can only view their own addresses unless they're admin
+        if ($address->user_id !== Auth::id() && Auth::user()->is_crew) {
             return response()->json([
                 'success' => false,
                 'message' => 'Address not found'
@@ -117,8 +115,8 @@ class AddressController extends Controller
      */
     public function update(Request $request, Address $address): JsonResponse
     {
-        // Ensure user can only update their own addresses
-        if ($address->user_id !== Auth::id()) {
+        // Ensure user can only update their own addresses unless they're admin
+        if ($address->user_id !== Auth::id() && Auth::user()->is_crew) {
             return response()->json([
                 'success' => false,
                 'message' => 'Address not found'
@@ -183,8 +181,8 @@ class AddressController extends Controller
      */
     public function destroy(Address $address): JsonResponse
     {
-        // Ensure user can only delete their own addresses
-        if ($address->user_id !== Auth::id()) {
+        // Ensure user can only delete their own addresses unless they're admin
+        if ($address->user_id !== Auth::id() && Auth::user()->is_crew) {
             return response()->json([
                 'success' => false,
                 'message' => 'Address not found'

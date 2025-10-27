@@ -25,7 +25,6 @@ class DatabaseSeeder extends Seeder
             // Basic entity data (no dependencies) 
             VesselTypeSeeder::class,
 
-            UniversitySeeder::class,
             ProgramSeeder::class,
 
 

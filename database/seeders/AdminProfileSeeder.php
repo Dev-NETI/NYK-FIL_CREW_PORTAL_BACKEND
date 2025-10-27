@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\AdminProfile;
+use App\Models\AdminRole;
 use App\Models\Department;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -16,91 +18,91 @@ class AdminProfileSeeder extends Seeder
     {
         $adminData = [
             [
-                'email' => 'admin@nykfil.com',
+                'email' => 'fleet@nykfil.com',
                 'firstname' => 'John',
                 'middlename' => 'Doe',
                 'lastname' => 'Smith',
                 'department_name' => 'A',
             ],
             [
-                'email' => 'manager@nykfil.com',
+                'email' => 'technical.dry@nykfil.com',
                 'firstname' => 'Jane',
                 'middlename' => 'Marie',
                 'lastname' => 'Johnson',
                 'department_name' => 'Dry',
             ],
             [
-                'email' => 'supervisor@nykfil.com',
+                'email' => 'recruitment@nykfil.com',
                 'firstname' => 'Robert',
                 'middlename' => 'Lee',
                 'lastname' => 'Williams',
                 'department_name' => 'Payroll',
             ],
             [
-                'email' => 'coordinator.a@nykfil.com',
+                'email' => 'assessment@nykfil.com',
                 'firstname' => 'Michael',
                 'middlename' => 'James',
                 'lastname' => 'Brown',
                 'department_name' => 'B1',
             ],
             [
-                'email' => 'coordinator.b@nykfil.com',
+                'email' => 'crewdevelopment@nykfil.com',
                 'firstname' => 'Sarah',
                 'middlename' => 'Ann',
                 'lastname' => 'Davis',
                 'department_name' => 'B2',
             ],
             [
-                'email' => 'coordinator.c@nykfil.com',
+                'email' => 'crewcertification@nykfil.com',
                 'firstname' => 'David',
                 'middlename' => 'Paul',
                 'lastname' => 'Miller',
                 'department_name' => 'C1',
             ],
             [
-                'email' => 'coordinator.d@nykfil.com',
+                'email' => 'crewalliedservices@nykfil.com',
                 'firstname' => 'Emily',
                 'middlename' => 'Rose',
                 'lastname' => 'Wilson',
                 'department_name' => 'C2',
             ],
             [
-                'email' => 'technical.dry@nykfil.com',
+                'email' => 'finance.payroll@nykfil.com',
                 'firstname' => 'Thomas',
                 'middlename' => 'Edward',
                 'lastname' => 'Moore',
                 'department_name' => 'Dry',
             ],
             [
-                'email' => 'technical.liquid@nykfil.com',
+                'email' => 'finance.SLAF@nykfil.com',
                 'firstname' => 'Jennifer',
                 'middlename' => 'Lynn',
                 'lastname' => 'Taylor',
                 'department_name' => 'Liquid',
             ],
             [
-                'email' => 'crew.development@nykfil.com',
+                'email' => 'finance.disbursement@nykfil.com',
                 'firstname' => 'Christopher',
                 'middlename' => 'Allen',
                 'lastname' => 'Anderson',
                 'department_name' => 'Shore-Based Work',
             ],
             [
-                'email' => 'crew.promotion@nykfil.com',
+                'email' => 'finance.sga@nykfil.com',
                 'firstname' => 'Amanda',
                 'middlename' => 'Grace',
                 'lastname' => 'Thomas',
                 'department_name' => 'Promotion',
             ],
             [
-                'email' => 'visa.officer@nykfil.com',
+                'email' => 'op.qad@nykfil.com',
                 'firstname' => 'Matthew',
                 'middlename' => 'Scott',
                 'lastname' => 'Jackson',
                 'department_name' => 'VISA',
             ],
             [
-                'email' => 'jiss.coordinator@nykfil.com',
+                'email' => 'op.claims@nykfil.com',
                 'firstname' => 'Jessica',
                 'middlename' => 'Marie',
                 'lastname' => 'White',
@@ -155,6 +157,14 @@ class AdminProfileSeeder extends Seeder
                 'lastname' => 'Lopez',
                 'department_name' => 'NTMA',
             ],
+            [
+                'email' => 'noc@neti.com.ph',
+                'firstname' => 'Network Operations',
+                'middlename' => 'Center',
+                'lastname' => 'Administrator',
+                'department_name' => 'A',
+                'assign_all_roles' => true, // Special flag for NOC admin
+            ],
         ];
 
         foreach ($adminData as $data) {
@@ -201,6 +211,34 @@ class AdminProfileSeeder extends Seeder
                 $this->command->info("Created admin profile for: {$data['email']}");
             } else {
                 $this->command->warn("Admin profile already exists for: {$data['email']}");
+            }
+
+            // Assign all roles if specified (for NOC admin)
+            if (isset($data['assign_all_roles']) && $data['assign_all_roles']) {
+                $allRoles = Role::all();
+                $assignedCount = 0;
+
+                foreach ($allRoles as $role) {
+                    // Check if role is already assigned
+                    $existingRole = AdminRole::where('user_id', $user->id)
+                        ->where('role_id', $role->id)
+                        ->first();
+
+                    if (!$existingRole) {
+                        AdminRole::create([
+                            'user_id' => $user->id,
+                            'role_id' => $role->id,
+                            'modified_by' => $user->id,
+                        ]);
+                        $assignedCount++;
+                    }
+                }
+
+                if ($assignedCount > 0) {
+                    $this->command->info("Assigned {$assignedCount} roles to: {$data['email']}");
+                } else {
+                    $this->command->warn("All roles already assigned to: {$data['email']}");
+                }
             }
         }
 

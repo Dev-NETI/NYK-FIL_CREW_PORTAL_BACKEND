@@ -74,20 +74,4 @@ class Address extends Model
     {
         return $this->hasMany(Allotee::class);
     }
-
-    /**
-     * Get the complete address string.
-     */
-    public function getFullAddressAttribute(): string
-    {
-        $parts = [
-            $this->street_address,
-            $this->city->name ?? '',
-            $this->province->name ?? '',
-            $this->region->name ?? '',
-            $this->island->name ?? '',
-        ];
-
-        return implode(', ', array_filter($parts));
-    }
 }

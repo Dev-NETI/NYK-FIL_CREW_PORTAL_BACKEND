@@ -14,35 +14,19 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $roles = [
-            // Master Data Management
-            ['name' => 'Vessel Management'],
-            ['name' => 'Fleet Management'],
-            ['name' => 'Rank Management'],
-            ['name' => 'Location Management'], // Islands, Regions, Provinces, Cities
-            ['name' => 'Nationality Management'],
-            ['name' => 'University Management'],
-            ['name' => 'Department Management'],
-            ['name' => 'Program Management'],
-
-            // Crew Management
-            ['name' => 'Crew Management'], // Full CRUD on crew users
-            ['name' => 'Contract Management'],
-            ['name' => 'Allotee Management'],
-            ['name' => 'Address Management'],
-            ['name' => 'Employment Records Management'],
-
-            // Document Management
-            ['name' => 'Employment Document Management'],
-            ['name' => 'Travel Document Management'],
-            ['name' => 'Certificate Document Management'],
-            ['name' => 'Document Type Management'],
-
-            // Admin Users
-            ['name' => 'Admin User Management'],
-
-            // System Roles
-            ['name' => 'Super Admin'], // Full system access
-            ['name' => 'Viewer'], // Read-only access
+            ['name' => 'Dashboard'],
+            ['name' => 'Crew Management'],
+            ['name' => 'Manage Crew Basic Info'],
+            ['name' => 'Manage Crew Physical Info'],
+            ['name' => 'Manage Crew Contact Info'],
+            ['name' => 'Manage Crew Employment Info'],
+            ['name' => 'Manage Crew Education'],
+            ['name' => 'Document Approval'],
+            ['name' => 'Employment Document Approval'],
+            ['name' => 'Travel Document Approval'],
+            ['name' => 'Inquiries'],
+            ['name' => 'Reports'],
+            ['name' => 'User Management'],
         ];
 
         foreach ($roles as $role) {

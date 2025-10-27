@@ -8,7 +8,6 @@ use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CertificateDocumentController;
-use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
@@ -24,18 +23,16 @@ use App\Http\Controllers\api\InquiryMessageController;
 use App\Http\Controllers\Api\IslandController;
 use App\Http\Controllers\Api\NationalityController;
 use App\Http\Controllers\Api\ProgramController;
-use App\Http\Controllers\Api\ProvinceController;
 use App\Http\Controllers\Api\UserProgramEmploymentController;
 use App\Http\Controllers\Api\RankCategoryController;
 use App\Http\Controllers\Api\RankController;
 use App\Http\Controllers\Api\RankGroupController;
-use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TravelDocumentApprovalController;
 use App\Http\Controllers\Api\TravelDocumentController;
 use App\Http\Controllers\Api\TravelDocumentTypeController;
-use App\Http\Controllers\Api\UniversityController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
 use App\Http\Controllers\JobDescriptionRequestController;
@@ -150,7 +147,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
         ]);
     });
     Route::apiResource('vessel-types', VesselTypeController::class);
-    Route::apiResource('universities', UniversityController::class);
     Route::apiResource('rank-categories', RankCategoryController::class);
     Route::apiResource('rank-groups', RankGroupController::class);
     Route::apiResource('ranks', RankController::class);
@@ -164,6 +160,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('employment-documents', EmploymentDocumentController::class);
     Route::apiResource('travel-documents', TravelDocumentController::class);
     Route::apiResource('programs', ProgramController::class);
+    Route::apiResource('crew', UserController::class);
 
     // User employment records
     Route::get('crew/{userId}/employment', [UserProgramEmploymentController::class, 'index']);
@@ -172,6 +169,16 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'update']);
     Route::delete('crew/{userId}/employment/{employment}', [UserProgramEmploymentController::class, 'destroy']);
 
+    // User education management (admin can manage any user's education)
+    Route::get('crew/{userId}/education', [UserEducationController::class, 'index']);
+    Route::post('crew/{userId}/education', [UserEducationController::class, 'store']);
+    Route::get('crew/{userId}/education/{educationId}', [UserEducationController::class, 'show']);
+    Route::put('crew/{userId}/education/{educationId}', [UserEducationController::class, 'update']);
+    Route::delete('crew/{userId}/education/{educationId}', [UserEducationController::class, 'destroy']);
+
+    // Education information management (admin can manage education by level)
+    Route::post('crew/{id}/education-info', [UserController::class, 'storeEducationInformation']);
+    Route::put('crew/{id}/education-info', [UserController::class, 'updateEducationInformation']);
 
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
 });

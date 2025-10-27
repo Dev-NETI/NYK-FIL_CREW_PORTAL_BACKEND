@@ -17,6 +17,19 @@ trait FormatsUserData
             'is_crew' => $user->is_crew,
             'role' => $user->is_crew ? 'crew' : 'admin',
 
+            // Admin roles (only for non-crew users)
+            'admin_roles' => !$user->is_crew ? $user->adminRoles()
+                ->with('role')
+                ->get()
+                ->map(function ($adminRole) {
+                    return [
+                        'id' => $adminRole->id,
+                        'role_id' => $adminRole->role_id,
+                        'role_name' => $adminRole->role?->name,
+                    ];
+                })
+                ->toArray() : null,
+
             // Profile information
             'profile' => $user->profile ? [
                 'crew_id' => $user->profile->crew_id,
@@ -46,6 +59,28 @@ trait FormatsUserData
                 'emergency_contact_relationship' => $user->contacts->emergency_contact_relationship,
             ] : null,
 
+            'permanent_address' => $user->contacts?->permanentAddress ? [
+                'id' => $user->contacts->permanentAddress->id,
+                'full_address' => $user->contacts->permanentAddress->full_address,
+                'brgy_id' => $user->contacts->permanentAddress->brgy_id,
+                'city_id' => $user->contacts->permanentAddress->city_id,
+                'province_id' => $user->contacts->permanentAddress->province_id,
+                'region_id' => $user->contacts->permanentAddress->region_id,
+                'zip_code' => $user->contacts->permanentAddress->zip_code,
+                'street_address' => $user->contacts->permanentAddress->street_address,
+            ] : null,
+
+            'current_address' => $user->contacts?->currentAddress ? [
+                'id' => $user->contacts->currentAddress->id,
+                'full_address' => $user->contacts->currentAddress->full_address,
+                'brgy_id' => $user->contacts->currentAddress->brgy_id,
+                'city_id' => $user->contacts->currentAddress->city_id,
+                'province_id' => $user->contacts->currentAddress->province_id,
+                'region_id' => $user->contacts->currentAddress->region_id,
+                'zip_code' => $user->contacts->currentAddress->zip_code,
+                'street_address' => $user->contacts->currentAddress->street_address,
+            ] : null,
+
             // Employment information
             'employment' => $user->employment ? [
                 'fleet_id' => $user->employment->fleet_id,
@@ -64,17 +99,16 @@ trait FormatsUserData
                 'employment_notes' => $user->employment->employment_notes,
             ] : null,
 
-            // Education information
-            'education' => $user->education ? [
-                'graduated_school_id' => $user->education->graduated_school_id,
-                'date_graduated' => $user->education->date_graduated,
-                'degree' => $user->education->degree,
-                'field_of_study' => $user->education->field_of_study,
-                'gpa' => $user->education->gpa,
-                'education_level' => $user->education->education_level,
-                'certifications' => $user->education->certifications,
-                'additional_training' => $user->education->additional_training,
-            ] : null,
+            // Education information (all education records)
+            'education' => $user->educations ? $user->educations->map(function ($education) {
+                return [
+                    'id' => $education->id,
+                    'school_name' => $education->school_name,
+                    'date_graduated' => $education->date_graduated,
+                    'degree' => $education->degree,
+                    'education_level' => $education->education_level,
+                ];
+            })->toArray() : [],
 
             // Physical traits
             'physical_traits' => $user->physicalTraits ? [
