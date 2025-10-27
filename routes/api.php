@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\api\AdminInquiryController;
-use App\Http\Controllers\api\AdminMessageContoller;
+use App\Http\Controllers\Api\AdminInquiryController;
+use App\Http\Controllers\Api\AdminMessageContoller;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
@@ -19,8 +19,7 @@ use App\Http\Controllers\Api\EmploymentDocumentTypeController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\GeographyController;
 use App\Http\Controllers\Api\InquiryController;
-use App\Http\Controllers\api\InquiryMessageController;
-use App\Http\Controllers\Api\IslandController;
+use App\Http\Controllers\Api\InquiryMessageController;
 use App\Http\Controllers\Api\NationalityController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\UserProgramEmploymentController;
@@ -35,10 +34,6 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
-use App\Http\Controllers\JobDescriptionRequestController;
-use App\Models\Inquiry;
-use App\Models\InquiryMessage;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Authentication routes (public)
