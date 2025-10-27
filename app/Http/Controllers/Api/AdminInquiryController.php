@@ -1,25 +1,26 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
 use App\Models\InquiryMessage;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class InquiryController extends Controller
+class AdminInquiryController extends Controller
 {
-    public function index(): JsonResponse
+
+    public function index()
     {
-        $inquiry = Inquiry::with('messages')->get();
-        return response()->json($inquiry);
+        $all = Inquiry::all();
+        return response()->json($all);
     }
 
     public function show($id)
     {
-        $inquiry = Inquiry::where('crew_id', $id)->with(['messages', 'department.departmentCategory', 'crew.profile'])->orderBy('created_at', 'DESC')->get();
+        $user = User::where('id', $id)->first();
+        $inquiry = Inquiry::where('department_id', $user->department_id)->with(['messages', 'crew.profile'])->orderBy('created_at', 'DESC')->get();
         return response()->json($inquiry);
     }
 
@@ -62,7 +63,18 @@ class InquiryController extends Controller
 
     public function update(Request $request, $id)
     {
-        return response()->json(['message' => 'update ' . $id]);
+        $validated = $request->validate([
+            'status' => 'required|in:open,in_progress,closed',
+        ]);
+
+        $data = Inquiry::where('id', $id)->first();
+
+        if (!$data) {
+            return response()->json(['message' => 'Records Not Found'], 404);
+        } else {
+            $data->update($validated);
+            return response()->json(['message' => 'update ' . $id]);
+        }
     }
 
     public function destroy($id)
