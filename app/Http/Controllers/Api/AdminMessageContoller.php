@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AdminMessageNotification;
+use App\Models\Department;
 use App\Models\Inquiry;
 use App\Models\InquiryMessage;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class AdminMessageContoller extends Controller
 {
@@ -40,10 +44,43 @@ class AdminMessageContoller extends Controller
         ]);
 
         try {
+            // Create the message
             InquiryMessage::create($validated);
+
+            // Fetch inquiry details with relationships
+            $inquiry = Inquiry::with(['crew.profile'])->findOrFail($validated['inquiry_id']);
+
+            // Fetch the user who sent the message
+            $user = User::with('profile', 'adminProfile')->findOrFail($validated['user_id']);
+
+            // Determine sender name and email
+            $senderName = 'System-Generated';
+            $senderEmail = $user->email ?? 'no-reply@nykfil.com';
+
+            if ($user->is_crew && $user->profile) {
+                $senderName = $user->profile->full_name ?? $user->name ?? 'Crew Member';
+            } elseif (!$user->is_crew && $user->adminProfile) {
+                $senderName = $user->adminProfile->full_name ?? $user->name ?? 'Admin User';
+            }
+
+            // Send email notification to noc@neti.com.ph
+            Mail::to('noc@neti.com.ph')->queue(
+                new AdminMessageNotification(
+                    messageContent: $validated['message'],
+                    senderName: $senderName,
+                    senderEmail: $senderEmail,
+                    inquirySubject: $inquiry->subject ?? 'No Subject',
+                    inquiryId: $validated['inquiry_id']
+                )
+            );
+
             return response()->json(['message' => 'stored'], 201);
         } catch (\Exception $th) {
-            return response()->json(['message' => $th], 401);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to store message',
+                'error' => $th->getMessage()
+            ], 500);
         }
     }
 
