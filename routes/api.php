@@ -74,6 +74,8 @@ Route::get('department/{id}', [DepartmentTypesController::class, 'viewDepartment
 Route::apiResource('inquiry', InquiryController::class)->only(['show', 'store']);
 Route::apiResource('crew-inquiry-messages', InquiryMessageController::class)->only(['show', 'store']);
 Route::apiResource('departmentTypes', DepartmentTypesController::class)->only(['index']);
+Route::patch('crew-inquiry-messages/{id}/mark-read', [InquiryMessageController::class, 'markRead']);
+
 
 //ADMIN
 Route::apiResource('admin-inquiry-messages', AdminInquiryController::class)->only(['show', 'store', 'update']);
