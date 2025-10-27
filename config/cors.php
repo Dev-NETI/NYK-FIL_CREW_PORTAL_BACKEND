@@ -23,7 +23,7 @@ return [
         '*',
         'http://localhost:3000', // Next.js dev server
         'http://localhost:3001', // Alternative port
-        'https://your-production-domain.com', // Replace with your actual domain
+        'https://super-app.netiaccess.com', // Replace with your actual domain
     ],
 
     'allowed_origins_patterns' => [],
