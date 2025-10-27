@@ -86,7 +86,7 @@ class UserController extends Controller
                 'educational_attainments' => 'nullable|array',
                 'educational_attainments.*.education_level' => 'required',
                 'educational_attainments.*.degree' => 'required|string|max:255',
-                'educational_attainments.*.date_graduated' => 'required|string|max:4',
+                'educational_attainments.*.date_graduated' => 'required',
                 'employment_documents' => 'nullable|array',
                 'employment_documents.*.employment_document_type_id' => 'required',
                 'employment_documents.*.document_number' => 'nullable|string',
