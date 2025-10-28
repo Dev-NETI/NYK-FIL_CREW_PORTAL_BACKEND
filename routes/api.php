@@ -111,6 +111,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // User profile routes
     Route::get('/crew/{crewId}/profile', [UserController::class, 'getProfile']);
+    Route::apiResource('nationalities', NationalityController::class);
 });
 
 // Crew-only routes (requires is_crew = 1)
@@ -148,7 +149,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('rank-groups', RankGroupController::class);
     Route::apiResource('ranks', RankController::class);
     Route::apiResource('fleets', FleetController::class);
-    Route::apiResource('nationalities', NationalityController::class);
     Route::apiResource('vessels', VesselController::class);
     Route::apiResource('addresses', AddressController::class);
     Route::apiResource('allotees', AlloteeController::class);
