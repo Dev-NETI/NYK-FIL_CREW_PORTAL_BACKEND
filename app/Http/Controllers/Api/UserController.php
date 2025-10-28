@@ -86,7 +86,7 @@ class UserController extends Controller
                 'educational_attainments' => 'nullable|array',
                 'educational_attainments.*.education_level' => 'required',
                 'educational_attainments.*.degree' => 'required|string|max:255',
-                'educational_attainments.*.date_graduated' => 'required',
+                // 'educational_attainments.*.date_graduated' => 'required',
                 'employment_documents' => 'nullable|array',
                 'employment_documents.*.employment_document_type_id' => 'required',
                 'employment_documents.*.document_number' => 'nullable|string',
@@ -144,8 +144,8 @@ class UserController extends Controller
                         $user->educations()->create([
                             'education_level' => $education['education_level'],
                             'degree' => $education['degree'],
-                            'date_graduated' => $education['date_graduated'],
-                            'modified_by' => 'RECRUITMENT API',
+                            // 'date_graduated' => $education['date_graduated'],
+                            // 'modified_by' => 'RECRUITMENT API',
                         ]);
                     }
                 }
