@@ -68,7 +68,6 @@ class InquiryMessageController extends Controller
 
             // Fetch inquiry details with relationships
             $inquiry = Inquiry::with(['crew.profile'])->findOrFail($validated['inquiry_id']);
-
             // Fetch the user who sent the message
             $user = User::with('profile', 'adminProfile')->findOrFail($validated['user_id']);
 
@@ -82,8 +81,18 @@ class InquiryMessageController extends Controller
                 $senderName = $user->adminProfile->full_name ?? $user->name ?? 'Admin User';
             }
 
-            // Send email notification to noc@neti.com.ph
-            Mail::to('noc@neti.com.ph')->queue(
+            // Get department users (where is_crew is NULL and department_id matches)
+            $departmentUsers = User::where('is_crew', 0)
+                ->where('department_id', $inquiry->department_id)
+                ->whereNotNull('email')
+                ->pluck('email')
+                ->toArray();
+
+            // Combine noc email with department user emails
+            $recipients = $departmentUsers;
+
+            // Send email notification to all recipients
+            Mail::to($recipients)->queue(
                 new AdminMessageNotification(
                     messageContent: $validated['message'],
                     senderName: $senderName,

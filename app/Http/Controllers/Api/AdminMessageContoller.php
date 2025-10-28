@@ -63,16 +63,21 @@ class AdminMessageContoller extends Controller
                 $senderName = $user->adminProfile->full_name ?? $user->name ?? 'Admin User';
             }
 
-            // Send email notification to noc@neti.com.ph
-            Mail::to('noc@neti.com.ph')->queue(
-                new AdminMessageNotification(
-                    messageContent: $validated['message'],
-                    senderName: $senderName,
-                    senderEmail: $senderEmail,
-                    inquirySubject: $inquiry->subject ?? 'No Subject',
-                    inquiryId: $validated['inquiry_id']
-                )
-            );
+            // Get the inquirer's (crew member's) email
+            $inquirerEmail = $inquiry->crew->email ?? null;
+
+            // Send email notification to the inquirer
+            if ($inquirerEmail) {
+                Mail::to($inquirerEmail)->queue(
+                    new AdminMessageNotification(
+                        messageContent: $validated['message'],
+                        senderName: $senderName,
+                        senderEmail: $senderEmail,
+                        inquirySubject: $inquiry->subject ?? 'No Subject',
+                        inquiryId: $validated['inquiry_id']
+                    )
+                );
+            }
 
             return response()->json(['message' => 'stored'], 201);
         } catch (\Exception $th) {
