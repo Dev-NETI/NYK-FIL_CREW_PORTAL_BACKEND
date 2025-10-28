@@ -96,7 +96,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'OTP sent to your email address',
-            'otp' => $otp,
+            // 'otp' => $otp,
             'session_token' => $sessionToken,
             'expires_in' => self::OTP_EXPIRY_MINUTES * 60
         ]);
