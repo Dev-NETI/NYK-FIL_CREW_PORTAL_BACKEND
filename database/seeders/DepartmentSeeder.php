@@ -19,8 +19,10 @@ class DepartmentSeeder extends Seeder
             'Technical Operations' => ['Dry', 'Liquid'],
             'Crew Development' => ['Shore-Based Work', 'Promotion'],
             'Crew Allied Services' => ['VISA', 'JISS', 'Crew Morale', 'Cruise'],
-            'Finance and OP' => ['Payroll', 'SLAF'],
+            'Finance' => ['Payroll', 'SLAF', 'Disbursement', 'SGA'],
             'OP' => ['QAD', 'Claims'],
+            'Recruitment' => ['Recruitment'],
+            'Assessment' => ['Assessment'],
         ];
 
         foreach ($departmentData as $categoryName => $departments) {

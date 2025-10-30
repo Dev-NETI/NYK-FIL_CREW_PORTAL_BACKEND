@@ -21,7 +21,8 @@ class DepartmentCategorySeeder extends Seeder
             'Crew Development',
             'Crew Certification',
             'Crew Allied Services',
-            'Finance and OP',
+            'Finance',
+            'OP'
         ];
 
         foreach ($categories as $category) {
