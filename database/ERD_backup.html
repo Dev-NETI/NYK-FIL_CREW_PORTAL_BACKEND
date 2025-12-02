@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>NYK-FIL Crew Portal - Database ERD</title>
+        <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+        <script src="https://unpkg.com/layout-base@1.0.2/layout-base.js"></script>
+        <script src="https://unpkg.com/cose-base@1.0.3/cose-base.js"></script>
+        <script src="https://unpkg.com/cytoscape-fcose@2.2.0/cytoscape-fcose.js"></script>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: #333;
+                overflow: hidden;
+            }
+
+            .container {
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            header {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 20px 30px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(10px);
+                z-index: 100;
+            }
+
+            h1 {
+                font-size: 24px;
+                color: #2d3748;
+                margin-bottom: 5px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+                color: #718096;
+                margin-bottom: 15px;
+            }
+
+            .tabs {
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                padding-bottom: 5px;
+            }
+
+            .tab {
+                padding: 10px 20px;
+                background: #e2e8f0;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+                color: #4a5568;
+                transition: all 0.3s ease;
+                white-space: nowrap;
+            }
+
+            .tab:hover {
+                background: #cbd5e0;
+                transform: translateY(-2px);
+            }
+
+            .tab.active {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            }
+
+            .content {
+                flex: 1;
+                position: relative;
+                background: white;
+                margin: 20px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+            }
+
+            #cy {
+                width: 100%;
+                height: 100%;
+                background: #f7fafc;
+            }
+
+            .controls {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                display: flex;
+                gap: 10px;
+                z-index: 10;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                background: white;
+                border: 2px solid #667eea;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 600;
+                color: #667eea;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .btn:hover {
+                background: #667eea;
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            }
+
+            .legend {
+                position: absolute;
+                bottom: 20px;
+                left: 20px;
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                font-size: 12px;
+                z-index: 10;
+            }
+
+            .legend-title {
+                font-weight: 700;
+                margin-bottom: 10px;
+                color: #2d3748;
+            }
+
+            .legend-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 6px;
+            }
+
+            .legend-color {
+                width: 20px;
+                height: 20px;
+                border-radius: 4px;
+                border: 2px solid #e2e8f0;
+            }
+
+            .info-panel {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                max-width: 400px;
+                max-height: 80vh;
+                overflow-y: auto;
+                display: none;
+                z-index: 10;
+            }
+
+            .info-panel.show {
+                display: block;
+            }
+
+            .info-title {
+                font-weight: 700;
+                font-size: 18px;
+                margin-bottom: 15px;
+                color: #667eea;
+                padding-right: 30px;
+            }
+
+            .info-section {
+                margin-bottom: 15px;
+            }
+
+            .info-label {
+                font-weight: 600;
+                font-size: 11px;
+                color: #718096;
+                text-transform: uppercase;
+                margin-bottom: 6px;
+            }
+
+            .info-value {
+                font-size: 13px;
+                color: #2d3748;
+                line-height: 1.6;
+                background: #f7fafc;
+                padding: 8px;
+                border-radius: 4px;
+            }
+
+            .close-info {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #718096;
+                padding: 5px;
+                line-height: 1;
+            }
+
+            .close-info:hover {
+                color: #2d3748;
+            }
+
+            .loader {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                z-index: 100;
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .spinner {
+                border: 4px solid #e2e8f0;
+                border-top: 4px solid #667eea;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 15px;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .loader-text {
+                color: #4a5568;
+                font-weight: 600;
+            }
+
+            .table-count {
+                position: absolute;
+                bottom: 20px;
+                right: 20px;
+                background: white;
+                padding: 10px 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                font-size: 13px;
+                color: #4a5568;
+                font-weight: 600;
+                z-index: 10;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>
+                    NYK-FIL Crew Portal - Database Entity Relationship Diagram
+                </h1>
+                <p class="subtitle">
+                    Interactive visualization of the complete database structure
+                </p>
+                <div class="tabs">
+                    <button class="tab active" data-tab="all">
+                        All Tables
+                    </button>
+                    <button class="tab" data-tab="auth">Authentication</button>
+                    <button class="tab" data-tab="user_profiles">
+                        User Profiles
+                    </button>
+                    <button class="tab" data-tab="geographic">
+                        Geographic Data
+                    </button>
+                    <button class="tab" data-tab="ranks">Rank System</button>
+                    <button class="tab" data-tab="vessels">
+                        Vessels & Fleets
+                    </button>
+                    <button class="tab" data-tab="documents">
+                        Document Management
+                    </button>
+                    <button class="tab" data-tab="certificates">
+                        Certificates
+                    </button>
+                    <button class="tab" data-tab="contracts">
+                        Contracts & Employment
+                    </button>
+                    <button class="tab" data-tab="programs">Programs</button>
+                    <button class="tab" data-tab="admin">Admin & Roles</button>
+                    <button class="tab" data-tab="support">
+                        Support System
+                    </button>
+                    <button class="tab" data-tab="reference">
+                        Reference Data
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="loader" id="loader">
+                    <div class="spinner"></div>
+                    <div class="loader-text">Loading ERD...</div>
+                </div>
+
+                <div id="cy"></div>
+
+                <div class="controls">
+                    <button class="btn" onclick="resetView()">
+                        Reset View
+                    </button>
+                    <button class="btn" onclick="fitToScreen()">
+                        Fit to Screen
+                    </button>
+                    <button class="btn" onclick="exportPNG()">
+                        Export PNG
+                    </button>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-title">Legend</div>
+                    <div class="legend-item">
+                        <div
+                            class="legend-color"
+                            style="background: #667eea"
+                        ></div>
+                        <span>Core Entity</span>
+                    </div>
+                    <div class="legend-item">
+                        <div
+                            class="legend-color"
+                            style="background: #48bb78"
+                        ></div>
+                        <span>Reference Data</span>
+                    </div>
+                    <div class="legend-item">
+                        <div
+                            class="legend-color"
+                            style="background: #ed8936"
+                        ></div>
+                        <span>Pivot/Junction</span>
+                    </div>
+                    <div class="legend-item">
+                        <div
+                            class="legend-color"
+                            style="background: #f56565"
+                        ></div>
+                        <span>Workflow/Tracking</span>
+                    </div>
+                </div>
+
+                <div class="table-count" id="tableCount">0 tables</div>
+
+                <div class="info-panel" id="infoPanel">
+                    <button class="close-info" onclick="closeInfo()">×</button>
+                    <div class="info-title" id="infoTitle">Table Name</div>
+                    <div class="info-section">
+                        <div class="info-label">Type</div>
+                        <div class="info-value" id="infoType">-</div>
+                    </div>
+                    <div class="info-section">
+                        <div class="info-label">Purpose</div>
+                        <div class="info-value" id="infoPurpose">-</div>
+                    </div>
+                    <div class="info-section">
+                        <div class="info-label">Key Fields</div>
+                        <div class="info-value" id="infoFields">-</div>
+                    </div>
+                    <div class="info-section">
+                        <div class="info-label">Parent Tables</div>
+                        <div class="info-value" id="infoParents">-</div>
+                    </div>
+                    <div class="info-section">
+                        <div class="info-label">Child Tables</div>
+                        <div class="info-value" id="infoChildren">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Database schema with complete relationships based on actual models
+            const schema = {
+                // Authentication & Core User
+                auth: [
+                    {
+                        id: "users",
+                        label: "users",
+                        type: "core",
+                        purpose:
+                            "Core authentication table for all system users (crew and admin)",
+                        fields: [
+                            "id",
+                            "is_crew",
+                            "email",
+                            "department_id",
+                            "email_verified_at",
+                            "last_login_at",
+                        ],
+                        parents: ["departments"],
+                        children: [
+                            "user_profiles",
+                            "admin_profiles",
+                            "user_contacts",
+                            "user_physical_traits",
+                            "user_education",
+                            "user_employment",
+                            "user_program_employment",
+                            "otp_verifications",
+                            "contracts",
+                            "admin_roles",
+                            "job_description_requests",
+                            "inquiries",
+                        ],
+                    },
+                    {
+                        id: "otp_verifications",
+                        label: "otp_verifications",
+                        type: "reference",
+                        purpose: "One-time password verification for login",
+                        fields: [
+                            "id",
+                            "user_id",
+                            "type",
+                            "otp_hash",
+                            "session_token",
+                            "expires_at",
+                            "attempts",
+                        ],
+                        parents: ["users"],
+                        children: [],
+                    },
+                ],
+
+                // User Profile System
+                user_profiles: [
+                    {
+                        id: "user_profiles",
+                        label: "user_profiles",
+                        type: "core",
+                        purpose: "Basic crew member profile information",
+                        fields: [
+                            "id",
+                            "user_id",
+                            "crew_id",
+                            "first_name",
+                            "middle_name",
+                            "last_name",
+                            "suffix",
+                            "birth_date",
+                            "gender",
+                            "nationality",
+                            "civil_status",
+                        ],
+                        parents: ["users"],
+                        children: [
+                            "employment_documents",
+                            "travel_documents",
+                            "crew_certificates",
+                        ],
+                    },
+                    {
+                        id: "user_contacts",
+                        label: "user_contacts",
+                        type: "core",
+                        purpose: "Contact information for users",
+                        fields: [
+                            "id",
+                            "user_id",
+                            "mobile_number",
+                            "alternate_phone",
+                            "email_personal",
+                            "permanent_address_id",
+                            "current_address_id",
+                            "emergency_contact_name",
+                        ],
+                        parents: ["users", "addresses"],
+                        children: [],
+                    },
+                    {
+                        id: "user_physical_traits",
+                        label: "user_physical_traits",
+                        type: "core",
+                        purpose: "Physical characteristics of crew members",
+                        fields: [
+                            "id",
+                            "user_id",
+                            "height",
+                            "weight",
+                            "blood_type",
+                            "eye_color",
+                            "hair_color",
+                        ],
+                        parents: ["users"],
+                        children: [],
+                    },
+                    {
+                        id: "user_education",
+                        label: "user_education",
+                        type: "core",
+                        purpose: "Educational background",
+                        fields: [
+                            "id",
+                            "user_id",
+                            "school_name",
+                            "date_graduated",
+                            "degree",
+                            "education_level",
+                        ],
+                        parents: ["users"],
+                        children: [],
+                    },
+                    {
+                        id: "user_employment",
+                        label: "user_employment",
+                        type: "core",
+                        purpose: "Current employment information",
+                        fields: [
+                            "id",
+                            "user_id",
+                            "fleet_id",
+                            "rank_id",
+                            "crew_status",
+                            "hire_status",
+                            "hire_date",
+                            "passport_number",
+                            "seaman_book_number",
+                        ],
+                        parents: ["users", "fleets", "ranks", "allotees"],
+                        children: [],
+                    },
+                    {
+                        id: "allotees",
+                        label: "allotees",
+                        type: "core",
+                        purpose: "Emergency contacts and beneficiaries",
+                        fields: [
+                            "id",
+                            "name",
+                            "relationship",
+                            "mobile_number",
+                            "address_id",
+                            "is_emergency_contact",
+                            "is_beneficiary",
+                            "beneficiary_percentage",
+                        ],
+                        parents: ["addresses"],
+                        children: ["crew_allotees"],
+                    },
+                    {
+                        id: "crew_allotees",
+                        label: "crew_allotees",
+                        type: "pivot",
+                        purpose:
+                            "Many-to-many: crew members and their allotees",
+                        fields: [
+                            "id",
+                            "crew_id",
+                            "allotee_id",
+                            "allotment_percentage",
+                            "is_primary",
+                            "is_emergency_contact",
+                        ],
+                        parents: ["users", "allotees"],
+                        children: [],
+                    },
+                ],
+
+                // Geographic Hierarchy (PSGC Data)
+                geographic: [
+                    {
+                        id: "regions",
+                        label: "regions",
+                        type: "reference",
+                        purpose: "Philippine administrative regions (PSGC)",
+                        fields: ["id", "psgc_code", "reg_desc", "reg_code"],
+                        parents: [],
+                        children: ["provinces", "cities", "barangays"],
+                    },
+                    {
+                        id: "provinces",
+                        label: "provinces",
+                        type: "reference",
+                        purpose: "Philippine provinces (PSGC)",
+                        fields: [
+                            "id",
+                            "psgc_code",
+                            "prov_desc",
+                            "reg_code",
+                            "prov_code",
+                        ],
+                        parents: ["regions"],
+                        children: ["cities", "barangays"],
+                    },
+                    {
+                        id: "cities",
+                        label: "cities",
+                        type: "reference",
+                        purpose: "Philippine cities/municipalities (PSGC)",
+                        fields: [
+                            "id",
+                            "psgc_code",
+                            "citymun_desc",
+                            "reg_code",
+                            "prov_code",
+                            "citymun_code",
+                        ],
+                        parents: ["regions", "provinces"],
+                        children: ["barangays", "addresses"],
+                    },
+                    {
+                        id: "barangays",
+                        label: "barangays",
+                        type: "reference",
+                        purpose: "Philippine barangays (PSGC)",
+                        fields: [
+                            "id",
+                            "brgy_code",
+                            "brgy_desc",
+                            "reg_code",
+                            "prov_code",
+                            "citymun_code",
+                        ],
+                        parents: ["regions", "provinces", "cities"],
+                        children: ["addresses"],
+                    },
+                    {
+                        id: "addresses",
+                        label: "addresses",
+                        type: "core",
+                        purpose:
+                            "Flexible address storage with GPS coordinates",
+                        fields: [
+                            "id",
+                            "type",
+                            "street_address",
+                            "city_id",
+                            "brgy_id",
+                            "zip_code",
+                            "latitude",
+                            "longitude",
+                        ],
+                        parents: ["cities", "barangays"],
+                        children: ["user_contacts", "allotees"],
+                    },
+                ],
+
+                // Rank System
+                ranks: [
+                    {
+                        id: "rank_departments",
+                        label: "rank_departments",
+                        type: "reference",
+                        purpose:
+                            "Rank departments (Deck, Engine, Catering, etc.)",
+                        fields: ["id", "name", "modified_by"],
+                        parents: [],
+                        children: ["ranks"],
+                    },
+                    {
+                        id: "rank_types",
+                        label: "rank_types",
+                        type: "reference",
+                        purpose:
+                            "Rank types classification (Officer, Rating, etc.)",
+                        fields: ["id", "name", "modified_by"],
+                        parents: [],
+                        children: ["ranks"],
+                    },
+                    {
+                        id: "ranks",
+                        label: "ranks",
+                        type: "core",
+                        purpose:
+                            "Specific maritime positions (Captain, Chief Officer, AB, OS)",
+                        fields: [
+                            "id",
+                            "rank_department_id",
+                            "rank_type_id",
+                            "name",
+                            "code",
+                        ],
+                        parents: ["rank_departments", "rank_types"],
+                        children: [
+                            "user_employment",
+                            "contracts",
+                            "rank_levelings",
+                        ],
+                    },
+                    {
+                        id: "rank_levelings",
+                        label: "rank_levelings",
+                        type: "reference",
+                        purpose: "Rank level hierarchies",
+                        fields: ["id", "rank_id", "level", "modified_by"],
+                        parents: ["ranks"],
+                        children: [],
+                    },
+                ],
+
+                // Vessels & Fleets
+                vessels: [
+                    {
+                        id: "vessel_types",
+                        label: "vessel_types",
+                        type: "reference",
+                        purpose:
+                            "Classifications of vessels (Tanker, Container, Bulk Carrier)",
+                        fields: ["id", "name", "code", "description"],
+                        parents: [],
+                        children: ["vessels"],
+                    },
+                    {
+                        id: "fleets",
+                        label: "fleets",
+                        type: "reference",
+                        purpose: "Fleet organization",
+                        fields: [
+                            "id",
+                            "name",
+                            "code",
+                            "manager_name",
+                            "manager_contact",
+                        ],
+                        parents: [],
+                        children: ["vessels", "user_employment"],
+                    },
+                    {
+                        id: "vessels",
+                        label: "vessels",
+                        type: "core",
+                        purpose: "Individual vessel information",
+                        fields: [
+                            "id",
+                            "name",
+                            "vessel_type_id",
+                            "fleet_id",
+                            "prefix",
+                        ],
+                        parents: ["vessel_types", "fleets"],
+                        children: ["contracts"],
+                    },
+                ],
+
+                // Document Management - Employment
+                documents: [
+                    {
+                        id: "employment_document_types",
+                        label: "employment_document_types",
+                        type: "reference",
+                        purpose: "Types of employment documents",
+                        fields: ["id", "name"],
+                        parents: [],
+                        children: ["employment_documents"],
+                    },
+                    {
+                        id: "employment_documents",
+                        label: "employment_documents",
+                        type: "core",
+                        purpose:
+                            "Employment-related documents (contracts, COE, etc.)",
+                        fields: [
+                            "id",
+                            "crew_id",
+                            "employment_document_type_id",
+                            "document_number",
+                            "file_path",
+                            "file_ext",
+                        ],
+                        parents: ["user_profiles", "employment_document_types"],
+                        children: ["employment_document_updates"],
+                    },
+                    {
+                        id: "employment_document_updates",
+                        label: "employment_document_updates",
+                        type: "workflow",
+                        purpose:
+                            "Track updates/changes to employment documents",
+                        fields: [
+                            "id",
+                            "employment_document_id",
+                            "crew_id",
+                            "original_data",
+                            "updated_data",
+                            "status",
+                            "reviewed_by",
+                        ],
+                        parents: ["employment_documents", "user_profiles"],
+                        children: [],
+                    },
+                    {
+                        id: "travel_document_types",
+                        label: "travel_document_types",
+                        type: "reference",
+                        purpose:
+                            "Types of travel documents (Passport, Visa, Seaman's Book)",
+                        fields: ["id", "name"],
+                        parents: [],
+                        children: ["travel_documents"],
+                    },
+                    {
+                        id: "travel_documents",
+                        label: "travel_documents",
+                        type: "core",
+                        purpose:
+                            "Travel-related documents with expiry tracking",
+                        fields: [
+                            "id",
+                            "crew_id",
+                            "id_no",
+                            "travel_document_type_id",
+                            "place_of_issue",
+                            "date_of_issue",
+                            "expiration_date",
+                            "file_path",
+                        ],
+                        parents: ["user_profiles", "travel_document_types"],
+                        children: ["travel_document_updates"],
+                    },
+                    {
+                        id: "travel_document_updates",
+                        label: "travel_document_updates",
+                        type: "workflow",
+                        purpose: "Track updates/changes to travel documents",
+                        fields: [
+                            "id",
+                            "travel_document_id",
+                            "crew_id",
+                            "original_data",
+                            "updated_data",
+                            "status",
+                            "reviewed_by",
+                        ],
+                        parents: ["travel_documents", "user_profiles"],
+                        children: [],
+                    },
+                ],
+
+                // Certificate Management
+                certificates: [
+                    {
+                        id: "certificate_types",
+                        label: "certificate_types",
+                        type: "reference",
+                        purpose:
+                            "Types of crew certificates (STCW, Government, NMC, TESDA)",
+                        fields: ["id", "name", "modified_by"],
+                        parents: [],
+                        children: ["certificates"],
+                    },
+                    {
+                        id: "certificates",
+                        label: "certificates",
+                        type: "reference",
+                        purpose:
+                            "Certificate definitions/templates (COC, COP, NMC, TESDA courses)",
+                        fields: [
+                            "id",
+                            "certificate_type_id",
+                            "regulation",
+                            "name",
+                            "stcw_type",
+                            "code",
+                            "vessel_type",
+                            "nmc_type",
+                            "nmc_department",
+                            "rank",
+                        ],
+                        parents: ["certificate_types"],
+                        children: ["crew_certificates"],
+                    },
+                    {
+                        id: "crew_certificates",
+                        label: "crew_certificates",
+                        type: "core",
+                        purpose:
+                            "Individual crew member certificates with expiry tracking",
+                        fields: [
+                            "id",
+                            "certificate_id",
+                            "crew_id",
+                            "grade",
+                            "rank_permitted",
+                            "certificate_no",
+                            "issued_by",
+                            "date_issued",
+                            "expiry_date",
+                            "file_path",
+                        ],
+                        parents: ["certificates", "user_profiles"],
+                        children: [],
+                    },
+                ],
+
+                // Contracts & Employment
+                contracts: [
+                    {
+                        id: "contracts",
+                        label: "contracts",
+                        type: "core",
+                        purpose: "Vessel assignment contracts for crew",
+                        fields: [
+                            "id",
+                            "contract_number",
+                            "user_id",
+                            "vessel_id",
+                            "rank_id",
+                            "contract_start_date",
+                            "contract_end_date",
+                            "status",
+                            "duration_months",
+                            "basic_salary",
+                        ],
+                        parents: ["users", "vessels", "ranks"],
+                        children: [],
+                    },
+                    {
+                        id: "job_description_requests",
+                        label: "job_description_requests",
+                        type: "workflow",
+                        purpose:
+                            "Workflow for crew requesting official job description documents",
+                        fields: [
+                            "id (JD-YYYY-###)",
+                            "crew_id",
+                            "purpose",
+                            "visa_type",
+                            "status",
+                            "memo_no",
+                            "processed_by",
+                            "approved_by",
+                            "signature_added",
+                        ],
+                        parents: ["users"],
+                        children: [],
+                    },
+                ],
+
+                // Programs
+                programs: [
+                    {
+                        id: "programs",
+                        label: "programs",
+                        type: "reference",
+                        purpose: "Training or employment programs",
+                        fields: ["id", "name", "created_by", "updated_by"],
+                        parents: [],
+                        children: ["user_program_employment"],
+                    },
+                    {
+                        id: "user_program_employment",
+                        label: "user_program_employment",
+                        type: "pivot",
+                        purpose: "Track crew enrollment in programs",
+                        fields: [
+                            "id",
+                            "user_id",
+                            "program_id",
+                            "batch",
+                            "status",
+                        ],
+                        parents: ["users", "programs"],
+                        children: [],
+                    },
+                ],
+
+                // Admin & Roles
+                admin: [
+                    {
+                        id: "admin_profiles",
+                        label: "admin_profiles",
+                        type: "core",
+                        purpose: "Admin-specific profile information",
+                        fields: [
+                            "id",
+                            "user_id",
+                            "firstname",
+                            "middlename",
+                            "lastname",
+                            "modified_by",
+                        ],
+                        parents: ["users"],
+                        children: [],
+                    },
+                    {
+                        id: "roles",
+                        label: "roles",
+                        type: "reference",
+                        purpose: "Administrative roles/permissions",
+                        fields: ["id", "name", "modified_by"],
+                        parents: [],
+                        children: ["admin_roles"],
+                    },
+                    {
+                        id: "admin_roles",
+                        label: "admin_roles",
+                        type: "pivot",
+                        purpose: "Many-to-many: admins and their roles",
+                        fields: ["id", "user_id", "role_id", "modified_by"],
+                        parents: ["users", "roles"],
+                        children: [],
+                    },
+                ],
+
+                // Support System
+                support: [
+                    {
+                        id: "department_categories",
+                        label: "department_categories",
+                        type: "reference",
+                        purpose: "Categories for departments",
+                        fields: ["id", "name", "modified_by"],
+                        parents: [],
+                        children: ["departments"],
+                    },
+                    {
+                        id: "departments",
+                        label: "departments",
+                        type: "reference",
+                        purpose:
+                            "Organizational departments for inquiries and user assignment",
+                        fields: [
+                            "id",
+                            "name",
+                            "description",
+                            "department_category_id",
+                            "modified_by",
+                        ],
+                        parents: ["department_categories"],
+                        children: ["users", "inquiries"],
+                    },
+                    {
+                        id: "inquiries",
+                        label: "inquiries",
+                        type: "core",
+                        purpose: "Crew support inquiries/tickets",
+                        fields: [
+                            "id",
+                            "crew_id",
+                            "department_id",
+                            "subject",
+                            "status",
+                        ],
+                        parents: ["users", "departments"],
+                        children: ["inquiry_messages"],
+                    },
+                    {
+                        id: "inquiry_messages",
+                        label: "inquiry_messages",
+                        type: "core",
+                        purpose: "Messages within inquiry conversations",
+                        fields: [
+                            "id",
+                            "inquiry_id",
+                            "user_id",
+                            "message",
+                            "is_admin",
+                        ],
+                        parents: ["inquiries"],
+                        children: [],
+                    },
+                ],
+
+                // Reference Data
+                reference: [
+                    {
+                        id: "companies",
+                        label: "companies",
+                        type: "reference",
+                        purpose: "Company/organization information",
+                        fields: ["id", "name", "code", "description"],
+                        parents: [],
+                        children: ["users"],
+                    },
+                    {
+                        id: "job_designations",
+                        label: "job_designations",
+                        type: "reference",
+                        purpose: "Job position titles",
+                        fields: ["id", "name", "description"],
+                        parents: [],
+                        children: ["users"],
+                    },
+                    {
+                        id: "nationalities",
+                        label: "nationalities",
+                        type: "reference",
+                        purpose: "Nationality/country reference data",
+                        fields: ["id", "name", "code"],
+                        parents: [],
+                        children: [],
+                    },
+                ],
+            };
+
+            // Generate relationships from parents/children
+            function generateRelationships() {
+                const relationships = [];
+
+                Object.values(schema).forEach((tables) => {
+                    tables.forEach((table) => {
+                        // Create edges from parents to this table
+                        if (table.parents && table.parents.length > 0) {
+                            table.parents.forEach((parent) => {
+                                relationships.push({
+                                    from: parent,
+                                    to: table.id,
+                                    label: "N:1",
+                                });
+                            });
+                        }
+                    });
+                });
+
+                return relationships;
+            }
+
+            const relationships = generateRelationships();
+
+            // Color mapping
+            const colors = {
+                core: "#667eea",
+                reference: "#48bb78",
+                pivot: "#ed8936",
+                workflow: "#f56565",
+            };
+
+            let cy;
+            let currentTab = "all";
+
+            // Initialize Cytoscape
+            function initCytoscape(tab = "all") {
+                console.log("Initializing for tab:", tab);
+
+                const elements = [];
+                const nodesToShow = new Set();
+
+                // Determine which tables to show
+                if (tab === "all") {
+                    Object.values(schema).forEach((tables) => {
+                        tables.forEach((table) => nodesToShow.add(table.id));
+                    });
+                } else {
+                    // Show tables in current tab
+                    if (schema[tab]) {
+                        schema[tab].forEach((table) => {
+                            nodesToShow.add(table.id);
+                            // Also include parent tables for context
+                            if (table.parents) {
+                                table.parents.forEach((parent) =>
+                                    nodesToShow.add(parent)
+                                );
+                            }
+                        });
+                    }
+                }
+
+                // Add nodes
+                Object.values(schema).forEach((tables) => {
+                    tables.forEach((table) => {
+                        if (nodesToShow.has(table.id)) {
+                            elements.push({
+                                data: {
+                                    id: table.id,
+                                    label: table.label,
+                                    type: table.type,
+                                    purpose: table.purpose,
+                                    fields: table.fields.join(", "),
+                                    parents:
+                                        (table.parents || []).join(", ") ||
+                                        "None",
+                                    children:
+                                        (table.children || []).join(", ") ||
+                                        "None",
+                                },
+                            });
+                        }
+                    });
+                });
+
+                // Add edges (only if both nodes are visible)
+                relationships.forEach((rel) => {
+                    if (nodesToShow.has(rel.from) && nodesToShow.has(rel.to)) {
+                        elements.push({
+                            data: {
+                                id: `${rel.from}-${rel.to}`,
+                                source: rel.from,
+                                target: rel.to,
+                                label: rel.label,
+                            },
+                        });
+                    }
+                });
+
+                // Update table count
+                const nodeCount = elements.filter((e) => !e.data.source).length;
+                document.getElementById(
+                    "tableCount"
+                ).textContent = `${nodeCount} table${
+                    nodeCount !== 1 ? "s" : ""
+                }`;
+
+                // Destroy existing instance
+                if (cy) {
+                    cy.destroy();
+                }
+
+                // Create Cytoscape instance
+                cy = cytoscape({
+                    container: document.getElementById("cy"),
+                    elements: elements,
+                    style: [
+                        {
+                            selector: "node",
+                            style: {
+                                "background-color": function (ele) {
+                                    return (
+                                        colors[ele.data("type")] || "#cbd5e0"
+                                    );
+                                },
+                                label: "data(label)",
+                                color: "#fff",
+                                "text-valign": "center",
+                                "text-halign": "center",
+                                "font-size": "11px",
+                                "font-weight": "600",
+                                width: "140px",
+                                height: "45px",
+                                "border-width": "3px",
+                                "border-color": "#fff",
+                                "text-wrap": "wrap",
+                                "text-max-width": "130px",
+                                shape: "roundrectangle",
+                            },
+                        },
+                        {
+                            selector: "node:selected",
+                            style: {
+                                "border-color": "#2d3748",
+                                "border-width": "5px",
+                            },
+                        },
+                        {
+                            selector: "edge",
+                            style: {
+                                width: 2,
+                                "line-color": "#a0aec0",
+                                "target-arrow-color": "#a0aec0",
+                                "target-arrow-shape": "triangle",
+                                "curve-style": "bezier",
+                                label: "data(label)",
+                                "font-size": "9px",
+                                color: "#4a5568",
+                                "text-rotation": "autorotate",
+                                "text-background-color": "#f7fafc",
+                                "text-background-opacity": 0.9,
+                                "text-background-padding": "2px",
+                            },
+                        },
+                    ],
+                    layout: {
+                        name: "fcose",
+                        quality: "default",
+                        randomize: false,
+                        animate: true,
+                        animationDuration: 500,
+                        fit: true,
+                        padding: 50,
+                        nodeDimensionsIncludeLabels: true,
+                        idealEdgeLength: 120,
+                        edgeElasticity: 0.45,
+                        gravity: 0.25,
+                        numIter: 2500,
+                    },
+                });
+
+                // Event handlers
+                cy.on("tap", "node", function (evt) {
+                    showInfo(evt.target.data());
+                });
+
+                cy.on("tap", function (evt) {
+                    if (evt.target === cy) {
+                        closeInfo();
+                    }
+                });
+
+                cy.on("layoutstop", function () {
+                    setTimeout(() => {
+                        document.getElementById("loader").style.display =
+                            "none";
+                    }, 300);
+                });
+            }
+
+            // Show info panel
+            function showInfo(data) {
+                document.getElementById("infoTitle").textContent = data.label;
+                document.getElementById("infoType").textContent =
+                    data.type.charAt(0).toUpperCase() + data.type.slice(1);
+                document.getElementById("infoPurpose").textContent =
+                    data.purpose || "N/A";
+                document.getElementById("infoFields").textContent =
+                    data.fields || "N/A";
+                document.getElementById("infoParents").textContent =
+                    data.parents || "None";
+                document.getElementById("infoChildren").textContent =
+                    data.children || "None";
+                document.getElementById("infoPanel").classList.add("show");
+            }
+
+            // Close info panel
+            function closeInfo() {
+                document.getElementById("infoPanel").classList.remove("show");
+            }
+
+            // Reset view
+            function resetView() {
+                if (cy) {
+                    cy.fit(50);
+                    cy.center();
+                }
+            }
+
+            // Fit to screen
+            function fitToScreen() {
+                if (cy) {
+                    cy.fit(30);
+                }
+            }
+
+            // Export PNG
+            function exportPNG() {
+                if (cy) {
+                    const png = cy.png({
+                        output: "blob",
+                        bg: "#f7fafc",
+                        full: true,
+                        scale: 2,
+                    });
+                    const url = URL.createObjectURL(png);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `crew-portal-erd-${currentTab}-${Date.now()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            }
+
+            // Tab switching
+            document.querySelectorAll(".tab").forEach((tab) => {
+                tab.addEventListener("click", function () {
+                    document
+                        .querySelectorAll(".tab")
+                        .forEach((t) => t.classList.remove("active"));
+                    this.classList.add("active");
+                    currentTab = this.dataset.tab;
+                    document.getElementById("loader").style.display = "block";
+                    closeInfo();
+                    setTimeout(() => {
+                        initCytoscape(currentTab);
+                    }, 100);
+                });
+            });
+
+            // Initialize
+            window.addEventListener("load", () => {
+                initCytoscape("all");
+            });
+        </script>
+    </body>
+</html>

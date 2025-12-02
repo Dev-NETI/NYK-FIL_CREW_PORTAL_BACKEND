@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Certificate extends Model
@@ -23,8 +24,19 @@ class Certificate extends Model
         'rank',
     ];
 
+    /**
+     * Get the certificate type that this certificate belongs to.
+     */
     public function certificateType(): BelongsTo
     {
         return $this->belongsTo(CertificateType::class);
+    }
+
+    /**
+     * Get all crew certificates that use this certificate definition.
+     */
+    public function crewCertificates(): HasMany
+    {
+        return $this->hasMany(CrewCertificate::class);
     }
 }
