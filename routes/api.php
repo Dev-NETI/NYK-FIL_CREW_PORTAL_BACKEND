@@ -7,7 +7,9 @@ use App\Http\Controllers\Api\AdminMessageContoller;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\CertificateDocumentController;
+use App\Http\Controllers\Api\CertificateTypeController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
@@ -34,6 +36,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
+use App\Models\CertificateType;
 use Illuminate\Support\Facades\Route;
 
 // Authentication routes (public)
@@ -102,6 +105,11 @@ Route::get('travel-document-updates/{id}', [TravelDocumentApprovalController::cl
 Route::post('travel-document-updates/{id}/approve', [TravelDocumentApprovalController::class, 'approve']);
 Route::post('travel-document-updates/{id}/reject', [TravelDocumentApprovalController::class, 'reject']);
 Route::get('travel-document-updates/history/{documentId}', [TravelDocumentApprovalController::class, 'history']);
+
+// certificate type
+Route::apiResource('certificate-types', CertificateTypeController::class)->only(['index']);
+//certificate
+Route::apiResource('certificates', CertificateController::class)->only(['show']);
 
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
