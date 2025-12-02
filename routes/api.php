@@ -141,7 +141,7 @@ Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
     Route::apiResource('crew-allotees', CrewAlloteeController::class)->only(['index', 'show']);
 });
 
-// VERY NICE
+
 // Admin-only routes (requires is_crew = 0)
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     // Admin dashboard
