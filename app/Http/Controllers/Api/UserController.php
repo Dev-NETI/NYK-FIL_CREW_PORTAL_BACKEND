@@ -125,7 +125,6 @@ class UserController extends Controller
                 // Create user contact information
                 $user->contacts()->create([
                     'mobile_number' => $validatedData['mobile_number'],
-                    'email_personal' => $validatedData['email'],
                     'modified_by' => 'RECRUITMENT API',
                 ]);
 
@@ -481,7 +480,6 @@ class UserController extends Controller
                 'physicalTraits.hair_color' => 'sometimes|nullable|string|max:50',
 
                 // Contact information
-                'contacts.email_personal' => 'sometimes|nullable|email|max:255',
                 'contacts.mobile_number' => 'sometimes|nullable|string|max:20',
                 'contacts.alternate_phone' => 'sometimes|nullable|string|max:20',
                 'contacts.emergency_contact_name' => 'sometimes|nullable|string|max:255',
@@ -532,8 +530,6 @@ class UserController extends Controller
                 'physicalTraits.hair_color.max' => 'Hair color cannot exceed 50 characters.',
 
                 // Contact validation messages
-                'contacts.email_personal.email' => 'Please enter a valid personal email address.',
-                'contacts.email_personal.max' => 'Personal email cannot exceed 255 characters.',
                 'contacts.mobile_number.string' => 'Mobile number must be text.',
                 'contacts.mobile_number.max' => 'Mobile number cannot exceed 20 characters.',
                 'contacts.alternate_phone.string' => 'Alternate phone must be text.',

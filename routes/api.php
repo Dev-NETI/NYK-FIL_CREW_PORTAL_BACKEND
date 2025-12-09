@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
+use App\Http\Controllers\Api\ProfileUpdateRequestController;
 use Illuminate\Support\Facades\Route;
 
 // Authentication routes (public)
@@ -102,6 +103,10 @@ Route::get('travel-document-updates/{id}', [TravelDocumentApprovalController::cl
 Route::post('travel-document-updates/{id}/approve', [TravelDocumentApprovalController::class, 'approve']);
 Route::post('travel-document-updates/{id}/reject', [TravelDocumentApprovalController::class, 'reject']);
 Route::get('travel-document-updates/history/{documentId}', [TravelDocumentApprovalController::class, 'history']);
+
+// Profile update requests (crew submission)
+Route::post('profile-update-requests', [ProfileUpdateRequestController::class, 'store']);
+Route::get('profile-update-requests/crew/{crewId}', [ProfileUpdateRequestController::class, 'getCrewRequests']);
 
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -178,6 +183,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('crew/{id}/education-info', [UserController::class, 'updateEducationInformation']);
 
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
+
+    // Profile update approvals (admin only)
+    Route::get('profile-update-requests/pending', [ProfileUpdateRequestController::class, 'getPendingRequests']);
+    Route::post('profile-update-requests/{id}/approve', [ProfileUpdateRequestController::class, 'approve']);
+    Route::post('profile-update-requests/{id}/reject', [ProfileUpdateRequestController::class, 'reject']);
 });
 
 // recruitment post api

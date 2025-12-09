@@ -117,8 +117,6 @@ trait FormatsUserData
                 'blood_type' => $user->physicalTraits->blood_type,
                 'eye_color' => $user->physicalTraits->eye_color,
                 'hair_color' => $user->physicalTraits->hair_color,
-                'distinguishing_marks' => $user->physicalTraits->distinguishing_marks,
-                'medical_conditions' => $user->physicalTraits->medical_conditions,
             ] : null,
         ];
     }
