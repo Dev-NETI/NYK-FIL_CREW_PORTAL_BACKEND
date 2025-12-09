@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\CertificateDocumentController;
 use App\Http\Controllers\Api\CertificateTypeController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
+use App\Http\Controllers\Api\CrewCertificateController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DepartmentTypesController;
@@ -110,6 +111,11 @@ Route::get('travel-document-updates/history/{documentId}', [TravelDocumentApprov
 Route::apiResource('certificate-types', CertificateTypeController::class)->only(['index']);
 //certificate
 Route::apiResource('certificates', CertificateController::class)->only(['show']);
+
+// crew certificates
+Route::get('crew/{crewId}/certificates', [CrewCertificateController::class, 'showByCrewId']);
+Route::apiResource('crew-certificates', CrewCertificateController::class);
+Route::get('crew-certificates/{id}/view-file', [CrewCertificateController::class, 'viewFile']);
 
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
