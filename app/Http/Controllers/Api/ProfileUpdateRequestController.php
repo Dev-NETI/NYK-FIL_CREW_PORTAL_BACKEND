@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\ProfileUpdateRequest;
 use App\Models\User;
 use App\Models\Address;
+use App\Models\Barangay;
+use App\Models\City;
+use App\Models\Province;
+use App\Models\Region;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -26,10 +30,10 @@ class ProfileUpdateRequestController extends Controller
 
             // Get the crew member's current profile data
             $crew = User::with(['profile', 'contacts.permanentAddress', 'contacts.currentAddress', 'physical_traits', 'education'])->findOrFail($validated['crew_id']);
-            
+
             // Extract current data for the section
             $currentData = $this->getCurrentSectionData($crew, $validated['section']);
-            
+
             // Check if there's already a pending request for this crew and section
             $existingRequest = ProfileUpdateRequest::where('crew_id', $validated['crew_id'])
                 ->where('section', $validated['section'])
@@ -58,7 +62,6 @@ class ProfileUpdateRequestController extends Controller
                 'message' => 'Profile update request submitted successfully. Waiting for admin approval.',
                 'data' => $updateRequest,
             ], 201);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -129,7 +132,7 @@ class ProfileUpdateRequestController extends Controller
     {
         try {
             $updateRequest = ProfileUpdateRequest::findOrFail($id);
-            
+
             if (!$updateRequest->isPending()) {
                 return response()->json([
                     'success' => false,
@@ -150,7 +153,6 @@ class ProfileUpdateRequestController extends Controller
                 'message' => 'Profile update request approved and changes applied successfully',
                 'data' => $updateRequest,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -171,7 +173,7 @@ class ProfileUpdateRequestController extends Controller
             ]);
 
             $updateRequest = ProfileUpdateRequest::findOrFail($id);
-            
+
             if (!$updateRequest->isPending()) {
                 return response()->json([
                     'success' => false,
@@ -188,7 +190,6 @@ class ProfileUpdateRequestController extends Controller
                 'message' => 'Profile update request rejected',
                 'data' => $updateRequest,
             ]);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -278,41 +279,106 @@ class ProfileUpdateRequestController extends Controller
                         $requestedData['contacts']
                     );
                 }
-                
+
                 // Handle individual address fields from frontend
                 $permanentAddressData = [];
                 $currentAddressData = [];
-                
+
                 $permanentFields = [
                     'permanent_region' => 'region_id',
-                    'permanent_province' => 'province_id', 
+                    'permanent_province' => 'province_id',
                     'permanent_city' => 'city_id',
                     'permanent_barangay' => 'brgy_id',
                     'permanent_street' => 'street_address',
                     'permanent_postal_code' => 'zip_code',
                 ];
-                
+
                 $currentFields = [
                     'current_region' => 'region_id',
                     'current_province' => 'province_id',
-                    'current_city' => 'city_id', 
+                    'current_city' => 'city_id',
                     'current_barangay' => 'brgy_id',
                     'current_street' => 'street_address',
                     'current_postal_code' => 'zip_code',
                 ];
-                
+
+                // Helper function to generate full address
+                $generateFullAddress = function ($regionCode, $provinceCode, $cityCode, $barangayCode, $streetAddress = null, $zipCode = null) {
+                    $region = Region::where('reg_code', $regionCode)->first();
+                    $province = Province::where('prov_code', $provinceCode)->first();
+                    $city = City::where('citymun_code', $cityCode)->first();
+                    $barangay = Barangay::where('brgy_code', $barangayCode)->first();
+
+                    $fullAddressParts = array_filter([
+                        $streetAddress,
+                        $barangay ? $barangay->brgy_desc : null,
+                        $city ? $city->citymun_desc : null,
+                        $province ? $province->prov_desc : null,
+                        $region ? $region->reg_desc : null,
+                        $zipCode
+                    ]);
+
+                    return !empty($fullAddressParts) ? implode(', ', $fullAddressParts) : null;
+                };
+
+                // Build permanent address data
                 foreach ($permanentFields as $frontendField => $dbField) {
                     if (isset($requestedData[$frontendField])) {
                         $permanentAddressData[$dbField] = $requestedData[$frontendField];
                     }
                 }
-                
+
+                // Generate permanent address full_address if we have required fields
+                if (
+                    isset($requestedData['permanent_region']) &&
+                    isset($requestedData['permanent_province']) &&
+                    isset($requestedData['permanent_city']) &&
+                    isset($requestedData['permanent_barangay'])
+                ) {
+
+                    $permanentFullAddress = $generateFullAddress(
+                        $requestedData['permanent_region'],
+                        $requestedData['permanent_province'],
+                        $requestedData['permanent_city'],
+                        $requestedData['permanent_barangay'],
+                        $requestedData['permanent_street'] ?? null,
+                        $requestedData['permanent_postal_code'] ?? null
+                    );
+
+                    if ($permanentFullAddress) {
+                        $permanentAddressData['full_address'] = $permanentFullAddress;
+                    }
+                }
+
+                // Build current address data
                 foreach ($currentFields as $frontendField => $dbField) {
                     if (isset($requestedData[$frontendField])) {
                         $currentAddressData[$dbField] = $requestedData[$frontendField];
                     }
                 }
-                
+
+                // Generate current address full_address if we have required fields
+                if (
+                    isset($requestedData['current_region']) &&
+                    isset($requestedData['current_province']) &&
+                    isset($requestedData['current_city']) &&
+                    isset($requestedData['current_barangay'])
+                ) {
+
+                    $currentFullAddress = $generateFullAddress(
+                        $requestedData['current_region'],
+                        $requestedData['current_province'],
+                        $requestedData['current_city'],
+                        $requestedData['current_barangay'],
+                        $requestedData['current_street'] ?? null,
+                        $requestedData['current_postal_code'] ?? null
+                    );
+
+                    if ($currentFullAddress) {
+                        $currentAddressData['full_address'] = $currentFullAddress;
+                    }
+                }
+
                 // Update permanent address
                 if (!empty($permanentAddressData) && $crew->contacts) {
                     if ($crew->contacts->permanent_address_id) {
@@ -325,7 +391,7 @@ class ProfileUpdateRequestController extends Controller
                         $crew->contacts->update(['permanent_address_id' => $permanentAddress->id]);
                     }
                 }
-                
+
                 // Update current address
                 if (!empty($currentAddressData) && $crew->contacts) {
                     if ($crew->contacts->current_address_id) {
