@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CertificateTypeController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\CrewCertificateController;
+use App\Http\Controllers\Api\CrewCertificateApprovalController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DepartmentTypesController;
@@ -107,6 +108,14 @@ Route::get('travel-document-updates/{id}', [TravelDocumentApprovalController::cl
 Route::post('travel-document-updates/{id}/approve', [TravelDocumentApprovalController::class, 'approve']);
 Route::post('travel-document-updates/{id}/reject', [TravelDocumentApprovalController::class, 'reject']);
 Route::get('travel-document-updates/history/{documentId}', [TravelDocumentApprovalController::class, 'history']);
+
+// Certificate document approvals
+Route::get('crew-certificate-updates', [CrewCertificateApprovalController::class, 'index']);
+Route::get('crew-certificate-updates/all', [CrewCertificateApprovalController::class, 'all']);
+Route::get('crew-certificate-updates/{id}', [CrewCertificateApprovalController::class, 'show']);
+Route::post('crew-certificate-updates/{id}/approve', [CrewCertificateApprovalController::class, 'approve']);
+Route::post('crew-certificate-updates/{id}/reject', [CrewCertificateApprovalController::class, 'reject']);
+Route::get('crew-certificate-updates/history/{certificateId}', [CrewCertificateApprovalController::class, 'history']);
 
 // Profile update requests (crew submission)
 Route::post('profile-update-requests', [ProfileUpdateRequestController::class, 'store']);

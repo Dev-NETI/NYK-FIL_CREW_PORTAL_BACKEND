@@ -46,6 +46,22 @@ class CrewCertificate extends Model
     }
 
     /**
+     * Get all update requests for this certificate.
+     */
+    public function updates()
+    {
+        return $this->hasMany(CrewCertificateUpdate::class);
+    }
+
+    /**
+     * Get pending update requests for this certificate.
+     */
+    public function pendingUpdates()
+    {
+        return $this->hasMany(CrewCertificateUpdate::class)->where('status', 'pending');
+    }
+
+    /**
      * Scope to filter expired certificates.
      */
     public function scopeExpired($query)
