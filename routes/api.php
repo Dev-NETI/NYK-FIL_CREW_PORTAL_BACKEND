@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
+use App\Http\Controllers\Api\ProfileUpdateRequestController;
 use App\Models\CertificateType;
 use Illuminate\Support\Facades\Route;
 
@@ -107,6 +108,9 @@ Route::post('travel-document-updates/{id}/approve', [TravelDocumentApprovalContr
 Route::post('travel-document-updates/{id}/reject', [TravelDocumentApprovalController::class, 'reject']);
 Route::get('travel-document-updates/history/{documentId}', [TravelDocumentApprovalController::class, 'history']);
 
+// Profile update requests (crew submission)
+Route::post('profile-update-requests', [ProfileUpdateRequestController::class, 'store']);
+Route::get('profile-update-requests/crew/{crewId}', [ProfileUpdateRequestController::class, 'getCrewRequests']);
 // certificate type
 Route::apiResource('certificate-types', CertificateTypeController::class)->only(['index']);
 //certificate
@@ -192,6 +196,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('crew/{id}/education-info', [UserController::class, 'updateEducationInformation']);
 
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
+
+    // Profile update approvals (admin only)
+    Route::get('profile-update-requests/pending', [ProfileUpdateRequestController::class, 'getPendingRequests']);
+    Route::post('profile-update-requests/{id}/approve', [ProfileUpdateRequestController::class, 'approve']);
+    Route::post('profile-update-requests/{id}/reject', [ProfileUpdateRequestController::class, 'reject']);
 });
 
 // recruitment post api

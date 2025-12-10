@@ -91,6 +91,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Alias for physicalTraits for backward compatibility.
+     */
+    public function physical_traits(): HasOne
+    {
+        return $this->physicalTraits();
+    }
+
+    /**
      * Get the user's contact information.
      */
     public function contacts(): HasOne

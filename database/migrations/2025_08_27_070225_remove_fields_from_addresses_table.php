@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('addresses', function (Blueprint $table) {
-            $table->dropColumn(['type', 'landmark', 'latitude', 'longitude']);
+            $table->dropColumn(['landmark', 'latitude', 'longitude']);
         });
     }
 
@@ -22,7 +22,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('addresses', function (Blueprint $table) {
-            $table->string('type')->nullable();
             $table->string('landmark')->nullable();
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
