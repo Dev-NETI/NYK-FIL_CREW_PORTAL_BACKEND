@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\CrewCertificate;
+use App\Models\CrewCertificateUpdate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -86,28 +88,83 @@ class CrewCertificateController extends Controller
             'file.max' => 'File size must not exceed 5MB',
         ]);
 
-        // Handle file upload if present
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $path = $file->store('crew_certificates', 'public');
-            $validated['file_path'] = $path;
-            $validated['file_ext'] = $file->getClientOriginalExtension();
+        // Check if user is crew or admin
+        if (Auth::guard('sanctum')->user()->is_crew == 1) {
+            // Crew creating new certificate: Create pending approval request
+            // First, create a temporary crew certificate to hold the reference
+            $tempData = [
+                'crew_id' => $validated['crew_id'],
+                'certificate_id' => $validated['certificate_id'],
+                'certificate_no' => 'PENDING_' . time(), // Temporary placeholder
+                'issued_by' => $validated['issued_by'] ?? null,
+                'date_issued' => $validated['date_issued'] ?? null,
+                'expiry_date' => $validated['expiry_date'] ?? null,
+            ];
+
+            $crewCertificate = CrewCertificate::create($tempData);
+
+            // Prepare data for approval
+            $newData = [
+                'certificate_id' => $validated['certificate_id'],
+                'certificate_name' => $certificate->name ?? null, // Store certificate name for later reference
+                'certificate_no' => $validated['certificate_no'] ?? null,
+                'issued_by' => $validated['issued_by'] ?? null,
+                'date_issued' => $validated['date_issued'] ?? null,
+                'expiry_date' => $validated['expiry_date'] ?? null,
+                'grade' => $validated['grade'] ?? null,
+                'rank_permitted' => $validated['rank_permitted'] ?? null,
+            ];
+
+            // Handle file upload if present
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $path = $file->store('crew_certificates_pending', 'public');
+                $newData['file_path'] = $path;
+                $newData['file_ext'] = $file->getClientOriginalExtension();
+            }
+
+            // Create pending update request
+            $update = CrewCertificateUpdate::create([
+                'crew_certificate_id' => $crewCertificate->id,
+                'crew_id' => $validated['crew_id'],
+                'original_data' => $tempData,
+                'updated_data' => $newData,
+                'status' => 'pending',
+            ]);
+
+            // Load the relationship for the response
+            $update->load('userProfile', 'crewCertificate.certificate');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'New certificate submitted for admin approval',
+                'data' => $update
+            ], 201);
+        } else {
+            // Admin creating certificate: Direct creation without approval
+            // Handle file upload if present
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $path = $file->store('crew_certificates', 'public');
+                $validated['file_path'] = $path;
+                $validated['file_ext'] = $file->getClientOriginalExtension();
+            }
+
+            // Remove 'file' from validated data before creating record
+            unset($validated['file']);
+
+            // Create the crew certificate
+            $crewCertificate = CrewCertificate::create($validated);
+
+            // Load relationships for response
+            $crewCertificate->load(['certificate.certificateType', 'crew']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Certificate added successfully',
+                'data' => $crewCertificate
+            ], 201);
         }
-
-        // Remove 'file' from validated data before creating record
-        unset($validated['file']);
-
-        // Create the crew certificate
-        $crewCertificate = CrewCertificate::create($validated);
-
-        // Load relationships for response
-        $crewCertificate->load(['certificate.certificateType', 'crew']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Certificate added successfully',
-            'data' => $crewCertificate
-        ], 201);
     }
 
     /**
@@ -149,26 +206,37 @@ class CrewCertificateController extends Controller
             });
         }
 
-        $crewCertificates = $query->orderBy('created_at', 'desc')->get();
+        $crewCertificates = $query->with('pendingUpdates')->orderBy('created_at', 'desc')->get();
 
         // Transform the data to include computed fields
         $transformedCertificates = $crewCertificates->map(function ($cert) {
             $data = $cert->toArray();
 
-            // Add status based on expiry date
-            $status = 'valid';
-            if ($cert->expiry_date) {
+            // Check if certificate has pending approval
+            $hasPendingApproval = $cert->pendingUpdates->count() > 0;
+            $isPendingCertificate = str_starts_with($cert->certificate_no ?? '', 'PENDING_');
+
+            // Add status based on expiry date and approval status
+            if ($hasPendingApproval || $isPendingCertificate) {
+                $status = 'pending_approval';
+            } elseif ($cert->expiry_date) {
                 if ($cert->isExpired()) {
                     $status = 'expired';
                 } elseif ($cert->isExpiringSoon(60)) { // 60 days
                     $status = 'expiring_soon';
+                } else {
+                    $status = 'valid';
                 }
+            } else {
+                $status = 'valid';
             }
             $data['status'] = $status;
 
             // Add computed fields
             $data['has_file'] = !empty($cert->file_path);
             $data['days_until_expiry'] = $cert->daysUntilExpiry();
+            $data['has_pending_approval'] = $hasPendingApproval || $isPendingCertificate;
+            $data['is_pending_certificate'] = $isPendingCertificate;
 
             return $data;
         });
@@ -217,33 +285,79 @@ class CrewCertificateController extends Controller
 
         $validated = $request->validate($rules);
 
-        // Handle file upload if present
-        if ($request->hasFile('file')) {
-            // Delete old file if exists
-            if ($crewCertificate->file_path && Storage::disk('public')->exists($crewCertificate->file_path)) {
-                Storage::disk('public')->delete($crewCertificate->file_path);
+        // Check if user is crew or admin
+        if (Auth::guard('sanctum')->user()->is_crew == 1) {
+            // Crew update: Create pending approval request
+            $updatedData = [
+                'certificate_id' => $validated['certificate_id'] ?? $crewCertificate->certificate_id,
+                'certificate_name' => $certificate->name ?? $crewCertificate->certificate->name ?? null, // Store certificate name
+                'certificate_no' => $validated['certificate_no'] ?? $crewCertificate->certificate_no,
+                'issued_by' => $validated['issued_by'] ?? $crewCertificate->issued_by,
+                'date_issued' => $validated['date_issued'] ?? $crewCertificate->date_issued,
+                'expiry_date' => $validated['expiry_date'] ?? $crewCertificate->expiry_date,
+                'grade' => $validated['grade'] ?? $crewCertificate->grade,
+                'rank_permitted' => $validated['rank_permitted'] ?? $crewCertificate->rank_permitted,
+            ];
+
+            // Handle file upload if present
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $path = $file->store('crew_certificates_pending', 'public');
+                $updatedData['file_path'] = $path;
+                $updatedData['file_ext'] = $file->getClientOriginalExtension();
             }
 
-            $file = $request->file('file');
-            $path = $file->store('crew_certificates', 'public');
-            $validated['file_path'] = $path;
-            $validated['file_ext'] = $file->getClientOriginalExtension();
+            // Create pending update
+            $update = CrewCertificateUpdate::create([
+                'crew_certificate_id' => $crewCertificate->id,
+                'crew_id' => $crewCertificate->crew_id,
+                'original_data' => $crewCertificate->only([
+                    'certificate_id', 'certificate_no', 'issued_by',
+                    'date_issued', 'expiry_date', 'grade', 'rank_permitted',
+                    'file_path', 'file_ext'
+                ]),
+                'updated_data' => $updatedData,
+                'status' => 'pending',
+            ]);
+
+            // Load the relationship for the response
+            $update->load('userProfile', 'crewCertificate.certificate');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Update submitted for admin approval',
+                'data' => $update
+            ]);
+        } else {
+            // Admin update: Direct update without approval
+            // Handle file upload if present
+            if ($request->hasFile('file')) {
+                // Delete old file if exists
+                if ($crewCertificate->file_path && Storage::disk('public')->exists($crewCertificate->file_path)) {
+                    Storage::disk('public')->delete($crewCertificate->file_path);
+                }
+
+                $file = $request->file('file');
+                $path = $file->store('crew_certificates', 'public');
+                $validated['file_path'] = $path;
+                $validated['file_ext'] = $file->getClientOriginalExtension();
+            }
+
+            // Remove 'file' from validated data
+            unset($validated['file']);
+
+            // Update the crew certificate
+            $crewCertificate->update($validated);
+
+            // Reload relationships
+            $crewCertificate->load(['certificate.certificateType', 'crew']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Certificate updated successfully',
+                'data' => $crewCertificate
+            ]);
         }
-
-        // Remove 'file' from validated data
-        unset($validated['file']);
-
-        // Update the crew certificate
-        $crewCertificate->update($validated);
-
-        // Reload relationships
-        $crewCertificate->load(['certificate.certificateType', 'crew']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Certificate updated successfully',
-            'data' => $crewCertificate
-        ]);
     }
 
     /**
