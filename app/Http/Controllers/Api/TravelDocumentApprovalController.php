@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TravelDocumentUpdateResource;
 use App\Models\TravelDocumentUpdate;
+use App\Traits\SendsDocumentNotifications;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 class TravelDocumentApprovalController extends Controller
 {
+    use SendsDocumentNotifications;
     /**
      * Get all pending updates
      */
@@ -27,7 +30,7 @@ class TravelDocumentApprovalController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            return response()->json($updates);
+            return TravelDocumentUpdateResource::collection($updates);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -51,7 +54,7 @@ class TravelDocumentApprovalController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            return response()->json($updates);
+            return TravelDocumentUpdateResource::collection($updates);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -73,7 +76,7 @@ class TravelDocumentApprovalController extends Controller
                 'userProfile',
             ])->findOrFail($id);
 
-            return response()->json($update);
+            return new TravelDocumentUpdateResource($update);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -134,6 +137,20 @@ class TravelDocumentApprovalController extends Controller
 
             DB::commit();
 
+            // Send email notification to crew
+            $this->sendCrewNotification(
+                $update,
+                'approved',
+                'Travel',
+                $update->travelDocument?->travelDocumentType?->name ?? 'Travel Document',
+                $reviewerName,
+                [
+                    'ID Number' => $update->updated_data['id_no'] ?? 'N/A',
+                    'Place of Issue' => $update->updated_data['place_of_issue'] ?? 'N/A',
+                    'Expiration Date' => $update->updated_data['expiration_date'] ?? 'N/A',
+                ]
+            );
+
             $message = $isNewDocument
                 ? 'New travel document approved and created successfully'
                 : 'Update approved and applied successfully';
@@ -182,7 +199,7 @@ class TravelDocumentApprovalController extends Controller
             $isNewDocument = isset($update->original_data['id_no']) &&
                 str_starts_with($update->original_data['id_no'], 'PENDING_');
 
-            // If rejecting a new document creation, delete the temporary document and pending file
+            // If rejecting a new document creation, completely remove the temporary document
             if ($isNewDocument) {
                 // Delete pending file if exists
                 if (isset($update->updated_data['file_path'])) {
@@ -192,8 +209,18 @@ class TravelDocumentApprovalController extends Controller
                     }
                 }
 
-                // Delete the temporary travel document
+                // Force delete the temporary travel document (it shouldn't exist at all)
                 $update->travelDocument->forceDelete();
+            } else {
+                // For document updates, delete the pending file but keep the original document unchanged
+                if (isset($update->updated_data['file_path'])) {
+                    $filePath = $update->updated_data['file_path'];
+                    // Only delete if it's a pending file (different from original)
+                    if (str_contains($filePath, 'travel_documents_pending') && Storage::disk('public')->exists($filePath)) {
+                        Storage::disk('public')->delete($filePath);
+                    }
+                }
+                // Original document remains unchanged - no action needed
             }
 
             $update->update([
@@ -205,9 +232,23 @@ class TravelDocumentApprovalController extends Controller
 
             DB::commit();
 
+            // Send email notification to crew
+            $this->sendCrewNotification(
+                $update,
+                'rejected',
+                'Travel',
+                $update->travelDocument?->travelDocumentType?->name ?? 'Travel Document',
+                $reviewerName,
+                [
+                    'ID Number' => $update->updated_data['id_no'] ?? 'N/A',
+                    'Place of Issue' => $update->updated_data['place_of_issue'] ?? 'N/A',
+                ],
+                $validated['rejection_reason']
+            );
+
             $message = $isNewDocument
                 ? 'New document creation rejected and removed'
-                : 'Update rejected';
+                : 'Update rejected - original document retained';
 
             return response()->json([
                 'success' => true,
@@ -246,7 +287,7 @@ class TravelDocumentApprovalController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $updates,
+                'data' => TravelDocumentUpdateResource::collection($updates),
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching update history', [

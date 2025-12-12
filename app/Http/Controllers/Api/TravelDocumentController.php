@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\TravelDocument;
 use App\Models\TravelDocumentUpdate;
+use App\Traits\SendsDocumentNotifications;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,9 +14,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TravelDocumentController extends Controller
 {
+    use SendsDocumentNotifications;
     public function index(): JsonResponse
     {
-        $travelDocuments = TravelDocument::with(['crew', 'travelDocumentType'])->get();
+        $travelDocuments = TravelDocument::with(['userProfile', 'travelDocumentType'])->get();
 
         return response()->json($travelDocuments);
     }
@@ -87,6 +89,20 @@ class TravelDocumentController extends Controller
 
             // Load the relationship for the response
             $update->load('userProfile', 'travelDocument.travelDocumentType');
+
+            // Send email notification to admin
+            $this->sendAdminNotification(
+                $update,
+                'created',
+                'Travel',
+                $update->travelDocument?->travelDocumentType?->name ?? 'Travel Document',
+                [
+                    'ID Number' => $update->updated_data['id_no'] ?? 'N/A',
+                    'Place of Issue' => $update->updated_data['place_of_issue'] ?? 'N/A',
+                    'Date of Issue' => $update->updated_data['date_of_issue'] ?? 'N/A',
+                    'Expiration Date' => $update->updated_data['expiration_date'] ?? 'N/A',
+                ]
+            );
 
             return response()->json([
                 'success' => true,
@@ -175,7 +191,21 @@ class TravelDocumentController extends Controller
             ]);
 
             // Load the relationship for the response
-            $update->load('userProfile');
+            $update->load('userProfile', 'travelDocument.travelDocumentType');
+
+            // Send email notification to admin
+            $this->sendAdminNotification(
+                $update,
+                'updated',
+                'Travel',
+                $update->travelDocument?->travelDocumentType?->name ?? 'Travel Document',
+                [
+                    'ID Number' => $update->updated_data['id_no'] ?? 'N/A',
+                    'Place of Issue' => $update->updated_data['place_of_issue'] ?? 'N/A',
+                    'Date of Issue' => $update->updated_data['date_of_issue'] ?? 'N/A',
+                    'Expiration Date' => $update->updated_data['expiration_date'] ?? 'N/A',
+                ]
+            );
 
             return response()->json([
                 'success' => true,
