@@ -19,6 +19,7 @@ class CertificateTypeSeeder extends Seeder
             'NMC Training Certificate',
             'TESDA Certificate',
             'Other Training Certificate',
+            'JISS Certificate',
         ];
 
         foreach ($certificateTypes as $type) {

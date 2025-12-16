@@ -7,9 +7,12 @@ use App\Http\Controllers\Api\AdminMessageContoller;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AlloteeController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\CertificateDocumentController;
+use App\Http\Controllers\Api\CertificateTypeController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
+use App\Http\Controllers\Api\CrewCertificateController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DepartmentTypesController;
@@ -35,6 +38,7 @@ use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
 use App\Http\Controllers\Api\ProfileUpdateRequestController;
+use App\Models\CertificateType;
 use Illuminate\Support\Facades\Route;
 
 // Authentication routes (public)
@@ -107,6 +111,15 @@ Route::get('travel-document-updates/history/{documentId}', [TravelDocumentApprov
 // Profile update requests (crew submission)
 Route::post('profile-update-requests', [ProfileUpdateRequestController::class, 'store']);
 Route::get('profile-update-requests/crew/{crewId}', [ProfileUpdateRequestController::class, 'getCrewRequests']);
+// certificate type
+Route::apiResource('certificate-types', CertificateTypeController::class)->only(['index']);
+//certificate
+Route::apiResource('certificates', CertificateController::class)->only(['show']);
+
+// crew certificates
+Route::get('crew/{crewId}/certificates', [CrewCertificateController::class, 'showByCrewId']);
+Route::apiResource('crew-certificates', CrewCertificateController::class);
+Route::get('crew-certificates/{id}/view-file', [CrewCertificateController::class, 'viewFile']);
 
 // Protected routes (common for both crew and admin)
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -138,7 +151,7 @@ Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
     Route::apiResource('crew-allotees', CrewAlloteeController::class)->only(['index', 'show']);
 });
 
-// VERY NICE
+
 // Admin-only routes (requires is_crew = 0)
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     // Admin dashboard

@@ -19,6 +19,8 @@ class EmploymentDocumentTypeSeeder extends Seeder
             'PAG-IBIG',
             'PHILHEALTH',
             'SRN',
+            'DMW e-REG',
+            'MARCO PAY'
         ];
 
         foreach ($documentTypes as $type) {
