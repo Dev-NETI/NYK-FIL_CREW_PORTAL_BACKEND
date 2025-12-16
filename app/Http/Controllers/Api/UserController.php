@@ -473,11 +473,11 @@ class UserController extends Controller
                 'profile.religion' => 'sometimes|nullable|string|max:100',
 
                 // Physical traits
-                'physicalTraits.height' => 'sometimes|nullable|numeric|min:0|max:300',
-                'physicalTraits.weight' => 'sometimes|nullable|numeric|min:0|max:500',
-                'physicalTraits.eye_color' => 'sometimes|nullable|string|max:50',
-                'physicalTraits.blood_type' => 'sometimes|nullable|string|max:50',
-                'physicalTraits.hair_color' => 'sometimes|nullable|string|max:50',
+                'physical_traits.height' => 'sometimes|nullable|numeric|min:0|max:300',
+                'physical_traits.weight' => 'sometimes|nullable|numeric|min:0|max:500',
+                'physical_traits.eye_color' => 'sometimes|nullable|string|max:50',
+                'physical_traits.blood_type' => 'sometimes|nullable|string|max:50',
+                'physical_traits.hair_color' => 'sometimes|nullable|string|max:50',
 
                 // Contact information
                 'contacts.mobile_number' => 'sometimes|nullable|string|max:20',
@@ -516,18 +516,18 @@ class UserController extends Controller
                 'profile.religion.max' => 'Religion cannot exceed 100 characters.',
 
                 // Physical traits validation messages
-                'physicalTraits.height.numeric' => 'Height must be a number.',
-                'physicalTraits.height.min' => 'Height cannot be negative.',
-                'physicalTraits.height.max' => 'Height cannot exceed 300 cm.',
-                'physicalTraits.weight.numeric' => 'Weight must be a number.',
-                'physicalTraits.weight.min' => 'Weight cannot be negative.',
-                'physicalTraits.weight.max' => 'Weight cannot exceed 500 kg.',
-                'physicalTraits.blood_type.string' => 'Blood type must be text.',
-                'physicalTraits.blood_type.max' => 'Blood type cannot exceed 50 characters.',
-                'physicalTraits.eye_color.string' => 'Eye color must be text.',
-                'physicalTraits.eye_color.max' => 'Eye color cannot exceed 50 characters.',
-                'physicalTraits.hair_color.string' => 'Hair color must be text.',
-                'physicalTraits.hair_color.max' => 'Hair color cannot exceed 50 characters.',
+                'physical_traits.height.numeric' => 'Height must be a number.',
+                'physical_traits.height.min' => 'Height cannot be negative.',
+                'physical_traits.height.max' => 'Height cannot exceed 300 cm.',
+                'physical_traits.weight.numeric' => 'Weight must be a number.',
+                'physical_traits.weight.min' => 'Weight cannot be negative.',
+                'physical_traits.weight.max' => 'Weight cannot exceed 500 kg.',
+                'physical_traits.blood_type.string' => 'Blood type must be text.',
+                'physical_traits.blood_type.max' => 'Blood type cannot exceed 50 characters.',
+                'physical_traits.eye_color.string' => 'Eye color must be text.',
+                'physical_traits.eye_color.max' => 'Eye color cannot exceed 50 characters.',
+                'physical_traits.hair_color.string' => 'Hair color must be text.',
+                'physical_traits.hair_color.max' => 'Hair color cannot exceed 50 characters.',
 
                 // Contact validation messages
                 'contacts.mobile_number.string' => 'Mobile number must be text.',
@@ -568,11 +568,11 @@ class UserController extends Controller
                 }
 
                 // Update physical traits
-                if (isset($validatedData['physicalTraits'])) {
+                if (isset($validatedData['physical_traits'])) {
                     if ($crew->physicalTraits) {
-                        $crew->physicalTraits->update($validatedData['physicalTraits']);
+                        $crew->physicalTraits->update($validatedData['physical_traits']);
                     } else {
-                        $crew->physicalTraits()->create($validatedData['physicalTraits']);
+                        $crew->physicalTraits()->create($validatedData['physical_traits']);
                     }
                 }
 

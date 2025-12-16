@@ -45,6 +45,7 @@ class AddressController extends Controller
                 'province_id' => 'required|string|max:50',
                 'region_id' => 'required|string|max:50',
                 'zip_code' => 'nullable|string|max:10',
+                'type' => 'required|string|in:permanent,current',
             ]);
 
             // Get the descriptions for building full address
@@ -66,6 +67,7 @@ class AddressController extends Controller
 
             $address = Address::create([
                 'user_id' => $validated['user_id'] ?? Auth::id(),
+                'type' => $validated['type'],
                 'full_address' => $fullAddress,
                 'street_address' => $validated['street_address'],
                 'brgy_id' => $validated['brgy_id'],
@@ -132,6 +134,7 @@ class AddressController extends Controller
                 'province_id' => 'required|string|max:50',
                 'region_id' => 'required|string|max:50',
                 'zip_code' => 'nullable|string|max:10',
+                'type' => 'sometimes|required|string|in:permanent,current',
             ]);
 
             // Get the descriptions for building full address
