@@ -36,6 +36,10 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
+use App\Http\Controllers\Api\AppointmentTypeController;
+use App\Http\Controllers\Api\DepartmentScheduleController;
+use App\Http\Controllers\Api\CrewAppointmentController;
+use App\Http\Controllers\Api\AdminAppointmentController;
 use App\Models\CertificateType;
 use Illuminate\Support\Facades\Route;
 
@@ -190,3 +194,50 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
 // recruitment post api
 Route::post('crew/recruitment', [UserController::class, 'store']);
+
+// Appointment types (admin)
+Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    Route::get('/appointment-types', [AppointmentTypeController::class, 'index']);
+    Route::post('/appointment-types', [AppointmentTypeController::class, 'store']);
+    Route::put('/appointment-types/{id}', [AppointmentTypeController::class, 'update']);
+    Route::delete('/appointment-types/{id}', [AppointmentTypeController::class, 'destroy']);
+
+    Route::patch('/appointment-types/{id}/toggle', [AppointmentTypeController::class, 'toggle']);
+});
+
+// Department schedules (admin)
+Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    Route::get('/department-schedules', [DepartmentScheduleController::class, 'index']);
+    Route::post('/department-schedules', [DepartmentScheduleController::class, 'store']);
+    Route::put('/department-schedules/{id}', [DepartmentScheduleController::class, 'update']);
+    Route::delete('/department-schedules/{id}', [DepartmentScheduleController::class, 'destroy']);
+});
+
+// Crew appointments
+Route::middleware(['auth:sanctum'])->prefix('crew')->group(function () {
+    Route::get('/appointments/calendar', [CrewAppointmentController::class, 'calendar']);
+    Route::get('/appointments/slots', [CrewAppointmentController::class, 'slots']);
+    Route::get('/departments', [CrewAppointmentController::class, 'departments']);
+
+    Route::get('/appointments', [CrewAppointmentController::class, 'index']);
+    Route::post('/appointments', [CrewAppointmentController::class, 'store']);
+    Route::get('/appointments/{appointment}', [CrewAppointmentController::class, 'show']);
+    Route::post('/appointments/{appointment}/cancel', [CrewAppointmentController::class, 'cancel']);
+});
+
+// Appointment types by department
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get(
+        '/appointment-types/department/{departmentId}',
+        [AppointmentTypeController::class, 'getByDepartment']
+    );
+});
+
+// Admin appointments
+Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    Route::get('/appointments/calendar', [AdminAppointmentController::class, 'calendar']);
+    Route::get('/appointments', [AdminAppointmentController::class, 'index']);
+    Route::get('/appointments/{id}', [AdminAppointmentController::class, 'show']);
+    Route::post('/appointments/{id}/cancel', [AdminAppointmentController::class, 'cancel']);
+    Route::post('/appointments/{id}/confirm', [AdminAppointmentController::class, 'confirm']);
+});
