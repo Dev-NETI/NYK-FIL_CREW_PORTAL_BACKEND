@@ -7,6 +7,10 @@ use App\Models\Appointment;
 use App\Models\AppointmentCancellation;
 use App\Models\DepartmentSchedule;
 use Carbon\Carbon;
+use App\Mail\AppointmentConfirmedMail;
+use App\Mail\AppointmentCancelledMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -102,15 +106,15 @@ class AdminAppointmentController extends Controller
 
     public function confirm(int $id): JsonResponse
     {
-        $user = Auth::user();
+        $admin = Auth::user();
 
-        if ($user->is_crew) {
+        if ($admin->is_crew) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
         $appointment = Appointment::query()
             ->where('id', $id)
-            ->where('department_id', $user->department_id)
+            ->where('department_id', $admin->department_id)
             ->firstOrFail();
 
         if ($appointment->status === 'cancelled') {
@@ -123,8 +127,24 @@ class AdminAppointmentController extends Controller
 
         $appointment->update(['status' => 'confirmed']);
 
+        $appointment->load(['type', 'department', 'user']);
+
+        $crewEmail = $appointment->user?->email;
+
+        Log::info('Appointment confirmed - crew recipient', [
+            'appointment_id' => $appointment->id,
+            'crew_email' => $crewEmail,
+        ]);
+
+        if ($crewEmail) {
+            Mail::to($crewEmail)->send(
+                new AppointmentConfirmedMail($appointment, $appointment->user, $appointment->department)
+            );
+        }
+
         return response()->json(['success' => true, 'message' => 'Appointment confirmed']);
     }
+
 
     public function cancel(Request $request, int $id): JsonResponse
     {
@@ -132,32 +152,53 @@ class AdminAppointmentController extends Controller
             'reason' => ['required', 'string', 'max:2000'],
         ]);
 
-        $user = Auth::user();
+        $admin = Auth::user();
 
-        if ($user->is_crew) {
+        if ($admin->is_crew) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
         $appointment = Appointment::query()
             ->where('id', $id)
-            ->where('department_id', $user->department_id)
+            ->where('department_id', $admin->department_id)
             ->firstOrFail();
 
         if ($appointment->status === 'cancelled') {
             return response()->json(['success' => false, 'message' => 'Appointment already cancelled'], 400);
         }
 
-        DB::transaction(function () use ($appointment, $validated, $user) {
+        DB::transaction(function () use ($appointment, $validated, $admin) {
             $appointment->update(['status' => 'cancelled']);
 
             AppointmentCancellation::create([
                 'appointment_id' => $appointment->id,
-                'cancelled_by' => $user->id,
+                'cancelled_by' => $admin->id,         // FK -> users.id
                 'cancelled_by_type' => 'department',
                 'reason' => $validated['reason'],
                 'cancelled_at' => now(),
             ]);
         });
+
+        $appointment->load(['type', 'department', 'user']);
+
+        $cancellation = AppointmentCancellation::query()
+            ->where('appointment_id', $appointment->id)
+            ->latest('cancelled_at')
+            ->first();
+
+        $crewEmail = $appointment->user?->email;
+
+        Log::info('Appointment cancelled by department - crew recipient', [
+            'appointment_id' => $appointment->id,
+            'crew_email' => $crewEmail,
+            'cancellation_id' => $cancellation?->id,
+        ]); // to check email is working
+
+        if ($crewEmail && $cancellation) {
+            Mail::to($crewEmail)->send(
+                new AppointmentCancelledMail($appointment, $cancellation, $appointment->user, $appointment->department)
+            );
+        }
 
         return response()->json(['success' => true, 'message' => 'Appointment cancelled']);
     }

@@ -32,13 +32,15 @@
     </div>
 
     <div class="row">
-      <span class="label">When</span>
-      <div class="value">{{ \Carbon\Carbon::parse($appointment->date)->toFormattedDateString() }} at {{ \Carbon\Carbon::parse($appointment->time)->format('g:i A') }}</div>
+      <span class="label">Cancelled At</span>
+      <div class="value">
+        {{ \Carbon\Carbon::parse($cancellation->cancelled_at)->toDayDateTimeString() }}
+      </div>
     </div>
 
     <div class="row">
       <span class="label">Cancellation Reason</span>
-      <div class="value">{{ $appointment->cancellation_remarks ?? 'No reason provided' }}</div>
+      <div class="value">{{ $cancellation->reason ?? 'No reason provided' }}</div>
     </div>
 
     <div class="foot">If this was a mistake, please contact the department immediately.</div>

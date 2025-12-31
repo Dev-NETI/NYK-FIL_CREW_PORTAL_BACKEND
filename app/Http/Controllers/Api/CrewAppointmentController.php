@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\Appointment;
 use App\Models\AppointmentCancellation;
 use App\Models\AppointmentType;
 use App\Models\Department;
 use App\Models\DepartmentSchedule;
 use Carbon\Carbon;
+use App\Mail\AppointmentCreatedMail;
+use App\Mail\AppointmentCancelledMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class CrewAppointmentController extends Controller
@@ -44,10 +49,10 @@ class CrewAppointmentController extends Controller
             'purpose' => 'required|string|max:1000',
         ]);
 
-        $user = Auth::user();
+        $crew = Auth::user();
 
         try {
-            $appointment = DB::transaction(function () use ($validated, $user) {
+            $appointment = DB::transaction(function () use ($validated, $crew) {
                 $schedule = DepartmentSchedule::where('department_id', $validated['department_id'])
                     ->whereDate('date', $validated['appointment_date'])
                     ->lockForUpdate()
@@ -72,7 +77,7 @@ class CrewAppointmentController extends Controller
                 }
 
                 return Appointment::create([
-                    'user_id' => $user->id,
+                    'user_id' => $crew->id,
                     'department_id' => $validated['department_id'],
                     'appointment_type_id' => $validated['appointment_type_id'],
                     'schedule_id' => $schedule->id,
@@ -80,10 +85,34 @@ class CrewAppointmentController extends Controller
                     'time' => $validated['time'],
                     'purpose' => $validated['purpose'],
                     'status' => 'pending',
-                    'created_by' => $user->id,
+                    'created_by' => $crew->id,
                     'created_by_type' => 'crew',
                 ]);
             });
+
+            $appointment->load(['type', 'department', 'user']);
+
+            // Send to department admin user(s) (users table)
+            $departmentEmails = User::query()
+                ->where('is_crew', 0)
+                ->where('department_id', $appointment->department_id)
+                ->whereNotNull('email')
+                ->pluck('email')
+                ->unique()
+                ->values()
+                ->all();
+
+            Log::info('Appointment created - department recipients', [
+                'appointment_id' => $appointment->id,
+                'department_id' => $appointment->department_id,
+                'department_emails' => $departmentEmails,
+            ]);
+
+            if (! empty($departmentEmails)) {
+                Mail::to($departmentEmails)->send(
+                    new AppointmentCreatedMail($appointment, $appointment->user, $appointment->department)
+                );
+            }
 
             return response()->json([
                 'success' => true,
@@ -225,9 +254,9 @@ class CrewAppointmentController extends Controller
      */
     public function cancel(Request $request, Appointment $appointment): JsonResponse
     {
-        $user = Auth::user();
+        $crew = Auth::user();
 
-        if ($appointment->created_by !== $user->id) {
+        if ($appointment->created_by !== $crew->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Appointment not found.',
@@ -238,23 +267,46 @@ class CrewAppointmentController extends Controller
             'remarks' => 'required|string|max:1000',
         ]);
 
-        DB::transaction(function () use ($appointment, $user, $validated) {
-            $appointment->update([
-                'status' => 'cancelled',
-                'cancelled_by' => $user->id,
-                'cancelled_by_type' => 'crew',
-                'cancelled_at' => now(),
-                'cancelled_reason' => $validated['remarks'],
-            ]);
+        DB::transaction(function () use ($appointment, $crew, $validated) {
+            $appointment->update(['status' => 'cancelled']);
 
             AppointmentCancellation::create([
                 'appointment_id' => $appointment->id,
-                'cancelled_by' => $user->id,
+                'cancelled_by' => $crew->id,          // FK -> users.id
                 'cancelled_by_type' => 'crew',
                 'reason' => $validated['remarks'],
                 'cancelled_at' => now(),
             ]);
         });
+
+        $appointment->load(['type', 'department', 'user']);
+
+        $cancellation = AppointmentCancellation::query()
+            ->where('appointment_id', $appointment->id)
+            ->latest('cancelled_at')
+            ->first();
+
+        $departmentEmails = User::query()
+            ->where('is_crew', 0)
+            ->where('department_id', $appointment->department_id)
+            ->whereNotNull('email')
+            ->pluck('email')
+            ->unique()
+            ->values()
+            ->all();
+
+        Log::info('Appointment cancelled by crew - department recipients', [
+            'appointment_id' => $appointment->id,
+            'department_id' => $appointment->department_id,
+            'department_emails' => $departmentEmails,
+            'cancellation_id' => $cancellation?->id,
+        ]);
+
+        if (! empty($departmentEmails) && $cancellation) {
+            Mail::to($departmentEmails)->send(
+                new AppointmentCancelledMail($appointment, $cancellation, $appointment->user, $appointment->department)
+            );
+        }
 
         return response()->json([
             'success' => true,
