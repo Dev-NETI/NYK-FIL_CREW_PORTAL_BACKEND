@@ -66,7 +66,7 @@ class AdminAppointmentController extends Controller
             ->where('department_id', $user->department_id)
             ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
             ->withCount([
-                'appointments as booked_slots' => fn ($q) => $q->whereIn('status', ['pending', 'confirmed']),
+                'appointments as booked_slots' => fn ($q) => $q->where('status', 'confirmed'),
                 'appointments as cancelled_slots' => fn ($q) => $q->where('status', 'cancelled'),
             ])
             ->get();
@@ -112,37 +112,74 @@ class AdminAppointmentController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        $appointment = Appointment::query()
-            ->where('id', $id)
-            ->where('department_id', $admin->department_id)
-            ->firstOrFail();
+        try {
+            $appointment = DB::transaction(function () use ($id, $admin) {
+                $appointment = Appointment::query()
+                    ->where('id', $id)
+                    ->where('department_id', $admin->department_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-        if ($appointment->status === 'cancelled') {
-            return response()->json(['success' => false, 'message' => 'Appointment already cancelled'], 400);
+                if ($appointment->status === 'cancelled') {
+                    throw ValidationException::withMessages([
+                        'status' => 'Appointment already cancelled.',
+                    ]);
+                }
+
+                if ($appointment->status === 'confirmed') {
+                    return $appointment;
+                }
+
+                $schedule = DepartmentSchedule::query()
+                    ->where('id', $appointment->schedule_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $schedule) {
+                    throw ValidationException::withMessages([
+                        'schedule' => 'Schedule not found for this appointment.',
+                    ]);
+                }
+
+                $confirmedCount = Appointment::query()
+                    ->where('schedule_id', $schedule->id)
+                    ->where('status', 'confirmed')
+                    ->lockForUpdate()
+                    ->count();
+
+                if ($confirmedCount >= (int) $schedule->total_slots) {
+                    throw ValidationException::withMessages([
+                        'date' => 'Daily capacity is already full. Cannot confirm this appointment.',
+                    ]);
+                }
+
+                $appointment->update(['status' => 'confirmed']);
+
+                return $appointment;
+            });
+
+            $appointment->load(['type', 'department', 'user']);
+
+            $crewEmail = $appointment->user?->email;
+
+            Log::info('Appointment confirmed - crew recipient', [
+                'appointment_id' => $appointment->id,
+                'crew_email' => $crewEmail,
+            ]);
+
+            if ($crewEmail) {
+                Mail::to($crewEmail)->send(
+                    new AppointmentConfirmedMail($appointment, $appointment->user, $appointment->department)
+                );
+            }
+
+            return response()->json(['success' => true, 'message' => 'Appointment confirmed']);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+            ], 422);
         }
-
-        if ($appointment->status === 'confirmed') {
-            return response()->json(['success' => true, 'message' => 'Appointment already confirmed']);
-        }
-
-        $appointment->update(['status' => 'confirmed']);
-
-        $appointment->load(['type', 'department', 'user']);
-
-        $crewEmail = $appointment->user?->email;
-
-        Log::info('Appointment confirmed - crew recipient', [
-            'appointment_id' => $appointment->id,
-            'crew_email' => $crewEmail,
-        ]);
-
-        if ($crewEmail) {
-            Mail::to($crewEmail)->send(
-                new AppointmentConfirmedMail($appointment, $appointment->user, $appointment->department)
-            );
-        }
-
-        return response()->json(['success' => true, 'message' => 'Appointment confirmed']);
     }
 
 
@@ -172,7 +209,7 @@ class AdminAppointmentController extends Controller
 
             AppointmentCancellation::create([
                 'appointment_id' => $appointment->id,
-                'cancelled_by' => $admin->id,         // FK -> users.id
+                'cancelled_by' => $admin->id,
                 'cancelled_by_type' => 'department',
                 'reason' => $validated['reason'],
                 'cancelled_at' => now(),

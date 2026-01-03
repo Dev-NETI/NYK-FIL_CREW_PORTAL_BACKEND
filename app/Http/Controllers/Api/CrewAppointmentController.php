@@ -64,6 +64,17 @@ class CrewAppointmentController extends Controller
                     ]);
                 }
 
+                $confirmedCount = Appointment::where('schedule_id', $schedule->id)
+                    ->where('status', 'confirmed')
+                    ->lockForUpdate()
+                    ->count();
+
+                if ($confirmedCount >= (int) $schedule->total_slots) {
+                    throw ValidationException::withMessages([
+                        'date' => 'This date is fully booked.',
+                    ]);
+                }
+
                 $slotTaken = Appointment::where('schedule_id', $schedule->id)
                     ->where('time', $validated['time'])
                     ->whereIn('status', ['pending', 'confirmed'])
@@ -92,7 +103,6 @@ class CrewAppointmentController extends Controller
 
             $appointment->load(['type', 'department', 'user']);
 
-            // Send to department admin user(s) (users table)
             $departmentEmails = User::query()
                 ->where('is_crew', 0)
                 ->where('department_id', $appointment->department_id)
@@ -160,10 +170,8 @@ class CrewAppointmentController extends Controller
         $schedules = DepartmentSchedule::where('department_id', $validated['department_id'])
             ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->withCount([
-                'appointments as booked_slots' => fn ($q) =>
-                    $q->whereIn('status', ['pending', 'confirmed']),
-                'appointments as cancelled_slots' => fn ($q) =>
-                    $q->where('status', 'cancelled'),
+                'appointments as booked_slots' => fn ($q) => $q->where('status', 'confirmed'),
+                'appointments as cancelled_slots' => fn ($q) => $q->where('status', 'cancelled'),
             ])
             ->orderBy('date')
             ->get();
@@ -272,7 +280,7 @@ class CrewAppointmentController extends Controller
 
             AppointmentCancellation::create([
                 'appointment_id' => $appointment->id,
-                'cancelled_by' => $crew->id,          // FK -> users.id
+                'cancelled_by' => $crew->id,
                 'cancelled_by_type' => 'crew',
                 'reason' => $validated['remarks'],
                 'cancelled_at' => now(),
