@@ -9,6 +9,7 @@ use App\Models\DepartmentSchedule;
 use Carbon\Carbon;
 use App\Mail\AppointmentConfirmedMail;
 use App\Mail\AppointmentCancelledMail;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
