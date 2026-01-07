@@ -101,6 +101,7 @@ Route::apiResource('roles', RoleController::class)->only(['index']);
 Route::get('employment-document-updates', [EmploymentDocumentApprovalController::class, 'index']);
 Route::get('employment-document-updates/all', [EmploymentDocumentApprovalController::class, 'all']);
 Route::get('employment-document-updates/{id}', [EmploymentDocumentApprovalController::class, 'show']);
+Route::get('employment-document-updates/{id}/view-pending-file', [EmploymentDocumentApprovalController::class, 'viewPendingFile']);
 Route::post('employment-document-updates/{id}/approve', [EmploymentDocumentApprovalController::class, 'approve']);
 Route::post('employment-document-updates/{id}/reject', [EmploymentDocumentApprovalController::class, 'reject']);
 Route::get('employment-document-updates/history/{documentId}', [EmploymentDocumentApprovalController::class, 'history']);
