@@ -66,12 +66,19 @@
       <div class="info-box">
         <div class="info-label">Cancellation Details</div>
 
-        <div class="info-value"><strong>Crew:</strong> {{ $crew?->name ?? 'N/A' }}</div>
-        <div class="info-value"><strong>Department:</strong> {{ $department?->name ?? 'N/A' }}</div>
+        <div class="info-value">
+          <strong>Cancelled By:</strong>
+          {{ ucfirst($cancellation->cancelled_by_type ?? 'N/A') }}
+          @if(($cancellation->cancelled_by_type ?? null) === 'crew')
+            ({{ $crew?->name ?? 'N/A' }})
+          @elseif(($cancellation->cancelled_by_type ?? null) === 'department')
+            ({{ $department?->name ?? 'N/A' }})
+          @endif
+        </div>
 
         <div class="info-value">
           <strong>Cancelled At:</strong>
-          {{ \Carbon\Carbon::parse($cancellation->cancelled_at)->toDayDateTimeString() }}
+          {{ \Carbon\Carbon::parse($cancellation->cancelled_at)->format('D, M j, Y g:i A') }}
         </div>
 
         <div class="info-value">
