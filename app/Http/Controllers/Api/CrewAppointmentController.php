@@ -28,7 +28,7 @@ class CrewAppointmentController extends Controller
     public function index(): JsonResponse
     {
         $appointments = Appointment::where('created_by', Auth::id())
-            ->with(['department', 'type'])
+            ->with(['department', 'type', 'cancellations'])
             ->orderBy('date', 'desc')
             ->orderBy('time')
             ->get();
