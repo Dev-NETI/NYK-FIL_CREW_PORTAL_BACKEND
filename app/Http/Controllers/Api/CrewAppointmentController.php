@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Appointment;
 use App\Models\AppointmentCancellation;
-use App\Models\AppointmentType;
 use App\Models\Department;
 use App\Models\DepartmentSchedule;
 use Carbon\Carbon;
@@ -14,6 +13,7 @@ use App\Mail\AppointmentCreatedMail;
 use App\Mail\AppointmentCancelledMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -22,15 +22,12 @@ use Illuminate\Validation\ValidationException;
 
 class CrewAppointmentController extends Controller
 {
-    /**
-     * List all appointments of the authenticated crew member.
-     */
     public function index(): JsonResponse
     {
         $appointments = Appointment::where('created_by', Auth::id())
             ->with(['department', 'type', 'cancellations'])
             ->orderBy('date', 'desc')
-            ->orderBy('time')
+            ->orderByRaw("FIELD(session, 'AM', 'PM')")
             ->get();
 
         return response()->json([
@@ -45,7 +42,7 @@ class CrewAppointmentController extends Controller
             'department_id' => 'required|exists:departments,id',
             'appointment_type_id' => 'required|exists:appointment_types,id',
             'appointment_date' => 'required|date',
-            'time' => 'required|string',
+            'session' => 'required|in:AM,PM',
             'purpose' => 'required|string|max:1000',
         ]);
 
@@ -75,15 +72,16 @@ class CrewAppointmentController extends Controller
                     ]);
                 }
 
-                $slotTaken = Appointment::where('schedule_id', $schedule->id)
-                    ->where('time', $validated['time'])
+                $alreadyBookedByCrew = Appointment::where('schedule_id', $schedule->id)
+                    ->where('created_by', $crew->id)
+                    ->where('session', $validated['session'])
                     ->whereIn('status', ['pending', 'confirmed'])
                     ->lockForUpdate()
                     ->exists();
 
-                if ($slotTaken) {
+                if ($alreadyBookedByCrew) {
                     throw ValidationException::withMessages([
-                        'time' => 'This time slot was just booked by another user.',
+                        'session' => 'You already have an appointment for this session on the selected date.',
                     ]);
                 }
 
@@ -93,7 +91,11 @@ class CrewAppointmentController extends Controller
                     'appointment_type_id' => $validated['appointment_type_id'],
                     'schedule_id' => $schedule->id,
                     'date' => $validated['appointment_date'],
-                    'time' => $validated['time'],
+                    'session' => $validated['session'],
+
+                    // keep time null for new flow
+                    'time' => null,
+
                     'purpose' => $validated['purpose'],
                     'status' => 'pending',
                     'created_by' => $crew->id,
@@ -136,9 +138,6 @@ class CrewAppointmentController extends Controller
         }
     }
 
-    /**
-     * Show appointment details
-     */
     public function show(Appointment $appointment): JsonResponse
     {
         if ($appointment->created_by !== Auth::id()) {
@@ -154,9 +153,6 @@ class CrewAppointmentController extends Controller
         ]);
     }
 
-    /**
-     * Calendar availability per month
-     */
     public function calendar(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -180,7 +176,7 @@ class CrewAppointmentController extends Controller
             $available = max(0, (int) $s->total_slots - (int) $s->booked_slots);
 
             return [
-                'date' => $s->date->toDateString(),
+                'date' => Carbon::parse($s->date)->toDateString(),
                 'total_slots' => (int) $s->total_slots,
                 'booked_slots' => (int) $s->booked_slots,
                 'cancelled_slots' => (int) $s->cancelled_slots,
@@ -194,59 +190,41 @@ class CrewAppointmentController extends Controller
         ]);
     }
 
-    /**
-     * Available slots for a date
-     */
     public function slots(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'department_id' => 'required|exists:departments,id',
             'date' => 'required|date',
         ]);
 
-        $schedule = DepartmentSchedule::where('department_id', $request->department_id)
-            ->whereDate('date', $request->date)
+        $crew = Auth::user();
+
+        $schedule = DepartmentSchedule::where('department_id', $validated['department_id'])
+            ->whereDate('date', $validated['date'])
             ->first();
 
-        if (! $schedule || ! $schedule->opening_time || ! $schedule->closing_time) {
+        if (! $schedule) {
             return response()->json([
                 'success' => true,
                 'data' => [],
             ]);
         }
 
-        $duration = $schedule->slot_duration_minutes ?? 30;
-
-        $bookedTimes = Appointment::where('schedule_id', $schedule->id)
+        $existingSessions = Appointment::where('schedule_id', $schedule->id)
+            ->where('created_by', $crew->id)
             ->whereIn('status', ['pending', 'confirmed'])
-            ->pluck('time')
-            ->map(fn ($t) => substr($t, 0, 5))
+            ->pluck('session')
             ->toArray();
-
-        $slots = [];
-        $current = strtotime($schedule->opening_time);
-        $end = strtotime($schedule->closing_time);
-
-        while ($current < $end) {
-            $time = date('H:i', $current);
-
-            $slots[] = [
-                'time' => $time,
-                'isAvailable' => ! in_array($time, $bookedTimes),
-            ];
-
-            $current += $duration * 60;
-        }
 
         return response()->json([
             'success' => true,
-            'data' => $slots,
+            'data' => [
+                ['value' => 'AM', 'isAvailable' => ! in_array('AM', $existingSessions, true)],
+                ['value' => 'PM', 'isAvailable' => ! in_array('PM', $existingSessions, true)],
+            ],
         ]);
     }
 
-    /**
-     * Active departments
-     */
     public function departments(): JsonResponse
     {
         return response()->json([
@@ -257,9 +235,6 @@ class CrewAppointmentController extends Controller
         ]);
     }
 
-    /**
-     * Cancel appointment (crew)
-     */
     public function cancel(Request $request, Appointment $appointment): JsonResponse
     {
         $crew = Auth::user();
@@ -276,7 +251,7 @@ class CrewAppointmentController extends Controller
         ]);
 
         DB::transaction(function () use ($appointment, $crew, $validated) {
-            $appointment->update(['status' => 'cancelled']);
+            $appointment->update(['status' => 'cancelled', 'qr_token' => null]);
 
             AppointmentCancellation::create([
                 'appointment_id' => $appointment->id,
@@ -319,6 +294,54 @@ class CrewAppointmentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Appointment cancelled successfully.',
+        ]);
+    }
+
+    public function qrToken(Appointment $appointment): JsonResponse
+    {
+        $userId = Auth::id();
+
+        if ($appointment->created_by !== $userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Appointment not found.',
+            ], 404);
+        }
+
+        if ($appointment->status !== 'confirmed') {
+            if ($appointment->qr_token) {
+                $appointment->update(['qr_token' => null]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'QR is available only for confirmed appointments.',
+            ], 422);
+        }
+
+        $date = Carbon::parse($appointment->date)->format('Y-m-d');
+        $cutoffTime = $appointment->session === 'AM' ? '12:00:00' : '23:59:59';
+        $scheduledAt = Carbon::createFromFormat('Y-m-d H:i:s', $date . ' ' . $cutoffTime);
+
+        if (now()->greaterThan($scheduledAt)) {
+            return response()->json([
+                'success' => true,
+                'data' => ['token' => null],
+                'message' => 'QR not available for past appointments.',
+            ], 200);
+        }
+
+        if (! $appointment->qr_token) {
+            $appointment->update([
+                'qr_token' => Str::random(64),
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'token' => $appointment->qr_token,
+            ],
         ]);
     }
 }

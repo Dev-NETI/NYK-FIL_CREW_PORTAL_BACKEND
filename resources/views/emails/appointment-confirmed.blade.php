@@ -94,11 +94,11 @@
         <div class="info-value"><strong>Crew:</strong> {{ $crew?->name ?? 'N/A' }}</div>
         <div class="info-value"><strong>Department:</strong> {{ $department?->name ?? 'N/A' }}</div>
         <div class="info-value">
-          <strong>When:</strong>
-          {{ \Carbon\Carbon::parse($appointment->date)->toFormattedDateString() }}
-          at
-          {{ \Carbon\Carbon::parse($appointment->time)->format('g:i A') }}
-        </div>
+        <strong>When:</strong>
+        {{ \Carbon\Carbon::parse($appointment->date)->toFormattedDateString() }}
+        ({{ $appointment->session ?? 'N/A' }})
+      </div>
+
       </div>
 
       <div class="message-container">

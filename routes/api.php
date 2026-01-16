@@ -43,6 +43,7 @@ use App\Http\Controllers\Api\DepartmentScheduleController;
 use App\Http\Controllers\Api\CrewAppointmentController;
 use App\Http\Controllers\Api\AdminAppointmentController;
 use App\Http\Controllers\Api\ProfileUpdateRequestController;
+use App\Http\Controllers\Api\GuardAppointmentController;
 use App\Models\CertificateType;
 use Illuminate\Support\Facades\Route;
 
@@ -266,3 +267,9 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::post('/appointments/{id}/cancel', [AdminAppointmentController::class, 'cancel']);
     Route::post('/appointments/{id}/confirm', [AdminAppointmentController::class, 'confirm']);
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/crew/appointments/{appointment}/qr', [CrewAppointmentController::class, 'qrToken']);
+});
+
+Route::post('/guard/appointments/verify', [GuardAppointmentController::class, 'verify']);

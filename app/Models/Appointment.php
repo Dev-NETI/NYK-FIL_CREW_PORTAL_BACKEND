@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -18,17 +17,21 @@ class Appointment extends Model
         'appointment_type_id',
         'schedule_id',
         'date',
+        'session',
         'time',
         'purpose',
         'duration_minutes',
         'status',
         'created_by',
         'created_by_type',
+        'qr_token',
+        'qr_expires_at',
     ];
 
     protected $casts = [
         'date' => 'date',
         'deleted_at' => 'datetime',
+        'qr_expires_at' => 'datetime',
     ];
 
     public function department(): BelongsTo
@@ -51,9 +54,8 @@ class Appointment extends Model
         return $this->hasMany(AppointmentCancellation::class, 'appointment_id');
     }
 
-    public function schedule()
+    public function schedule(): BelongsTo
     {
         return $this->belongsTo(DepartmentSchedule::class, 'schedule_id');
     }
-
 }
