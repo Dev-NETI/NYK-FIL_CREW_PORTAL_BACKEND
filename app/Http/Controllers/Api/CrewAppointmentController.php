@@ -24,7 +24,19 @@ class CrewAppointmentController extends Controller
 {
     public function index(): JsonResponse
     {
-        $appointments = Appointment::where('created_by', Auth::id())
+        $crewId = Auth::id();
+
+        Appointment::query()
+            ->where('created_by', $crewId)
+            ->where('status', 'confirmed')
+            ->whereNotNull('qr_expires_at')
+            ->where('qr_expires_at', '<', now())
+            ->update([
+                'status' => 'no show',
+                'qr_token' => null,
+            ]);
+
+        $appointments = Appointment::where('created_by', $crewId)
             ->with(['department', 'type', 'cancellations'])
             ->orderBy('date', 'desc')
             ->orderByRaw("FIELD(session, 'AM', 'PM')")
@@ -324,6 +336,15 @@ class CrewAppointmentController extends Controller
         $scheduledAt = Carbon::createFromFormat('Y-m-d H:i:s', $date . ' ' . $cutoffTime);
 
         if (now()->greaterThan($scheduledAt)) {
+            if ($appointment->status === 'confirmed') {
+                $appointment->update([
+                    'status' => 'no show',
+                    'qr_token' => null,
+                ]);
+            } else if ($appointment->qr_token) {
+                $appointment->update(['qr_token' => null]);
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => ['token' => null],

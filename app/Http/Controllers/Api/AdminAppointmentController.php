@@ -28,6 +28,16 @@ class AdminAppointmentController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
+        Appointment::query()
+            ->where('department_id', $user->department_id)
+            ->where('status', 'confirmed')
+            ->whereNotNull('qr_expires_at')
+            ->where('qr_expires_at', '<', now())
+            ->update([
+                'status' => 'no show',
+                'qr_token' => null,
+            ]);
+
         $query = Appointment::with(['type', 'user.profile', 'cancellations'])
             ->where('department_id', $user->department_id);
 
@@ -71,7 +81,7 @@ class AdminAppointmentController extends Controller
             ->where('department_id', $user->department_id)
             ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
             ->withCount([
-                'appointments as booked_slots' => fn ($q) => $q->where('status', 'confirmed'),
+                'appointments as booked_slots' => fn ($q) => $q->whereIn('status', ['confirmed', 'attended', 'no show']),
                 'appointments as cancelled_slots' => fn ($q) => $q->where('status', 'cancelled'),
             ])
             ->get();

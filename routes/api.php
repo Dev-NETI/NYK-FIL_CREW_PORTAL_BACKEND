@@ -43,7 +43,7 @@ use App\Http\Controllers\Api\DepartmentScheduleController;
 use App\Http\Controllers\Api\CrewAppointmentController;
 use App\Http\Controllers\Api\AdminAppointmentController;
 use App\Http\Controllers\Api\ProfileUpdateRequestController;
-use App\Http\Controllers\Api\GuardAppointmentController;
+use App\Http\Controllers\Api\QrAppointmentController;
 use App\Models\CertificateType;
 use Illuminate\Support\Facades\Route;
 
@@ -272,4 +272,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/crew/appointments/{appointment}/qr', [CrewAppointmentController::class, 'qrToken']);
 });
 
-Route::post('/guard/appointments/verify', [GuardAppointmentController::class, 'verify']);
+Route::post('/qr/appointments/verify', [QrAppointmentController::class, 'verify']);
