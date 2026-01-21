@@ -12,6 +12,7 @@ use App\Mail\AppointmentCancelledMail;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +27,16 @@ class AdminAppointmentController extends Controller
         if ($user->is_crew) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
+
+        Appointment::query()
+            ->where('department_id', $user->department_id)
+            ->where('status', 'confirmed')
+            ->whereNotNull('qr_expires_at')
+            ->where('qr_expires_at', '<', now())
+            ->update([
+                'status' => 'no show',
+                'qr_token' => null,
+            ]);
 
         $query = Appointment::with(['type', 'user.profile', 'cancellations'])
             ->where('department_id', $user->department_id);
@@ -44,7 +55,10 @@ class AdminAppointmentController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $query->orderBy('date', 'desc')->orderBy('time')->get(),
+            'data' => $query
+                ->orderBy('date', 'desc')
+                ->orderByRaw("FIELD(session, 'AM', 'PM')")
+                ->get(),
         ]);
     }
 
@@ -67,7 +81,7 @@ class AdminAppointmentController extends Controller
             ->where('department_id', $user->department_id)
             ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
             ->withCount([
-                'appointments as booked_slots' => fn ($q) => $q->where('status', 'confirmed'),
+                'appointments as booked_slots' => fn ($q) => $q->whereIn('status', ['confirmed', 'attended', 'no show']),
                 'appointments as cancelled_slots' => fn ($q) => $q->where('status', 'cancelled'),
             ])
             ->get();
@@ -128,6 +142,9 @@ class AdminAppointmentController extends Controller
                 }
 
                 if ($appointment->status === 'confirmed') {
+                    if (! $appointment->qr_token) {
+                        $appointment->update(['qr_token' => Str::random(64)]);
+                    }
                     return $appointment;
                 }
 
@@ -154,7 +171,11 @@ class AdminAppointmentController extends Controller
                     ]);
                 }
 
-                $appointment->update(['status' => 'confirmed']);
+                $appointment->update([
+                    'status' => 'confirmed',
+                    'qr_token' => $appointment->qr_token ?: Str::random(64),
+                    'qr_expires_at' => Carbon::parse($appointment->date)->endOfDay(),
+                ]);
 
                 return $appointment;
             });
@@ -183,7 +204,6 @@ class AdminAppointmentController extends Controller
         }
     }
 
-
     public function cancel(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
@@ -206,7 +226,10 @@ class AdminAppointmentController extends Controller
         }
 
         DB::transaction(function () use ($appointment, $validated, $admin) {
-            $appointment->update(['status' => 'cancelled']);
+            $appointment->update([
+                'status' => 'cancelled',
+                'qr_token' => null,
+            ]);
 
             AppointmentCancellation::create([
                 'appointment_id' => $appointment->id,
@@ -230,7 +253,7 @@ class AdminAppointmentController extends Controller
             'appointment_id' => $appointment->id,
             'crew_email' => $crewEmail,
             'cancellation_id' => $cancellation?->id,
-        ]); // to check email is working
+        ]);
 
         if ($crewEmail && $cancellation) {
             Mail::to($crewEmail)->send(

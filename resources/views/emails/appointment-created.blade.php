@@ -209,11 +209,11 @@
         </div>
 
         <div class="info-value">
-          <strong>Date &amp; Time:</strong>
-          {{ \Carbon\Carbon::parse($appointment->date)->toFormattedDateString() }}
-          at
-          {{ \Carbon\Carbon::parse($appointment->time)->format('g:i A') }}
-        </div>
+        <strong>Date &amp; Session:</strong>
+        {{ \Carbon\Carbon::parse($appointment->date)->toFormattedDateString() }}
+        ({{ $appointment->session ?? 'N/A' }})
+      </div>
+
       </div>
 
       <div class="message-container">

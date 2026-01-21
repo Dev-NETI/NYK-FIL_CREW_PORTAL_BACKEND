@@ -26,30 +26,41 @@ class DepartmentScheduleController extends Controller
         return response()->json(['success' => true, 'data' => $schedules]);
     }
 
-    /**
-     * Compute the capacity of slots between opening and closing time given a time duration.
-     * - If duration is null, defaults to 30 minutes..
-     */
-    private function computeMaxSlots(?string $opening, ?string $closing, ?int $durationMinutes): int
+    private function expandDates(array $validated): array
     {
-        if (! $opening || ! $closing) {
-            return 0;
+        if (! empty($validated['dates']) && is_array($validated['dates'])) {
+            return collect($validated['dates'])
+                ->map(fn ($d) => Carbon::parse($d)->toDateString())
+                ->unique()
+                ->values()
+                ->all();
         }
 
-        $duration = $durationMinutes ?: 30;
-        if ($duration <= 0) {
-            return 0;
+        if (! empty($validated['start_date']) && ! empty($validated['end_date'])) {
+            $start = Carbon::parse($validated['start_date'])->startOfDay();
+            $end = Carbon::parse($validated['end_date'])->startOfDay();
+
+            if ($end->lt($start)) {
+                throw ValidationException::withMessages([
+                    'end_date' => 'End date must be the same as or later than start date.',
+                ]);
+            }
+
+            $dates = [];
+            for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+                $dates[] = $d->toDateString();
+            }
+
+            return $dates;
         }
 
-        $open = Carbon::createFromFormat('H:i', $opening);
-        $close = Carbon::createFromFormat('H:i', $closing);
-
-        $totalMinutes = $close->diffInMinutes($open, false);
-        if ($totalMinutes <= 0) {
-            return 0;
+        if (! empty($validated['date'])) {
+            return [Carbon::parse($validated['date'])->toDateString()];
         }
 
-        return intdiv($totalMinutes, $duration);
+        throw ValidationException::withMessages([
+            'date' => 'Please provide either date, dates[], or start_date and end_date.',
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -61,38 +72,38 @@ class DepartmentScheduleController extends Controller
             }
 
             $validated = $request->validate([
-                'date' => 'required|date',
                 'total_slots' => 'required|integer|min:0',
-                'opening_time' => 'nullable|date_format:H:i',
-                'closing_time' => 'nullable|date_format:H:i|after:opening_time',
-                'slot_duration_minutes' => 'nullable|integer|min:5',
+
+                // Option A: single day
+                'date' => 'nullable|date',
+
+                // Option B: multiple days
+                'dates' => 'nullable|array|min:1',
+                'dates.*' => 'date',
+
+                // Option C: date range
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date',
             ]);
 
-            $maxSlots = $this->computeMaxSlots(
-                $validated['opening_time'] ?? null,
-                $validated['closing_time'] ?? null,
-                $validated['slot_duration_minutes'] ?? null
-            );
+            $dates = $this->expandDates($validated);
 
-            if ($maxSlots > 0 && (int) $validated['total_slots'] > $maxSlots) {
-                throw ValidationException::withMessages([
-                    'total_slots' => "Daily capacity cannot exceed {$maxSlots} based on the selected time range and slot duration.",
-                ]);
+            $saved = [];
+            foreach ($dates as $date) {
+                $saved[] = DepartmentSchedule::updateOrCreate(
+                    ['department_id' => $user->department_id, 'date' => $date],
+                    [
+                        'department_id' => $user->department_id,
+                        'date' => $date,
+                        'total_slots' => $validated['total_slots'],
+                        'created_by' => Auth::id(),
+                    ]
+                );
             }
-
-            $data = array_merge($validated, [
-                'department_id' => $user->department_id,
-                'created_by' => Auth::id(),
-            ]);
-
-            $schedule = DepartmentSchedule::updateOrCreate(
-                ['department_id' => $user->department_id, 'date' => $validated['date']],
-                $data
-            );
 
             return response()->json([
                 'success' => true,
-                'data' => $schedule,
+                'data' => $saved,
                 'message' => 'Schedule saved',
             ]);
         } catch (ValidationException $e) {
@@ -117,38 +128,10 @@ class DepartmentScheduleController extends Controller
                 ->firstOrFail();
 
             $validated = $request->validate([
-                'total_slots' => 'nullable|integer|min:0',
-                'opening_time' => 'nullable|date_format:H:i',
-                'closing_time' => 'nullable|date_format:H:i',
-                'slot_duration_minutes' => 'nullable|integer|min:5',
+                'total_slots' => 'required|integer|min:0',
             ]);
 
-            $opening = array_key_exists('opening_time', $validated) ? $validated['opening_time'] : $schedule->opening_time;
-            $closing = array_key_exists('closing_time', $validated) ? $validated['closing_time'] : $schedule->closing_time;
-            $duration = array_key_exists('slot_duration_minutes', $validated) ? $validated['slot_duration_minutes'] : $schedule->slot_duration_minutes;
-
-            $maxSlots = $this->computeMaxSlots($opening, $closing, $duration);
-
-            $totalSlots = array_key_exists('total_slots', $validated) ? $validated['total_slots'] : $schedule->total_slots;
-
-            if ($maxSlots > 0 && (int) $totalSlots > $maxSlots) {
-                throw ValidationException::withMessages([
-                    'total_slots' => "Daily capacity cannot exceed {$maxSlots} based on the selected time range and slot duration.",
-                ]);
-            }
-
-            if ($opening && $closing) {
-                $open = Carbon::createFromFormat('H:i', $opening);
-                $close = Carbon::createFromFormat('H:i', $closing);
-
-                if ($close->diffInMinutes($open, false) <= 0) {
-                    throw ValidationException::withMessages([
-                        'closing_time' => 'Closing time must be later than opening time.',
-                    ]);
-                }
-            }
-
-            $schedule->fill($validated);
+            $schedule->total_slots = $validated['total_slots'];
             $schedule->modified_by = Auth::id();
             $schedule->save();
 

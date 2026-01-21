@@ -36,6 +36,29 @@
     .footer { background:#f9fafb; padding: 35px 40px; text-align: center; border-top: 1px solid #e5e7eb; }
     .divider { height: 1px; background: linear-gradient(90deg, transparent, #e5e7eb, transparent); margin: 10px 0 20px; }
     .support-text { font-size: 12px; color:#9ca3af; }
+    .message-container {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 2px solid #3b82f6;
+      border-radius: 16px;
+      padding: 22px;
+      margin: 26px 0;
+      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
+    }
+    .message-label {
+      font-size: 14px;
+      color: #1e40af;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .message-content {
+      font-size: 15px;
+      color: #1e3a8a;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
     @media only screen and (max-width: 600px) {
       body { padding: 20px 10px; }
       .email-wrapper { border-radius: 12px; }
@@ -71,11 +94,16 @@
         <div class="info-value"><strong>Crew:</strong> {{ $crew?->name ?? 'N/A' }}</div>
         <div class="info-value"><strong>Department:</strong> {{ $department?->name ?? 'N/A' }}</div>
         <div class="info-value">
-          <strong>When:</strong>
-          {{ \Carbon\Carbon::parse($appointment->date)->toFormattedDateString() }}
-          at
-          {{ \Carbon\Carbon::parse($appointment->time)->format('g:i A') }}
-        </div>
+        <strong>When:</strong>
+        {{ \Carbon\Carbon::parse($appointment->date)->toFormattedDateString() }}
+        ({{ $appointment->session ?? 'N/A' }})
+      </div>
+
+      </div>
+
+      <div class="message-container">
+        <div class="message-label">Purpose</div>
+        <div class="message-content">{{ $appointment->purpose ?? 'N/A' }}</div>
       </div>
 
       <!-- <div class="cta">
