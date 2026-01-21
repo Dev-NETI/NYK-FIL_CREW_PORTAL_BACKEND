@@ -29,6 +29,7 @@ class RoleSeeder extends Seeder
             ['name' => 'User Management'],
             ['name' => 'Appointments'],
             ['name' => 'Qr Scanner'],
+            ['name' => 'Debriefing Form'],
         ];
 
         foreach ($roles as $role) {
