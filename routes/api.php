@@ -44,6 +44,9 @@ use App\Http\Controllers\Api\CrewAppointmentController;
 use App\Http\Controllers\Api\AdminAppointmentController;
 use App\Http\Controllers\Api\ProfileUpdateRequestController;
 use App\Http\Controllers\Api\QrAppointmentController;
+use App\Http\Controllers\Api\DebriefingPdfLinkController;
+use App\Http\Controllers\Api\AdminDebriefingFormController;
+use App\Http\Controllers\Api\CrewDebriefingFormController;
 use App\Models\CertificateType;
 use Illuminate\Support\Facades\Route;
 
@@ -273,3 +276,34 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::post('/qr/appointments/verify', [QrAppointmentController::class, 'verify']);
+
+// Debriefing form
+Route::middleware(['signed', 'throttle:10,1'])->group(function () {
+    Route::get(
+        '/debriefing-forms/{id}/pdf/download',
+        [DebriefingPdfLinkController::class, 'download']
+    )->name('debriefing.pdf.download');
+});
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('admin')->group(function () {
+        Route::get('/debriefing-forms', [AdminDebriefingFormController::class, 'index']);
+        Route::get('/debriefing-forms/{id}', [AdminDebriefingFormController::class, 'show']);
+        Route::post('/debriefing-forms/{id}/confirm', [AdminDebriefingFormController::class, 'confirm']);
+        Route::get('/debriefing-forms/{id}/pdf/preview', [AdminDebriefingFormController::class, 'previewPdf']);
+        Route::get('/debriefing-forms/{id}/pdf/download', [AdminDebriefingFormController::class, 'downloadPdf']);
+        Route::post('/debriefing-forms/{id}/pdf/regenerate', [AdminDebriefingFormController::class, 'regeneratePdf']);
+        Route::put('/debriefing-forms/{id}/override', [AdminDebriefingFormController::class, 'override']);
+    });
+
+    Route::prefix('crew')->group(function () {
+        Route::get('/debriefing-forms', [CrewDebriefingFormController::class, 'index']);
+        Route::post('/debriefing-forms', [CrewDebriefingFormController::class, 'store']);
+        Route::get('/debriefing-forms/{id}', [CrewDebriefingFormController::class, 'show']);
+        Route::put('/debriefing-forms/{id}', [CrewDebriefingFormController::class, 'update']);
+        Route::post('/debriefing-forms/{id}/submit', [CrewDebriefingFormController::class, 'submit']);
+        Route::get('/debriefing-forms/{id}/pdf/preview', [CrewDebriefingFormController::class, 'previewPdf']);
+        Route::get('/debriefing-forms/{id}/pdf/download', [CrewDebriefingFormController::class, 'downloadPdf']);
+    });
+});
