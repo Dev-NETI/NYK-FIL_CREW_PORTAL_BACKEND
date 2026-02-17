@@ -90,7 +90,7 @@ Route::apiResource('crew-inquiry-messages', InquiryMessageController::class)->on
 Route::apiResource('departmentTypes', DepartmentTypesController::class)->only(['index']);
 Route::patch('crew-inquiry-messages/{id}/mark-read', [InquiryMessageController::class, 'markRead']);
 
-
+//For Inquiry
 //ADMIN
 Route::apiResource('admin-inquiry-messages', AdminInquiryController::class)->only(['show', 'store', 'update']);
 Route::apiResource('admin-messages', AdminMessageContoller::class)->only(['show', 'store', 'update']);

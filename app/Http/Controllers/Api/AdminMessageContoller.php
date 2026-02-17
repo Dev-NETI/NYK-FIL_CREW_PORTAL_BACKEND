@@ -68,7 +68,7 @@ class AdminMessageContoller extends Controller
 
             // Send email notification to the inquirer
             if ($inquirerEmail) {
-                Mail::to($inquirerEmail)->queue(
+                Mail::to($inquirerEmail)->send(
                     new AdminMessageNotification(
                         messageContent: $validated['message'],
                         senderName: $senderName,

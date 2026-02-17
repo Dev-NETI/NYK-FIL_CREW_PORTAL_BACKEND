@@ -92,7 +92,7 @@ class InquiryMessageController extends Controller
             $recipients = $departmentUsers;
 
             // Send email notification to all recipients
-            Mail::to($recipients)->queue(
+            Mail::to($recipients)->send(
                 new AdminMessageNotification(
                     messageContent: $validated['message'],
                     senderName: $senderName,
