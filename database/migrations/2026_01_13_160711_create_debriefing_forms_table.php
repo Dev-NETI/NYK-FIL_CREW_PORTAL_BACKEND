@@ -14,13 +14,12 @@ return new class extends Migration
         Schema::create('debriefing_forms', function (Blueprint $table) {
             $table->id();
             $table->foreignId('crew_id')->constrained('users')->cascadeOnDelete();
-            $table->unsignedBigInteger('department_id')->nullable()->after('crew_id');
+            $table->unsignedBigInteger('department_id')->nullable();
             $table->enum('status', ['draft', 'submitted', 'confirmed'])->default('draft')->index();
-            $table->timestamp('submitted_at')->nullable()->after('status');
-            $table->timestamp('confirmed_at')->nullable()->after('submitted_at');
+            $table->timestamp('submitted_at')->nullable();
+            $table->timestamp('confirmed_at')->nullable();
             $table->foreignId('confirmed_by')
                 ->nullable()
-                ->after('confirmed_at')
                 ->constrained('users')
                 ->nullOnDelete();
             $table->string('rank')->nullable();
@@ -56,9 +55,9 @@ return new class extends Migration
             $table->string('signature_path')->nullable();
             $table->string('pdf_path')->nullable();
             $table->timestamp('pdf_generated_at')->nullable();
-            $table->enum('pdf_status', ['pending', 'generating', 'ready', 'failed'])->nullable()->after('pdf_path');
-            $table->text('pdf_error')->nullable()->after('pdf_status');
-            $table->timestamp('pdf_emailed_at')->nullable()->after('pdf_generated_at');
+            $table->enum('pdf_status', ['pending', 'generating', 'ready', 'failed'])->nullable();
+            $table->text('pdf_error')->nullable();
+            $table->timestamp('pdf_emailed_at')->nullable();
             $table->timestamps();
             $table->index(['crew_id', 'status']);
             $table->index('department_id');
