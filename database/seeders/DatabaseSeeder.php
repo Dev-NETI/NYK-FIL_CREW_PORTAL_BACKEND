@@ -72,6 +72,7 @@ class DatabaseSeeder extends Seeder
             AdminProfileSeeder::class,
             RoleSeeder::class,
             AdminRoleSeeder::class,
+            AppointmentTypeSeeder::class,
         ]);
     }
 }

@@ -3,34 +3,46 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\TravelDocumentUpdateResource;
-use App\Models\TravelDocumentUpdate;
-use App\Traits\SendsDocumentNotifications;
+use App\Models\CrewCertificateUpdate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-class TravelDocumentApprovalController extends Controller
+class CrewCertificateApprovalController extends Controller
 {
-    use SendsDocumentNotifications;
     /**
      * Get all pending updates
      */
     public function index()
     {
         try {
-            $updates = TravelDocumentUpdate::with([
-                'travelDocument.userProfile',
-                'travelDocument.travelDocumentType',
+            $updates = CrewCertificateUpdate::with([
+                'crewCertificate.crew',
+                'crewCertificate.certificate',
                 'userProfile',
             ])
                 ->where('status', 'pending')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            return TravelDocumentUpdateResource::collection($updates);
+            // For records without certificate relationship, add certificate name from Certificate model
+            $updates->each(function ($update) {
+                if (!$update->crewCertificate && isset($update->updated_data['certificate_id'])) {
+                    $certificate = \App\Models\Certificate::find($update->updated_data['certificate_id']);
+                    if ($certificate) {
+                        // Add certificate name to updated_data if not already present
+                        if (!isset($update->updated_data['certificate_name'])) {
+                            $updateData = $update->updated_data;
+                            $updateData['certificate_name'] = $certificate->name;
+                            $update->updated_data = $updateData;
+                        }
+                    }
+                }
+            });
+
+            return response()->json($updates);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -46,15 +58,30 @@ class TravelDocumentApprovalController extends Controller
     public function all()
     {
         try {
-            $updates = TravelDocumentUpdate::with([
-                'travelDocument.userProfile',
-                'travelDocument.travelDocumentType',
+            $updates = CrewCertificateUpdate::with([
+                'crewCertificate.crew',
+                'crewCertificate.certificate',
                 'userProfile',
             ])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            return TravelDocumentUpdateResource::collection($updates);
+            // For rejected records without certificate relationship, add certificate name from Certificate model
+            $updates->each(function ($update) {
+                if (!$update->crewCertificate && isset($update->updated_data['certificate_id'])) {
+                    $certificate = \App\Models\Certificate::find($update->updated_data['certificate_id']);
+                    if ($certificate) {
+                        // Add certificate name to updated_data if not already present
+                        if (!isset($update->updated_data['certificate_name'])) {
+                            $updateData = $update->updated_data;
+                            $updateData['certificate_name'] = $certificate->name;
+                            $update->updated_data = $updateData;
+                        }
+                    }
+                }
+            });
+
+            return response()->json($updates);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -70,13 +97,13 @@ class TravelDocumentApprovalController extends Controller
     public function show($id)
     {
         try {
-            $update = TravelDocumentUpdate::with([
-                'travelDocument.userProfile',
-                'travelDocument.travelDocumentType',
+            $update = CrewCertificateUpdate::with([
+                'crewCertificate.crew',
+                'crewCertificate.certificate',
                 'userProfile',
             ])->findOrFail($id);
 
-            return new TravelDocumentUpdateResource($update);
+            return response()->json($update);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -94,7 +121,7 @@ class TravelDocumentApprovalController extends Controller
         DB::beginTransaction();
 
         try {
-            $update = TravelDocumentUpdate::with('travelDocument')->findOrFail($id);
+            $update = CrewCertificateUpdate::with('crewCertificate')->findOrFail($id);
 
             if ($update->status !== 'pending') {
                 return response()->json([
@@ -108,17 +135,17 @@ class TravelDocumentApprovalController extends Controller
                 ? "{$user->adminProfile->firstname} {$user->adminProfile->lastname}"
                 : $user->email;
 
-            // Check if this is a new document creation (original id_no starts with PENDING_)
-            $isNewDocument = isset($update->original_data['id_no']) &&
-                str_starts_with($update->original_data['id_no'], 'PENDING_');
+            // Check if this is a new certificate creation (original certificate_no starts with PENDING_)
+            $isNewCertificate = isset($update->original_data['certificate_no']) &&
+                str_starts_with($update->original_data['certificate_no'], 'PENDING_');
 
-            // Apply changes to actual document
+            // Apply changes to actual certificate
             $updateData = $update->updated_data;
 
             // If there's a pending file, move it to the permanent location
-            if (isset($updateData['file_path']) && str_contains($updateData['file_path'], 'travel_documents_pending')) {
+            if (isset($updateData['file_path']) && str_contains($updateData['file_path'], 'crew_certificates_pending')) {
                 $oldPath = $updateData['file_path'];
-                $newPath = str_replace('travel_documents_pending', 'travel_documents', $oldPath);
+                $newPath = str_replace('crew_certificates_pending', 'crew_certificates', $oldPath);
 
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->move($oldPath, $newPath);
@@ -126,7 +153,7 @@ class TravelDocumentApprovalController extends Controller
                 }
             }
 
-            $update->travelDocument->update($updateData);
+            $update->crewCertificate->update($updateData);
 
             // Mark as approved
             $update->update([
@@ -137,22 +164,8 @@ class TravelDocumentApprovalController extends Controller
 
             DB::commit();
 
-            // Send email notification to crew
-            $this->sendCrewNotification(
-                $update,
-                'approved',
-                'Travel',
-                $update->travelDocument?->travelDocumentType?->name ?? 'Travel Document',
-                $reviewerName,
-                [
-                    'ID Number' => $update->updated_data['id_no'] ?? 'N/A',
-                    'Place of Issue' => $update->updated_data['place_of_issue'] ?? 'N/A',
-                    'Expiration Date' => $update->updated_data['expiration_date'] ?? 'N/A',
-                ]
-            );
-
-            $message = $isNewDocument
-                ? 'New travel document approved and created successfully'
+            $message = $isNewCertificate
+                ? 'New certificate approved and created successfully'
                 : 'Update approved and applied successfully';
 
             return response()->json([
@@ -181,7 +194,7 @@ class TravelDocumentApprovalController extends Controller
                 'rejection_reason' => 'required|string|max:500',
             ]);
 
-            $update = TravelDocumentUpdate::with('travelDocument')->findOrFail($id);
+            $update = CrewCertificateUpdate::with('crewCertificate')->findOrFail($id);
 
             if ($update->status !== 'pending') {
                 return response()->json([
@@ -195,12 +208,20 @@ class TravelDocumentApprovalController extends Controller
                 ? "{$user->adminProfile->firstname} {$user->adminProfile->lastname}"
                 : $user->email;
 
-            // Check if this is a new document creation (original id_no starts with PENDING_)
-            $isNewDocument = isset($update->original_data['id_no']) &&
-                str_starts_with($update->original_data['id_no'], 'PENDING_');
+            // Check if this is a new certificate creation (original certificate_no starts with PENDING_)
+            $isNewCertificate = isset($update->original_data['certificate_no']) &&
+                str_starts_with($update->original_data['certificate_no'], 'PENDING_');
 
-            // If rejecting a new document creation, completely remove the temporary document
-            if ($isNewDocument) {
+            // Mark update as rejected first (before deleting certificate to avoid cascade delete)
+            $update->update([
+                'status' => 'rejected',
+                'reviewed_by' => $reviewerName,
+                'reviewed_at' => now(),
+                'rejection_reason' => $validated['rejection_reason'],
+            ]);
+
+            // If rejecting a new certificate creation, delete the temporary certificate and pending file
+            if ($isNewCertificate) {
                 // Delete pending file if exists
                 if (isset($update->updated_data['file_path'])) {
                     $filePath = $update->updated_data['file_path'];
@@ -209,46 +230,19 @@ class TravelDocumentApprovalController extends Controller
                     }
                 }
 
-                // Force delete the temporary travel document (it shouldn't exist at all)
-                $update->travelDocument->forceDelete();
-            } else {
-                // For document updates, delete the pending file but keep the original document unchanged
-                if (isset($update->updated_data['file_path'])) {
-                    $filePath = $update->updated_data['file_path'];
-                    // Only delete if it's a pending file (different from original)
-                    if (str_contains($filePath, 'travel_documents_pending') && Storage::disk('public')->exists($filePath)) {
-                        Storage::disk('public')->delete($filePath);
-                    }
-                }
-                // Original document remains unchanged - no action needed
-            }
+                // Remove the foreign key constraint temporarily by setting it to null
+                // This prevents cascade delete of the update record
+                $update->update(['crew_certificate_id' => null]);
 
-            $update->update([
-                'status' => 'rejected',
-                'reviewed_by' => $reviewerName,
-                'reviewed_at' => now(),
-                'rejection_reason' => $validated['rejection_reason'],
-            ]);
+                // Now delete the temporary crew certificate
+                $update->crewCertificate->forceDelete();
+            }
 
             DB::commit();
 
-            // Send email notification to crew
-            $this->sendCrewNotification(
-                $update,
-                'rejected',
-                'Travel',
-                $update->travelDocument?->travelDocumentType?->name ?? 'Travel Document',
-                $reviewerName,
-                [
-                    'ID Number' => $update->updated_data['id_no'] ?? 'N/A',
-                    'Place of Issue' => $update->updated_data['place_of_issue'] ?? 'N/A',
-                ],
-                $validated['rejection_reason']
-            );
-
-            $message = $isNewDocument
-                ? 'New document creation rejected and removed'
-                : 'Update rejected - original document retained';
+            $message = $isNewCertificate
+                ? 'New certificate creation rejected and removed'
+                : 'Update rejected';
 
             return response()->json([
                 'success' => true,
@@ -271,28 +265,28 @@ class TravelDocumentApprovalController extends Controller
     }
 
     /**
-     * Get update history for a document
+     * Get update history for a certificate
      */
-    public function history($documentId)
+    public function history($certificateId)
     {
         try {
-            $updates = TravelDocumentUpdate::with([
-                'travelDocument.userProfile',
-                'travelDocument.travelDocumentType',
+            $updates = CrewCertificateUpdate::with([
+                'crewCertificate.crew',
+                'crewCertificate.certificate',
                 'userProfile',
             ])
-                ->where('travel_document_id', $documentId)
+                ->where('crew_certificate_id', $certificateId)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([
                 'success' => true,
-                'data' => TravelDocumentUpdateResource::collection($updates),
+                'data' => $updates,
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching update history', [
                 'error' => $e->getMessage(),
-                'document_id' => $documentId,
+                'certificate_id' => $certificateId,
                 'trace' => $e->getTraceAsString(),
             ]);
 

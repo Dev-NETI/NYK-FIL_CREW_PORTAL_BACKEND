@@ -262,4 +262,64 @@ class EmploymentDocumentApprovalController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * View pending document file
+     */
+    public function viewPendingFile($id)
+    {
+        try {
+            $update = EmploymentDocumentUpdate::findOrFail($id);
+
+            // Check if there's a pending file
+            if (!isset($update->updated_data['file_path'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No pending file found',
+                ], 404);
+            }
+
+            $filePath = $update->updated_data['file_path'];
+
+            // Check if file exists
+            if (!Storage::disk('public')->exists($filePath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File not found',
+                ], 404);
+            }
+
+            // Get file extension and determine content type
+            $extension = $update->updated_data['file_ext'] ?? pathinfo($filePath, PATHINFO_EXTENSION);
+            $mimeType = match (strtolower($extension)) {
+                'pdf' => 'application/pdf',
+                'jpg', 'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                default => 'application/octet-stream',
+            };
+
+            // Return file response
+            return response()->file(
+                Storage::disk('public')->path($filePath),
+                [
+                    'Content-Type' => $mimeType,
+                    'Content-Disposition' => 'inline',
+                ]
+            );
+        } catch (\Exception $e) {
+            Log::error('Error viewing pending file', [
+                'error' => $e->getMessage(),
+                'update_id' => $id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load file',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

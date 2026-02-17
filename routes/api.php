@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CertificateTypeController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\CrewCertificateController;
+use App\Http\Controllers\Api\CrewCertificateApprovalController;
 use App\Http\Controllers\Api\DepartmentCategoryController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DepartmentTypesController;
@@ -37,7 +38,15 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\VesselTypeController;
+use App\Http\Controllers\Api\AppointmentTypeController;
+use App\Http\Controllers\Api\DepartmentScheduleController;
+use App\Http\Controllers\Api\CrewAppointmentController;
+use App\Http\Controllers\Api\AdminAppointmentController;
 use App\Http\Controllers\Api\ProfileUpdateRequestController;
+use App\Http\Controllers\Api\QrAppointmentController;
+use App\Http\Controllers\Api\DebriefingPdfLinkController;
+use App\Http\Controllers\Api\AdminDebriefingFormController;
+use App\Http\Controllers\Api\CrewDebriefingFormController;
 use App\Models\CertificateType;
 use Illuminate\Support\Facades\Route;
 
@@ -96,6 +105,7 @@ Route::apiResource('roles', RoleController::class)->only(['index']);
 Route::get('employment-document-updates', [EmploymentDocumentApprovalController::class, 'index']);
 Route::get('employment-document-updates/all', [EmploymentDocumentApprovalController::class, 'all']);
 Route::get('employment-document-updates/{id}', [EmploymentDocumentApprovalController::class, 'show']);
+Route::get('employment-document-updates/{id}/view-pending-file', [EmploymentDocumentApprovalController::class, 'viewPendingFile']);
 Route::post('employment-document-updates/{id}/approve', [EmploymentDocumentApprovalController::class, 'approve']);
 Route::post('employment-document-updates/{id}/reject', [EmploymentDocumentApprovalController::class, 'reject']);
 Route::get('employment-document-updates/history/{documentId}', [EmploymentDocumentApprovalController::class, 'history']);
@@ -107,6 +117,14 @@ Route::get('travel-document-updates/{id}', [TravelDocumentApprovalController::cl
 Route::post('travel-document-updates/{id}/approve', [TravelDocumentApprovalController::class, 'approve']);
 Route::post('travel-document-updates/{id}/reject', [TravelDocumentApprovalController::class, 'reject']);
 Route::get('travel-document-updates/history/{documentId}', [TravelDocumentApprovalController::class, 'history']);
+
+// Certificate document approvals
+Route::get('crew-certificate-updates', [CrewCertificateApprovalController::class, 'index']);
+Route::get('crew-certificate-updates/all', [CrewCertificateApprovalController::class, 'all']);
+Route::get('crew-certificate-updates/{id}', [CrewCertificateApprovalController::class, 'show']);
+Route::post('crew-certificate-updates/{id}/approve', [CrewCertificateApprovalController::class, 'approve']);
+Route::post('crew-certificate-updates/{id}/reject', [CrewCertificateApprovalController::class, 'reject']);
+Route::get('crew-certificate-updates/history/{certificateId}', [CrewCertificateApprovalController::class, 'history']);
 
 // Profile update requests (crew submission)
 Route::post('profile-update-requests', [ProfileUpdateRequestController::class, 'store']);
@@ -205,3 +223,87 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
 // recruitment post api
 Route::post('crew/recruitment', [UserController::class, 'store']);
+
+// Appointment types (admin)
+Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    Route::get('/appointment-types', [AppointmentTypeController::class, 'index']);
+    Route::post('/appointment-types', [AppointmentTypeController::class, 'store']);
+    Route::put('/appointment-types/{id}', [AppointmentTypeController::class, 'update']);
+    Route::delete('/appointment-types/{id}', [AppointmentTypeController::class, 'destroy']);
+
+    Route::patch('/appointment-types/{id}/toggle', [AppointmentTypeController::class, 'toggle']);
+});
+
+// Department schedules (admin)
+Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    Route::get('/department-schedules', [DepartmentScheduleController::class, 'index']);
+    Route::post('/department-schedules', [DepartmentScheduleController::class, 'store']);
+    Route::put('/department-schedules/{id}', [DepartmentScheduleController::class, 'update']);
+    Route::delete('/department-schedules/{id}', [DepartmentScheduleController::class, 'destroy']);
+});
+
+// Crew appointments
+Route::middleware(['auth:sanctum'])->prefix('crew')->group(function () {
+    Route::get('/appointments/calendar', [CrewAppointmentController::class, 'calendar']);
+    Route::get('/appointments/slots', [CrewAppointmentController::class, 'slots']);
+    Route::get('/departments', [CrewAppointmentController::class, 'departments']);
+
+    Route::get('/appointments', [CrewAppointmentController::class, 'index']);
+    Route::post('/appointments', [CrewAppointmentController::class, 'store']);
+    Route::get('/appointments/{appointment}', [CrewAppointmentController::class, 'show']);
+    Route::post('/appointments/{appointment}/cancel', [CrewAppointmentController::class, 'cancel']);
+});
+
+// Appointment types by department
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get(
+        '/appointment-types/department/{departmentId}',
+        [AppointmentTypeController::class, 'getByDepartment']
+    );
+});
+
+// Admin appointments
+Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    Route::get('/appointments/calendar', [AdminAppointmentController::class, 'calendar']);
+    Route::get('/appointments', [AdminAppointmentController::class, 'index']);
+    Route::get('/appointments/{id}', [AdminAppointmentController::class, 'show']);
+    Route::post('/appointments/{id}/cancel', [AdminAppointmentController::class, 'cancel']);
+    Route::post('/appointments/{id}/confirm', [AdminAppointmentController::class, 'confirm']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/crew/appointments/{appointment}/qr', [CrewAppointmentController::class, 'qrToken']);
+});
+
+Route::post('/qr/appointments/verify', [QrAppointmentController::class, 'verify']);
+
+// Debriefing form
+Route::middleware(['signed', 'throttle:10,1'])->group(function () {
+    Route::get(
+        '/debriefing-forms/{id}/pdf/download',
+        [DebriefingPdfLinkController::class, 'download']
+    )->name('debriefing.pdf.download');
+});
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('admin')->group(function () {
+        Route::get('/debriefing-forms', [AdminDebriefingFormController::class, 'index']);
+        Route::get('/debriefing-forms/{id}', [AdminDebriefingFormController::class, 'show']);
+        Route::post('/debriefing-forms/{id}/confirm', [AdminDebriefingFormController::class, 'confirm']);
+        Route::get('/debriefing-forms/{id}/pdf/preview', [AdminDebriefingFormController::class, 'previewPdf']);
+        Route::get('/debriefing-forms/{id}/pdf/download', [AdminDebriefingFormController::class, 'downloadPdf']);
+        Route::post('/debriefing-forms/{id}/pdf/regenerate', [AdminDebriefingFormController::class, 'regeneratePdf']);
+        Route::put('/debriefing-forms/{id}/override', [AdminDebriefingFormController::class, 'override']);
+    });
+
+    Route::prefix('crew')->group(function () {
+        Route::get('/debriefing-forms', [CrewDebriefingFormController::class, 'index']);
+        Route::post('/debriefing-forms', [CrewDebriefingFormController::class, 'store']);
+        Route::get('/debriefing-forms/{id}', [CrewDebriefingFormController::class, 'show']);
+        Route::put('/debriefing-forms/{id}', [CrewDebriefingFormController::class, 'update']);
+        Route::post('/debriefing-forms/{id}/submit', [CrewDebriefingFormController::class, 'submit']);
+        Route::get('/debriefing-forms/{id}/pdf/preview', [CrewDebriefingFormController::class, 'previewPdf']);
+        Route::get('/debriefing-forms/{id}/pdf/download', [CrewDebriefingFormController::class, 'downloadPdf']);
+    });
+});
