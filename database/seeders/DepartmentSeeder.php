@@ -15,7 +15,18 @@ class DepartmentSeeder extends Seeder
     public function run(): void
     {
         $departmentData = [
-            'Fleet Operations' => ['A', 'B1', 'B2', 'C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'NTMA'],
+            'Fleet Operations' => [
+                'FLEET A',
+                'FLEET B1',
+                'FLEET B2',
+                'FLEET C1',
+                'FLEET C2',
+                'FLEET D1',
+                'FLEET D2',
+                'FLEET E1',
+                'FLEET E2',
+                'NTMA FLEET'
+            ],
             'Technical Operations' => ['Dry', 'Liquid'],
             'Crew Development' => ['Shore-Based Work', 'Promotion'],
             'Crew Allied Services' => ['VISA', 'JISS', 'Crew Morale', 'Cruise'],

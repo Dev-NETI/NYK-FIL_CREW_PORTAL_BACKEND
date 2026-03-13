@@ -269,7 +269,6 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::get('/appointments', [AdminAppointmentController::class, 'index']);
     Route::get('/appointments/{id}', [AdminAppointmentController::class, 'show']);
     Route::post('/appointments/{id}/cancel', [AdminAppointmentController::class, 'cancel']);
-    Route::post('/appointments/{id}/confirm', [AdminAppointmentController::class, 'confirm']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {

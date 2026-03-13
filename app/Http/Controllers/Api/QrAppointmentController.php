@@ -41,13 +41,6 @@ class QrAppointmentController extends Controller
                     ], 422);
                 }
 
-                if ($appointment->status === 'pending') {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Appointment is not confirmed.',
-                    ], 422);
-                }
-
                 if (in_array($appointment->status, ['attended', 'no_show'], true)) {
                     return response()->json([
                         'success' => true,
