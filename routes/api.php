@@ -68,6 +68,7 @@ Route::apiResource('certificate-documents', CertificateDocumentController::class
 Route::apiResource('department-categories', DepartmentCategoryController::class)->only(['index']);
 Route::apiResource('departments', DepartmentController::class)->only(['index', 'show']);
 Route::apiResource('admins', AdminController::class);
+Route::post('admins/{user}/reset-device', [AdminController::class, 'resetDevice']);
 
 // Geography API routes (public access)
 Route::prefix('geography')->group(function () {

@@ -39,6 +39,7 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
+            'device_fingerprint' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -59,6 +60,18 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Invalid Email. Please try again.'
             ], 404);
+        }
+
+        // Device restriction: block immediately if account is bound to a different device
+        $incomingFingerprint = $request->device_fingerprint;
+        if ($user->device_fingerprint && $incomingFingerprint && $user->device_fingerprint !== $incomingFingerprint) {
+            RateLimiter::hit($rateLimitKey, 60);
+            return response()->json([
+                'success' => false,
+                'error_code' => 'DEVICE_CONFLICT',
+                'message' => 'This account is already registered on another device. Please contact your administrator to reset your device.',
+                'device_name' => $user->device_name,
+            ], 409);
         }
 
         // Email verification will happen automatically on first successful OTP login
@@ -117,6 +130,8 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'session_token' => 'required|string',
             'otp' => 'required|string|size:6',
+            'device_fingerprint' => 'nullable|string|max:255',
+            'device_name' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -169,6 +184,8 @@ class AuthController extends Controller
 
         $user = $otpRecord->user;
 
+        $incomingFingerprint = $request->device_fingerprint;
+
         $user->tokens()->delete();
 
         $token = $user->createToken('auth-token', ['*'], Carbon::now()->addHours(24));
@@ -178,8 +195,14 @@ class AuthController extends Controller
         // Update login tracking and verify email if this is the first successful OTP login
         $updateData = [
             'last_login_at' => Carbon::now(),
-            'last_login_ip' => $request->ip()
+            'last_login_ip' => $request->ip(),
         ];
+
+        // Register or refresh the device fingerprint
+        if ($incomingFingerprint) {
+            $updateData['device_fingerprint'] = $incomingFingerprint;
+            $updateData['device_name'] = $request->device_name ?? $user->device_name;
+        }
 
         // If email is not verified, verify it now (first successful OTP login)
         if (!$user->email_verified_at) {

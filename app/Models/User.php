@@ -27,11 +27,14 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'is_crew',
+        'is_industrial',
         'email',
         'department_id',
         'email_verified_at',
         'last_login_at',
         'last_login_ip',
+        'device_fingerprint',
+        'device_name',
         'modified_by',
     ];
 
@@ -54,6 +57,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'is_crew' => 'boolean',
+            'is_industrial' => 'boolean',
             'deleted_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
