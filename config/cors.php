@@ -23,6 +23,7 @@ return [
         '*',
         'http://localhost:3000', // Next.js dev server
         'http://localhost:3001', // Alternative port
+        'http://10.10.31.7:3000', // Alternative port
         'https://super-app.netiaccess.com', // Replace with your actual domain
     ],
 

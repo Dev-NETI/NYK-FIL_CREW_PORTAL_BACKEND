@@ -41,6 +41,8 @@ class AdminController extends Controller
                     ] : null,
                     'email_verified_at' => $user->email_verified_at,
                     'last_login_at' => $user->last_login_at,
+                    'device_fingerprint' => $user->device_fingerprint,
+                    'device_name' => $user->device_name,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,
                 ];
@@ -223,6 +225,37 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reset the device binding for an admin user.
+     * Clears device_fingerprint and device_name, and revokes all active tokens.
+     */
+    public function resetDevice(User $user)
+    {
+        try {
+            $user->update([
+                'device_fingerprint' => null,
+                'device_name' => null,
+            ]);
+
+            $user->tokens()->delete();
+
+            Log::info('Device reset for user', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Device reset successfully. The user can now log in from a new device.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

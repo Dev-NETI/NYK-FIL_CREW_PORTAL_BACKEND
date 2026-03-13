@@ -11,6 +11,7 @@ use App\Models\DepartmentSchedule;
 use Carbon\Carbon;
 use App\Mail\AppointmentCreatedMail;
 use App\Mail\AppointmentCancelledMail;
+use App\Mail\AppointmentConfirmedMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -87,7 +88,7 @@ class CrewAppointmentController extends Controller
                 $alreadyBookedByCrew = Appointment::where('schedule_id', $schedule->id)
                     ->where('created_by', $crew->id)
                     ->where('session', $validated['session'])
-                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->where('status', 'confirmed')
                     ->lockForUpdate()
                     ->exists();
 
@@ -109,7 +110,9 @@ class CrewAppointmentController extends Controller
                     'time' => null,
 
                     'purpose' => $validated['purpose'],
-                    'status' => 'pending',
+                    'status' => 'confirmed',
+                    'qr_token' => Str::random(64),
+                    'qr_expires_at' => Carbon::parse($validated['appointment_date'])->endOfDay(),
                     'created_by' => $crew->id,
                     'created_by_type' => 'crew',
                 ]);
@@ -135,6 +138,14 @@ class CrewAppointmentController extends Controller
             if (! empty($departmentEmails)) {
                 Mail::to($departmentEmails)->send(
                     new AppointmentCreatedMail($appointment, $appointment->user, $appointment->department)
+                );
+            }
+
+            $crewEmail = $appointment->user?->email;
+
+            if ($crewEmail) {
+                Mail::to($crewEmail)->send(
+                    new AppointmentConfirmedMail($appointment, $appointment->user, $appointment->department)
                 );
             }
 
@@ -224,7 +235,7 @@ class CrewAppointmentController extends Controller
 
         $existingSessions = Appointment::where('schedule_id', $schedule->id)
             ->where('created_by', $crew->id)
-            ->whereIn('status', ['pending', 'confirmed'])
+            ->where('status', 'confirmed')
             ->pluck('session')
             ->toArray();
 

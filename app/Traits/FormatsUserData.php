@@ -15,6 +15,7 @@ trait FormatsUserData
             'last_login_at' => $user->last_login_at,
             'last_login_ip' => $user->last_login_ip,
             'is_crew' => $user->is_crew,
+            'is_industrial' => $user->is_industrial,
             'role' => $user->is_crew ? 'crew' : 'admin',
 
             // Admin roles (only for non-crew users)

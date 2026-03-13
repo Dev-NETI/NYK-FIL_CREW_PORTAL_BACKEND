@@ -68,6 +68,7 @@ Route::apiResource('certificate-documents', CertificateDocumentController::class
 Route::apiResource('department-categories', DepartmentCategoryController::class)->only(['index']);
 Route::apiResource('departments', DepartmentController::class)->only(['index', 'show']);
 Route::apiResource('admins', AdminController::class);
+Route::post('admins/{user}/reset-device', [AdminController::class, 'resetDevice']);
 
 // Geography API routes (public access)
 Route::prefix('geography')->group(function () {
@@ -268,7 +269,6 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::get('/appointments', [AdminAppointmentController::class, 'index']);
     Route::get('/appointments/{id}', [AdminAppointmentController::class, 'show']);
     Route::post('/appointments/{id}/cancel', [AdminAppointmentController::class, 'cancel']);
-    Route::post('/appointments/{id}/confirm', [AdminAppointmentController::class, 'confirm']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {

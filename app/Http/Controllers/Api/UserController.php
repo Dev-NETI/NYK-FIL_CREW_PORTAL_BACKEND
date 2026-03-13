@@ -457,6 +457,7 @@ class UserController extends Controller
                     'email',
                     Rule::unique('users')->ignore($crew->id)
                 ],
+                'is_industrial' => 'sometimes|nullable|boolean',
 
                 // Profile data
                 'profile.full_name' => 'sometimes|string|max:255',
@@ -548,8 +549,16 @@ class UserController extends Controller
 
             try {
                 // Update main user data
+                $userChanged = false;
                 if (isset($validatedData['email'])) {
                     $crew->email = $validatedData['email'];
+                    $userChanged = true;
+                }
+                if (array_key_exists('is_industrial', $validatedData)) {
+                    $crew->is_industrial = $validatedData['is_industrial'];
+                    $userChanged = true;
+                }
+                if ($userChanged) {
                     $crew->save();
                 }
 
