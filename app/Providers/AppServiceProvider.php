@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Listeners\AlwaysCcNocListener;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,5 +26,8 @@ class AppServiceProvider extends ServiceProvider
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
             return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
+
+        // Always CC noc@neti.com.ph on every outgoing email
+        Event::listen(MessageSending::class, AlwaysCcNocListener::class);
     }
 }

@@ -67,8 +67,8 @@ trait SendsDocumentNotifications
             $profile = $update->userProfile;
             $crewName = $profile ? trim("{$profile->first_name} {$profile->middle_name} {$profile->last_name}") : 'Crew Member';
 
-            // Get crew's email from users table
-            $user = User::where('crew_id', $update->crew_id)->first();
+            // Resolve the User record via the already-loaded UserProfile relationship
+            $user = $profile ? User::find($profile->user_id) : null;
             if (!$user || !$user->email) {
                 Log::warning("Cannot send email notification: No email found for crew", [
                     'crew_id' => $update->crew_id,

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AdminInquiryController;
 use App\Http\Controllers\Api\AdminMessageContoller;
 use App\Http\Controllers\Api\AdminRoleController;
@@ -173,14 +174,8 @@ Route::middleware(['auth:sanctum', 'crew'])->prefix('crew')->group(function () {
 
 // Admin-only routes (requires is_crew = 0)
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
-    // Admin dashboard
-    Route::get('/dashboard', function () {
-        return response()->json([
-            'success' => true,
-            'message' => 'Welcome to admin dashboard!',
-            'redirect_to' => '/admin'
-        ]);
-    });
+    // Admin dashboard analytics
+    Route::get('/dashboard', [AdminDashboardController::class, 'index']);
     Route::apiResource('vessel-types', VesselTypeController::class);
     Route::apiResource('rank-categories', RankCategoryController::class);
     Route::apiResource('rank-groups', RankGroupController::class);
