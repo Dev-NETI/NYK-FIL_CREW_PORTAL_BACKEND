@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\HasModifiedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Company extends Model
@@ -20,5 +21,10 @@ class Company extends Model
         return [
             'deleted_at' => 'datetime',
         ];
+    }
+
+    public function userProfiles(): HasMany
+    {
+        return $this->hasMany(UserProfile::class);
     }
 }

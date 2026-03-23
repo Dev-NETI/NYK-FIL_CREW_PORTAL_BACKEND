@@ -11,7 +11,7 @@ class RankController extends Controller
 {
     public function index(): JsonResponse
     {
-        $ranks = Rank::with(['rankGroup.rankCategory'])->get();
+        $ranks = Rank::with(['rankDepartment', 'rankType'])->get();
 
         return response()->json($ranks);
     }
@@ -25,14 +25,14 @@ class RankController extends Controller
         ]);
 
         $rank = Rank::create($validated);
-        $rank->load(['rankGroup.rankCategory']);
+        $rank->load(['rankDepartment', 'rankType']);
 
         return response()->json($rank, 201);
     }
 
     public function show(Rank $rank): JsonResponse
     {
-        $rank->load(['rankGroup.rankCategory']);
+        $rank->load(['rankDepartment', 'rankType']);
 
         return response()->json($rank);
     }
@@ -46,7 +46,7 @@ class RankController extends Controller
         ]);
 
         $rank->update($validated);
-        $rank->load(['rankGroup.rankCategory']);
+        $rank->load(['rankDepartment', 'rankType']);
 
         return response()->json($rank);
     }

@@ -46,4 +46,9 @@ class Rank extends Model
     {
         return $this->hasMany(Contract::class);
     }
+
+    public function userProfiles(): HasMany
+    {
+        return $this->hasMany(UserProfile::class);
+    }
 }

@@ -28,7 +28,10 @@ class UserProfile extends Model
         'nationality',
         'civil_status',
         'religion',
-        'blood_type'
+        'blood_type',
+        'rank_id',
+        'fleet_id',
+        'company_id',
     ];
 
     protected function casts(): array
@@ -55,6 +58,21 @@ class UserProfile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function rank(): BelongsTo
+    {
+        return $this->belongsTo(Rank::class);
+    }
+
+    public function fleet(): BelongsTo
+    {
+        return $this->belongsTo(Fleet::class);
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function employmentDocuments(): HasMany

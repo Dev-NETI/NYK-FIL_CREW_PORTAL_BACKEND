@@ -46,6 +46,12 @@ trait FormatsUserData
                 'civil_status' => $user->profile->civil_status,
                 'religion' => $user->profile->religion,
                 'full_name' => $user->profile->full_name,
+                'rank_id' => $user->profile->rank_id,
+                'rank_name' => optional($user->profile->rank)->name,
+                'fleet_id' => $user->profile->fleet_id,
+                'fleet_name' => optional($user->profile->fleet)->name,
+                'company_id' => $user->profile->company_id,
+                'company_name' => optional($user->profile->company)->name,
             ] : null,
 
             // Contact information
