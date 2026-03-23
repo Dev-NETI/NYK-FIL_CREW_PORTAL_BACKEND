@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'mpip' => [
+        'shared_secret' => env('MPIP_SHARED_SECRET'),
+    ],
+
 ];

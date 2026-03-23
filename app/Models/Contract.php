@@ -16,11 +16,24 @@ class Contract extends Model
         'contract_number',
         'user_id',
         'vessel_id',
+        'rank_id',
         'departure_date',
         'arrival_date',
         'duration_months',
         'contract_start_date',
         'contract_end_date',
+        'port_of_departure',
+        'port_of_arrival',
+        'basic_wage',
+        'fixed_overtime',
+        'leave_pay',
+        'subsistence_allowance',
+        'vacation_leave_conversion',
+        'total_guaranteed_monthly',
+        'currency',
+        'contract_status',
+        'remarks',
+        'modified_by',
     ];
 
     protected $casts = [
@@ -29,6 +42,12 @@ class Contract extends Model
         'contract_start_date' => 'date',
         'contract_end_date' => 'date',
         'duration_months' => 'integer',
+        'basic_wage' => 'decimal:2',
+        'fixed_overtime' => 'decimal:2',
+        'leave_pay' => 'decimal:2',
+        'subsistence_allowance' => 'decimal:2',
+        'vacation_leave_conversion' => 'decimal:2',
+        'total_guaranteed_monthly' => 'decimal:2',
         'deleted_at' => 'datetime',
     ];
 
@@ -70,6 +89,14 @@ class Contract extends Model
     public function vessel(): BelongsTo
     {
         return $this->belongsTo(Vessel::class);
+    }
+
+    /**
+     * Get the rank for this contract.
+     */
+    public function rank(): BelongsTo
+    {
+        return $this->belongsTo(Rank::class);
     }
 
     /**
