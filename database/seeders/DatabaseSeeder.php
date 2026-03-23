@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Models\RankDepartment;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -16,63 +15,67 @@ class DatabaseSeeder extends Seeder
     {
         // Run seeders in the correct order to respect foreign key constraints
         $this->call([
-            // Geographic data (no dependencies)
+            // ── Reference / lookup tables (no FK dependencies) ───────────────
+            CompanySeeder::class,
+            NationalitySeeder::class,
+            VesselTypeSeeder::class,
+            RankDepartmentSeeder::class,
+            RankTypeSeeder::class,
+            ProgramSeeder::class,
+            DepartmentCategorySeeder::class,
+            TravelDocumentTypeSeeder::class,
+            EmploymentDocumentTypeSeeder::class,
+            CertificateTypeSeeder::class,
+            RoleSeeder::class,
+            AppointmentTypeSeeder::class,
+
+            // ── Geographic hierarchy (region → province → city → barangay) ───
             RegionSeeder::class,
             ProvinceSeeder::class,
             CitySeeder::class,
             BarangaySeeder::class,
 
-            // Basic entity data (no dependencies) 
-            VesselTypeSeeder::class,
+            // ── Rank hierarchy (depends on RankDepartment, RankType) ─────────
+            RankSeeder::class,
+            RankLevelingSeeder::class,
 
-            ProgramSeeder::class,
+            // ── Department hierarchy (depends on DepartmentCategory) ──────────
+            DepartmentSeeder::class,
 
+            // ── Fleet data (depends on Department) ───────────────────────────
+            FleetSeeder::class,
 
+            // ── Vessel data (depends on VesselType, Fleet) ───────────────────
+            VesselSeeder::class,
 
-            // Address data (depends on geographic data)
+            // ── Address data (depends on geographic data) ────────────────────
             AddressSeeder::class,
-            NationalitySeeder::class,
 
-            // User data (depends on fleet, rank, university, address)
+            // ── Users (base entity) ──────────────────────────────────────────
             UserSeeder::class,
 
-            // User profile data (depends on users)
+            // ── User profile & related (depends on User, Rank, Fleet, Company)
             UserProfileSeeder::class,
             UserContactSeeder::class,
             UserEmploymentSeeder::class,
             UserEducationSeeder::class,
             UserPhysicalTraitSeeder::class,
 
-
-
-            // Allotee data (independent)
-            AlloteeSeeder::class,
-
-            // Pivot table data (depends on users and allotees)
-            // commented causing errors
-            // CrewAlloteeSeeder::class,
-
-            // Contract data (depends on users and vessels)
-            DepartmentCategorySeeder::class,
-            DepartmentSeeder::class,
-            ContractSeeder::class,
-            TravelDocumentTypeSeeder::class,
-            TravelDocumentSeeder::class,
-            EmploymentDocumentTypeSeeder::class,
-            EmploymentDocumentSeeder::class,
-            FleetSeeder::class,
-            // Vessel data (depends on vessel types)
-            VesselSeeder::class,
-            CertificateTypeSeeder::class,
-            CertificateSeeder::class,
-            RankDepartmentSeeder::class,
-            RankTypeSeeder::class,
-            RankSeeder::class,
-            RankLevelingSeeder::class,
+            // ── Admin users (depends on User, Role) ──────────────────────────
             AdminProfileSeeder::class,
-            RoleSeeder::class,
             AdminRoleSeeder::class,
-            AppointmentTypeSeeder::class,
+
+            // ── Allotees (depends on User) ───────────────────────────────────
+            AlloteeSeeder::class,
+            // CrewAlloteeSeeder::class, // commented - causing errors
+
+            // ── Contracts (depends on User, Vessel) ──────────────────────────
+            ContractSeeder::class,
+
+            // ── Documents (depend on UserProfile / crew_id) ──────────────────
+            TravelDocumentSeeder::class,
+            EmploymentDocumentSeeder::class,
+            CertificateSeeder::class,
         ]);
     }
 }

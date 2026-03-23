@@ -36,4 +36,9 @@ class Fleet extends Model
     {
         return $this->hasMany(Vessel::class);
     }
+
+    public function userProfiles(): HasMany
+    {
+        return $this->hasMany(UserProfile::class);
+    }
 }

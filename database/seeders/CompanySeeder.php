@@ -14,12 +14,20 @@ class CompanySeeder extends Seeder
     public function run(): void
     {
         $companies = [
+            ['name' => 'NYK-Fil Ship Management, Inc.'],
             ['name' => 'NYK-Fil Maritime E-Training, Inc.'],
-            ['name' => 'NYK-Fil Ship Management Inc.'],
+            ['name' => 'NYK Bulk & Projects Carriers Ltd.'],
+            ['name' => 'NYK Line (Asia) Pte. Ltd.'],
+            ['name' => 'NYK Shipmanagement Pte. Ltd.'],
+            ['name' => 'Yusen Logistics Co., Ltd.'],
+            ['name' => 'MTI Co., Ltd.'],
+            ['name' => 'NYK Cool AB'],
         ];
 
         foreach ($companies as $company) {
-            Company::create($company);
+            Company::firstOrCreate(['name' => $company['name']], $company);
         }
+
+        $this->command->info('Companies seeded successfully!');
     }
 }

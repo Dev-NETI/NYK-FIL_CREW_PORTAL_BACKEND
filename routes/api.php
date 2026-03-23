@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\DepartmentTypesController;
 use App\Http\Controllers\Api\EmploymentDocumentApprovalController;
 use App\Http\Controllers\Api\EmploymentDocumentController;
 use App\Http\Controllers\Api\EmploymentDocumentTypeController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\FleetController;
 use App\Http\Controllers\Api\GeographyController;
 use App\Http\Controllers\Api\InquiryController;
@@ -150,6 +151,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // User profile routes
     Route::get('/crew/{crewId}/profile', [UserController::class, 'getProfile']);
     Route::apiResource('nationalities', NationalityController::class);
+
+    // Read-only rank/fleet/company lookup (available to both crew and admin)
+    Route::get('ranks', [RankController::class, 'index']);
+    Route::get('fleets', [FleetController::class, 'index']);
+    Route::get('companies', [CompanyController::class, 'index']);
 });
 
 // Crew-only routes (requires is_crew = 1)

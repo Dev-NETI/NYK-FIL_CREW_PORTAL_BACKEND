@@ -22,7 +22,7 @@ class UserController extends Controller
             // Find the user by crew_id in user_profiles table
             $user = User::whereHas('profile', function ($query) use ($crewId) {
                 $query->where('crew_id', $crewId);
-            })->with(['profile', 'contacts', 'employment', 'education', 'physicalTraits'])->first();
+            })->with(['profile.rank', 'profile.fleet', 'profile.company', 'contacts', 'employment', 'education', 'physicalTraits'])->first();
 
             if (!$user) {
                 return response()->json([
@@ -231,7 +231,7 @@ class UserController extends Controller
 
             // Build query for crew members (is_crew = 1) with their related data
             $query = User::where('is_crew', 1)
-                ->with(['profile', 'contacts', 'employment', 'education', 'physicalTraits']);
+                ->with(['profile.rank', 'profile.fleet', 'profile.company', 'contacts', 'employment', 'education', 'physicalTraits']);
 
             // Apply search filter
             if (!empty($search)) {
@@ -396,7 +396,7 @@ class UserController extends Controller
             // Find crew by id with related data
             $crew = User::where('id', $id)
                 ->where('is_crew', 1)
-                ->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
+                ->with(['profile.rank', 'profile.fleet', 'profile.company', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
                 ->first();
 
             if (!$crew) {
@@ -439,7 +439,7 @@ class UserController extends Controller
             // Find the crew member
             $crew = User::where('id', $id)
                 ->where('is_crew', 1)
-                ->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
+                ->with(['profile.rank', 'profile.fleet', 'profile.company', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
                 ->first();
 
             if (!$crew) {
@@ -472,6 +472,9 @@ class UserController extends Controller
                 'profile.civil_status' => 'sometimes|nullable|string|max:100',
                 'profile.nationality' => 'sometimes|nullable|string|max:100',
                 'profile.religion' => 'sometimes|nullable|string|max:100',
+                'profile.rank_id' => 'sometimes|nullable|integer|exists:ranks,id',
+                'profile.fleet_id' => 'sometimes|nullable|integer|exists:fleets,id',
+                'profile.company_id' => 'sometimes|nullable|integer|exists:companies,id',
 
                 // Physical traits
                 'physical_traits.height' => 'sometimes|nullable|numeric|min:0|max:300',
@@ -598,7 +601,7 @@ class UserController extends Controller
 
                 // Reload the crew with fresh data
                 $updatedCrew = User::where('id', $id)
-                    ->with(['profile', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
+                    ->with(['profile.rank', 'profile.fleet', 'profile.company', 'contacts', 'employment.fleet', 'employment.rank', 'education', 'physicalTraits'])
                     ->first();
 
                 Log::info('Crew profile updated', [
