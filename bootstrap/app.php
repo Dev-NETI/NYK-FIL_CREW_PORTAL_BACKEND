@@ -18,9 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // ]);
 
         $middleware->alias([
-            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
-            'crew' => \App\Http\Middleware\EnsureCrew::class,
-            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'verified'   => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'crew'       => \App\Http\Middleware\EnsureCrew::class,
+            'admin'      => \App\Http\Middleware\EnsureAdmin::class,
+            'mpip.auth'  => \App\Http\Middleware\MpipAuth::class,
         ]);
 
         // Enable CORS for API routes
