@@ -19,6 +19,7 @@ class RecruitmentController extends Controller
      *
      * POST /api/recruitment/ingest
      */
+
     public function ingest(Request $request)
     {
         // ── Duplicate crew guard (before full validation) ──────────────────────
