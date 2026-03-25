@@ -8,6 +8,7 @@ use App\Traits\FormatsUserData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 
@@ -902,6 +903,55 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while updating education information'
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload profile image for a crew member (admin only — direct update, no approval required).
+     */
+    public function uploadProfileImage(Request $request, $id): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $request->validate([
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            ]);
+
+            $user = User::with('profile')->findOrFail($id);
+
+            $crewId = $user->profile?->crew_id ?? $user->id;
+            $directory = "profile_images/{$crewId}";
+
+            // Delete old image if present
+            if ($user->profile?->image_path) {
+                Storage::disk('public')->delete($user->profile->image_path);
+            }
+
+            $ext = $request->file('image')->getClientOriginalExtension();
+            $path = $request->file('image')->storeAs($directory, "profile.{$ext}", 'public');
+
+            $user->profile()->updateOrCreate(
+                ['user_id' => $user->id],
+                ['image_path' => $path]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile image updated successfully',
+                'image_path' => $path,
+                'image_url' => Storage::disk('public')->url($path),
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload profile image',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

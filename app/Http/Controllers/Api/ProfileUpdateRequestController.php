@@ -12,6 +12,7 @@ use App\Models\Province;
 use App\Models\Region;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class ProfileUpdateRequestController extends Controller
@@ -97,6 +98,66 @@ class ProfileUpdateRequestController extends Controller
                 'success' => false,
                 'message' => 'Failed to fetch profile update requests',
                 'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Store an image update request (crew submission — goes through approval).
+     */
+    public function storeImageRequest(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'crew_id' => 'required|exists:users,id',
+                'image'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            ]);
+
+            $crew = User::with('profile')->findOrFail($validated['crew_id']);
+
+            $existingRequest = ProfileUpdateRequest::where('crew_id', $validated['crew_id'])
+                ->where('section', 'image')
+                ->where('status', 'pending')
+                ->first();
+
+            if ($existingRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'There is already a pending image update request. Please wait for admin approval.',
+                ], 422);
+            }
+
+            $crewId = $crew->profile?->crew_id ?? $crew->id;
+            $directory = "profile_images/pending/{$crewId}";
+            $ext = $request->file('image')->getClientOriginalExtension();
+            $pendingPath = $request->file('image')->storeAs($directory, "profile.{$ext}", 'public');
+
+            $updateRequest = ProfileUpdateRequest::create([
+                'crew_id'        => $validated['crew_id'],
+                'section'        => 'image',
+                'current_data'   => ['image_path' => $crew->profile?->image_path],
+                'requested_data' => ['pending_image_path' => $pendingPath],
+                'status'         => 'pending',
+            ]);
+
+            $updateRequest->load(['crew', 'reviewer']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile image update request submitted. Waiting for admin approval.',
+                'data'    => $updateRequest,
+            ], 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to submit image update request',
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
@@ -242,6 +303,10 @@ class ProfileUpdateRequestController extends Controller
             case 'education':
                 return [
                     'education' => $crew->education?->toArray(),
+                ];
+            case 'image':
+                return [
+                    'image_path' => $crew->profile?->image_path,
                 ];
             default:
                 return [];
@@ -420,6 +485,30 @@ class ProfileUpdateRequestController extends Controller
                     $crew->education()->updateOrCreate(
                         ['user_id' => $crew->id],
                         $requestedData['education']
+                    );
+                }
+                break;
+
+            case 'image':
+                if (isset($requestedData['pending_image_path'])) {
+                    $pendingPath = $requestedData['pending_image_path'];
+                    $crewId = $crew->profile?->crew_id ?? $crew->id;
+                    $filename = basename($pendingPath);
+                    $finalPath = "profile_images/{$crewId}/{$filename}";
+
+                    // Delete old image
+                    if ($crew->profile?->image_path) {
+                        Storage::disk('public')->delete($crew->profile->image_path);
+                    }
+
+                    // Move pending image to final location
+                    if (Storage::disk('public')->exists($pendingPath)) {
+                        Storage::disk('public')->move($pendingPath, $finalPath);
+                    }
+
+                    $crew->profile()->updateOrCreate(
+                        ['user_id' => $crew->id],
+                        ['image_path' => $finalPath]
                     );
                 }
                 break;

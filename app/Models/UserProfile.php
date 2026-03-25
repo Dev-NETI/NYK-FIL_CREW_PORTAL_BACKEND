@@ -32,6 +32,7 @@ class UserProfile extends Model
         'rank_id',
         'fleet_id',
         'company_id',
+        'image_path',
     ];
 
     protected function casts(): array
