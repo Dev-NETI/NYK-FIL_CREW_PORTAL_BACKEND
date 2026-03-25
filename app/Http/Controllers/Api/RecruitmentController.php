@@ -47,16 +47,11 @@ class RecruitmentController extends Controller
                 'profile'                => 'required|array',
                 'profile.crew_id'        => 'required|string|max:255|unique:user_profiles,crew_id',
                 'profile.first_name'     => 'required|string|max:255',
-                'profile.middle_name'    => 'nullable|string|max:255',
                 'profile.last_name'      => 'required|string|max:255',
-                'profile.suffix'         => 'nullable|string|max:50',
                 'profile.birth_date'     => 'required|date',
                 'profile.birth_place'    => 'required|string|max:255',
-                'profile.age'            => 'nullable|integer|min:0|max:150',
                 'profile.gender'         => 'required|in:Male,Female',
                 'profile.civil_status'   => 'required|string|max:100',
-                'profile.religion'       => 'nullable|string|max:100',
-                'profile.image_path'     => 'nullable|string|max:500',
 
                 // ── UserContact ───────────────────────────────────────────────
                 'contact'                                    => 'nullable|array',
@@ -110,16 +105,11 @@ class RecruitmentController extends Controller
                 $profile = $user->profile()->create([
                     'crew_id'      => $profileData['crew_id'],
                     'first_name'   => $profileData['first_name'],
-                    'middle_name'  => $profileData['middle_name'] ?? null,
                     'last_name'    => $profileData['last_name'],
-                    'suffix'       => $profileData['suffix'] ?? null,
                     'birth_date'   => $profileData['birth_date'],
                     'birth_place'  => $profileData['birth_place'],
-                    'age'          => $profileData['age'] ?? null,
                     'gender'       => $profileData['gender'],
                     'civil_status' => $profileData['civil_status'],
-                    'religion'     => $profileData['religion'] ?? null,
-                    'image_path'   => $profileData['image_path'] ?? null,
                     'modified_by'  => 'RECRUITMENT API',
                 ]);
 
