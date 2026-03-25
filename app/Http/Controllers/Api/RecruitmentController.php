@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\CrewCertificate;
 use App\Models\User;
 use App\Models\UserProfile;
-use App\Models\UserProgramEmployment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,8 +14,8 @@ class RecruitmentController extends Controller
     /**
      * Ingest a new crew member from the Recruitment App.
      *
-     * Creates records across all core crew models in a single atomic transaction.
-     * Travel documents, crew certificates, and employment documents are optional.
+     * Creates records across: User, UserProfile, UserContact, UserEducation,
+     * TravelDocument (optional), EmploymentDocument (optional).
      *
      * POST /api/recruitment/ingest
      */
@@ -59,40 +57,18 @@ class RecruitmentController extends Controller
                 'profile.civil_status'   => 'required|string|max:100',
                 'profile.religion'       => 'nullable|string|max:100',
                 'profile.blood_type'     => 'nullable|string|max:10',
-                'profile.rank_id'        => 'nullable|integer|exists:ranks,id',
-                'profile.fleet_id'       => 'nullable|integer|exists:fleets,id',
-                'profile.company_id'     => 'nullable|integer|exists:companies,id',
+                'profile.rank_id'        => 'nullable|integer',
+                'profile.fleet_id'       => 'nullable|integer',
+                'profile.company_id'     => 'nullable|integer',
                 'profile.image_path'     => 'nullable|string|max:500',
 
                 // ── UserContact ───────────────────────────────────────────────
-                'contact'                                       => 'nullable|array',
-                'contact.mobile_number'                         => 'nullable|string|max:20',
-                'contact.alternate_phone'                       => 'nullable|string|max:20',
-                'contact.emergency_contact_name'                => 'nullable|string|max:255',
-                'contact.emergency_contact_phone'               => 'nullable|string|max:20',
-                'contact.emergency_contact_relationship'        => 'nullable|string|max:100',
-
-                // ── UserPhysicalTrait ─────────────────────────────────────────
-                'physical_traits'            => 'nullable|array',
-                'physical_traits.height'     => 'nullable|numeric|min:0|max:300',
-                'physical_traits.weight'     => 'nullable|numeric|min:0|max:500',
-                'physical_traits.eye_color'  => 'nullable|string|max:20',
-                'physical_traits.hair_color' => 'nullable|string|max:20',
-                'physical_traits.blood_type' => 'nullable|string|max:5',
-
-                // ── UserEmployment ────────────────────────────────────────────
-                'employment'                    => 'nullable|array',
-                'employment.rank_id'            => 'nullable|integer|exists:ranks,id',
-                'employment.fleet_id'           => 'nullable|integer|exists:fleets,id',
-                'employment.crew_status'        => 'nullable|in:on_board,on_vacation,standby,resigned,terminated',
-                'employment.hire_status'        => 'nullable|in:new_hire,re_hire,promoted,transferred',
-                'employment.hire_date'          => 'nullable|date',
-                'employment.passport_number'    => 'nullable|string|max:255',
-                'employment.passport_expiry'    => 'nullable|date',
-                'employment.seaman_book_number' => 'nullable|string|max:255',
-                'employment.seaman_book_expiry' => 'nullable|date',
-                'employment.basic_salary'       => 'nullable|numeric|min:0',
-                'employment.employment_notes'   => 'nullable|string',
+                'contact'                                    => 'nullable|array',
+                'contact.mobile_number'                      => 'nullable|string|max:20',
+                'contact.alternate_phone'                    => 'nullable|string|max:20',
+                'contact.emergency_contact_name'             => 'nullable|string|max:255',
+                'contact.emergency_contact_phone'            => 'nullable|string|max:20',
+                'contact.emergency_contact_relationship'     => 'nullable|string|max:100',
 
                 // ── UserEducation (array — one entry per level) ───────────────
                 'education'                   => 'nullable|array',
@@ -101,14 +77,9 @@ class RecruitmentController extends Controller
                 'education.*.degree'          => 'nullable|string|max:255',
                 'education.*.date_graduated'  => 'nullable|date',
 
-                // ── UserProgramEmployment (array) ─────────────────────────────
-                'program_employments'              => 'nullable|array',
-                'program_employments.*.program_id' => 'required|integer|exists:programs,id',
-                'program_employments.*.batch'      => 'nullable|string|max:255',
-
                 // ── TravelDocument (optional array — file_path only) ──────────
                 'travel_documents'                            => 'nullable|array',
-                'travel_documents.*.travel_document_type_id' => 'required|integer|exists:travel_document_types,id',
+                'travel_documents.*.travel_document_type_id' => 'required|integer',
                 'travel_documents.*.id_no'                   => 'nullable|string|max:255',
                 'travel_documents.*.place_of_issue'          => 'nullable|string|max:500',
                 'travel_documents.*.date_of_issue'           => 'nullable|date',
@@ -119,24 +90,12 @@ class RecruitmentController extends Controller
                 'travel_documents.*.file_path'               => 'nullable|string|max:500',
                 'travel_documents.*.file_ext'                => 'nullable|string|max:10',
 
-                // ── CrewCertificate (optional array — file_path only) ─────────
-                'crew_certificates'                    => 'nullable|array',
-                'crew_certificates.*.certificate_id'   => 'required|integer|exists:certificates,id',
-                'crew_certificates.*.grade'            => 'nullable|string',
-                'crew_certificates.*.rank_permitted'   => 'nullable|string',
-                'crew_certificates.*.certificate_no'   => 'nullable|string',
-                'crew_certificates.*.issued_by'        => 'nullable|string',
-                'crew_certificates.*.date_issued'      => 'nullable|date',
-                'crew_certificates.*.expiry_date'      => 'nullable|date',
-                'crew_certificates.*.file_path'        => 'nullable|string|max:500',
-                'crew_certificates.*.file_ext'         => 'nullable|string|max:10',
-
                 // ── EmploymentDocument (optional array — file_path only) ───────
-                'employment_documents'                                 => 'nullable|array',
-                'employment_documents.*.employment_document_type_id'   => 'required|integer|exists:employment_document_types,id',
-                'employment_documents.*.document_number'               => 'nullable|string',
-                'employment_documents.*.file_path'                     => 'nullable|string|max:500',
-                'employment_documents.*.file_ext'                      => 'nullable|string|max:10',
+                'employment_documents'                               => 'nullable|array',
+                'employment_documents.*.employment_document_type_id' => 'required|integer',
+                'employment_documents.*.document_number'             => 'nullable|string',
+                'employment_documents.*.file_path'                   => 'nullable|string|max:500',
+                'employment_documents.*.file_ext'                    => 'nullable|string|max:10',
             ]);
 
             DB::beginTransaction();
@@ -183,45 +142,17 @@ class RecruitmentController extends Controller
                     ));
                 }
 
-                // 4. UserPhysicalTrait
-                if (!empty($validated['physical_traits'])) {
-                    $user->physicalTraits()->create(array_merge(
-                        $validated['physical_traits'],
-                        ['modified_by' => 'RECRUITMENT API']
-                    ));
-                }
-
-                // 5. UserEmployment
-                if (!empty($validated['employment'])) {
-                    $user->employment()->create(array_merge(
-                        $validated['employment'],
-                        ['modified_by' => 'RECRUITMENT API']
-                    ));
-                }
-
-                // 6. UserEducation (multiple)
+                // 4. UserEducation (multiple)
                 if (!empty($validated['education'])) {
                     foreach ($validated['education'] as $edu) {
                         $user->educations()->create(array_merge(
                             $edu,
-                            ['modified_by' => 'RECRUITMENT API']
+                            ['modified_by' => null]
                         ));
                     }
                 }
 
-                // 7. UserProgramEmployment (multiple)
-                if (!empty($validated['program_employments'])) {
-                    foreach ($validated['program_employments'] as $pe) {
-                        UserProgramEmployment::create([
-                            'user_id'     => $user->id,
-                            'program_id'  => $pe['program_id'],
-                            'batch'       => $pe['batch'] ?? null,
-                            'modified_by' => 'RECRUITMENT API',
-                        ]);
-                    }
-                }
-
-                // 8. TravelDocuments (optional)
+                // 5. TravelDocuments (optional)
                 if (!empty($validated['travel_documents'])) {
                     foreach ($validated['travel_documents'] as $doc) {
                         $profile->travelDocuments()->create(array_merge(
@@ -234,20 +165,7 @@ class RecruitmentController extends Controller
                     }
                 }
 
-                // 9. CrewCertificates (optional)
-                if (!empty($validated['crew_certificates'])) {
-                    foreach ($validated['crew_certificates'] as $cert) {
-                        CrewCertificate::create(array_merge(
-                            $cert,
-                            [
-                                'crew_id'     => $crewId,
-                                'modified_by' => 'RECRUITMENT API',
-                            ]
-                        ));
-                    }
-                }
-
-                // 10. EmploymentDocuments (optional)
+                // 6. EmploymentDocuments (optional)
                 if (!empty($validated['employment_documents'])) {
                     foreach ($validated['employment_documents'] as $doc) {
                         $profile->employmentDocuments()->create(array_merge(
@@ -297,7 +215,7 @@ class RecruitmentController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while ingesting crew data',
+                'message' => $e->getMessage(),
                 'debug'   => config('app.debug') ? [
                     'message' => $e->getMessage(),
                     'line'    => $e->getLine(),
