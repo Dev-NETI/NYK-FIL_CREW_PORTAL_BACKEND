@@ -134,6 +134,7 @@ Route::get('crew-certificate-updates/history/{certificateId}', [CrewCertificateA
 
 // Profile update requests (crew submission)
 Route::post('profile-update-requests', [ProfileUpdateRequestController::class, 'store']);
+Route::post('profile-image-requests', [ProfileUpdateRequestController::class, 'storeImageRequest']);
 Route::get('profile-update-requests/crew/{crewId}', [ProfileUpdateRequestController::class, 'getCrewRequests']);
 // certificate type
 Route::apiResource('certificate-types', CertificateTypeController::class)->only(['index']);
@@ -219,6 +220,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('crew/{id}/education-info', [UserController::class, 'updateEducationInformation']);
 
     Route::get('/crew/{id}/profile', [UserController::class, 'getProfileAdmin']);
+    Route::post('/crew/{id}/profile-image', [UserController::class, 'uploadProfileImage']);
 
     // Profile update approvals (admin only)
     Route::get('profile-update-requests/pending', [ProfileUpdateRequestController::class, 'getPendingRequests']);

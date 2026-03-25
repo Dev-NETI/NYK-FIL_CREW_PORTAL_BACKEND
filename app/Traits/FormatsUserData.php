@@ -52,6 +52,7 @@ trait FormatsUserData
                 'fleet_name' => optional($user->profile->fleet)->name,
                 'company_id' => $user->profile->company_id,
                 'company_name' => optional($user->profile->company)->name,
+                'image_path' => $user->profile->image_path,
             ] : null,
 
             // Contact information
