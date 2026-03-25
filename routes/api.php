@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TravelDocumentApprovalController;
 use App\Http\Controllers\Api\TravelDocumentController;
 use App\Http\Controllers\Api\TravelDocumentTypeController;
+use App\Http\Controllers\Api\RecruitmentController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\VesselController;
@@ -228,8 +229,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('profile-update-requests/{id}/reject', [ProfileUpdateRequestController::class, 'reject']);
 });
 
-// recruitment post api
-Route::post('crew/recruitment', [UserController::class, 'store']);
+// recruitment post api (legacy)
+// Route::post('crew/recruitment', [UserController::class, 'store']);
+
+// Recruitment App integration — comprehensive crew data ingest (protected by shared secret)
+Route::middleware('recruitment.auth')->post('recruitment/ingest', [RecruitmentController::class, 'ingest']);
 
 // MPIP inbound webhook routes (authenticated via shared-secret Bearer token)
 Route::middleware('mpip.auth')->prefix('mpip')->group(function () {

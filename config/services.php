@@ -39,4 +39,8 @@ return [
         'shared_secret' => env('MPIP_SHARED_SECRET'),
     ],
 
+    'recruitment' => [
+        'shared_secret' => env('RECRUITMENT_API_KEY'),
+    ],
+
 ];

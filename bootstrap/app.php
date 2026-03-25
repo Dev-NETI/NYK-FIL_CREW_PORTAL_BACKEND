@@ -21,7 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified'   => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'crew'       => \App\Http\Middleware\EnsureCrew::class,
             'admin'      => \App\Http\Middleware\EnsureAdmin::class,
-            'mpip.auth'  => \App\Http\Middleware\MpipAuth::class,
+            'mpip.auth'        => \App\Http\Middleware\MpipAuth::class,
+            'recruitment.auth' => \App\Http\Middleware\RecruitmentAuth::class,
         ]);
 
         // Enable CORS for API routes
