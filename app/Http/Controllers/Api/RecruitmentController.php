@@ -201,13 +201,7 @@ class RecruitmentController extends Controller
                 DB::rollBack();
                 throw $e;
             }
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors'  => $e->errors(),
-            ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Recruitment API: ingest failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
