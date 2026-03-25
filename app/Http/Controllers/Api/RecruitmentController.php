@@ -54,13 +54,8 @@ class RecruitmentController extends Controller
                 'profile.birth_place'    => 'required|string|max:255',
                 'profile.age'            => 'nullable|integer|min:0|max:150',
                 'profile.gender'         => 'required|in:Male,Female',
-                'profile.nationality'    => 'nullable|string|max:100',
                 'profile.civil_status'   => 'required|string|max:100',
                 'profile.religion'       => 'nullable|string|max:100',
-                'profile.blood_type'     => 'nullable|string|max:10',
-                'profile.rank_id'        => 'nullable|integer',
-                'profile.fleet_id'       => 'nullable|integer',
-                'profile.company_id'     => 'nullable|integer',
                 'profile.image_path'     => 'nullable|string|max:500',
 
                 // ── UserContact ───────────────────────────────────────────────
@@ -122,13 +117,8 @@ class RecruitmentController extends Controller
                     'birth_place'  => $profileData['birth_place'],
                     'age'          => $profileData['age'] ?? null,
                     'gender'       => $profileData['gender'],
-                    'nationality'  => $profileData['nationality'] ?? null,
                     'civil_status' => $profileData['civil_status'],
                     'religion'     => $profileData['religion'] ?? null,
-                    'blood_type'   => $profileData['blood_type'] ?? null,
-                    'rank_id'      => $profileData['rank_id'] ?? null,
-                    'fleet_id'     => $profileData['fleet_id'] ?? null,
-                    'company_id'   => $profileData['company_id'] ?? null,
                     'image_path'   => $profileData['image_path'] ?? null,
                     'modified_by'  => 'RECRUITMENT API',
                 ]);
