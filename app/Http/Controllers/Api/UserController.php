@@ -220,7 +220,9 @@ class UserController extends Controller
                 'search' => 'sometimes|nullable|string|max:255',
                 'status' => 'sometimes|string|in:all,active,inactive,on_leave',
                 'sort_by' => 'sometimes|string|in:first_name,email',
-                'sort_order' => 'sometimes|string|in:asc,desc'
+                'sort_order' => 'sometimes|string|in:asc,desc',
+                'rank_id' => 'sometimes|nullable|integer',
+                'fleet_id' => 'sometimes|nullable|integer',
             ]);
 
             // Set defaults
@@ -229,10 +231,54 @@ class UserController extends Controller
             $status = $validatedData['status'] ?? 'all';
             $sortBy = $validatedData['sort_by'] ?? 'first_name';
             $sortOrder = $validatedData['sort_order'] ?? 'asc';
+            $rankId = $validatedData['rank_id'] ?? null;
+            $fleetId = $validatedData['fleet_id'] ?? null;
 
             // Build query for crew members (is_crew = 1) with their related data
             $query = User::where('is_crew', 1)
                 ->with(['profile.rank', 'profile.fleet', 'profile.company', 'contacts', 'employment', 'education', 'physicalTraits']);
+
+            // Fleet admin scoping using raw DB queries:
+            // Admin chain: users.department_id -> departments.department_category_id = 1 (Fleet Operations)
+            //              -> fleets.department_id = departments.id -> fleets.id
+            // Crew chain:  user_profiles.fleet_id = fleets.id
+            $adminDeptId = $currentUser->department_id;
+            $isFleetAdmin = false;
+            $adminFleetId = null;
+
+            if ($adminDeptId) {
+                $dept = DB::table('departments')
+                    ->whereNull('deleted_at')
+                    ->where('id', $adminDeptId)
+                    ->first();
+
+                if ($dept && (int) $dept->department_category_id === 1) {
+                    $isFleetAdmin = true;
+                    $fleet = DB::table('fleets')
+                        ->whereNull('deleted_at')
+                        ->where('department_id', $adminDeptId)
+                        ->first();
+                    $adminFleetId = $fleet?->id;
+                }
+            }
+
+            Log::info('Crew list fleet admin scope', [
+                'admin_id'       => $currentUser->id,
+                'department_id'  => $adminDeptId,
+                'is_fleet_admin' => $isFleetAdmin,
+                'admin_fleet_id' => $adminFleetId,
+            ]);
+
+            if ($isFleetAdmin) {
+                if ($adminFleetId) {
+                    // Only show crew whose user_profiles.fleet_id matches admin's fleet
+                    $query->whereHas('profile', fn($q) => $q->where('fleet_id', $adminFleetId));
+                } else {
+                    // Fleet admin but no fleet linked to their department — show nothing
+                    $query->whereRaw('0 = 1');
+                }
+            }
+            // Non-fleet admin: no scope applied, all crew is visible
 
             // Apply search filter
             if (!empty($search)) {
@@ -249,6 +295,21 @@ class UserController extends Controller
             if ($status !== 'all') {
                 $query->whereHas('employment', function ($employmentQuery) use ($status) {
                     $employmentQuery->where('crew_status', $status);
+                });
+            }
+
+            // Apply rank filter (rank is stored on user_profiles)
+            if (!empty($rankId)) {
+                $query->whereHas('profile', function ($q) use ($rankId) {
+                    $q->where('rank_id', $rankId);
+                });
+            }
+
+            // Apply fleet (department) filter — check both profile and employment
+            if (!empty($fleetId)) {
+                $query->where(function ($q) use ($fleetId) {
+                    $q->whereHas('profile', fn($sq) => $sq->where('fleet_id', $fleetId))
+                        ->orWhereHas('employment', fn($sq) => $sq->where('fleet_id', $fleetId));
                 });
             }
 
