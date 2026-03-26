@@ -21,6 +21,7 @@ class RoleSeeder extends Seeder
             ['name' => 'Manage Crew Contact Info'],
             ['name' => 'Manage Crew Employment Info'],
             ['name' => 'Manage Crew Education'],
+            ['name' => 'Manage Crew Image'],
             ['name' => 'Document Approval'],
             ['name' => 'Employment Document Approval'],
             ['name' => 'Travel Document Approval'],

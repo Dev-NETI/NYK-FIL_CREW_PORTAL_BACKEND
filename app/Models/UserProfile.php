@@ -14,6 +14,8 @@ class UserProfile extends Model
 {
     use HasFactory, HasModifiedBy, SoftDeletes;
 
+    protected $appends = ['full_name'];
+
     protected $fillable = [
         'user_id',
         'crew_id',
