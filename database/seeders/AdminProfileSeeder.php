@@ -158,8 +158,8 @@ class AdminProfileSeeder extends Seeder
                 'department_name' => 'NTMA',
             ],
             [
-                'email' => 'noc@neti.com.ph',
-                'firstname' => 'Network Operations',
+                'email' => 'adm@neti.com.ph',
+                'firstname' => 'Super Admin',
                 'middlename' => 'Center',
                 'lastname' => 'Administrator',
                 'department_name' => 'Dry',
