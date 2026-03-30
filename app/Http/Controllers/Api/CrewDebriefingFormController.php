@@ -86,7 +86,7 @@ class CrewDebriefingFormController extends Controller
             'status' => 'draft',
 
             // Crew details (server-owned)
-            'rank' => $rankName ?? ($profile->rank ?? $profile->rank_name ?? null),
+            'rank' => $rankName ?? ($profile->rank?->name ?? null),
             'crew_name' => $profile
                 ? $this->formatCrewName($profile)
                 : ($user->name ?? $user->email),
@@ -104,6 +104,12 @@ class CrewDebriefingFormController extends Controller
         return response()->json([
             'success' => true,
             'data' => $form,
+            'prefill' => [
+                'mobile_number' => $contact?->mobile_number,
+                'email' => $user->email,
+                'present_address' => $presentAddress,
+                'provincial_address' => $provincialAddress,
+            ],
             'message' => 'Debriefing form draft created.',
         ], 201);
     }

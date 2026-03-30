@@ -86,7 +86,7 @@ class DebriefingPdfService
 
     private function fillTemplate($sheet, DebriefingForm $form): void
     {
-        $s = fn ($v) => $v === null ? '' : (string) $v;
+        $s = fn($v) => $v === null ? '' : (string) $v;
 
         $d = function ($date) {
             if (!$date) return '';
