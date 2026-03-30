@@ -35,12 +35,14 @@ class AdminDebriefingFormController extends Controller
         if ($user->department_id) {
             $query->where(function ($q) use ($user) {
                 $q->whereNull('department_id')
-                  ->orWhere('department_id', $user->department_id);
+                    ->orWhere('department_id', $user->department_id);
             });
         }
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
+        } else {
+            $query->whereIn('status', ['submitted', 'confirmed']);
         }
 
         if ($request->filled('crew_name')) {
@@ -176,7 +178,7 @@ class AdminDebriefingFormController extends Controller
 
         return response()->file($fullPath, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="debriefing_form_'.$form->id.'.pdf"',
+            'Content-Disposition' => 'inline; filename="debriefing_form_' . $form->id . '.pdf"',
         ]);
     }
 
@@ -214,7 +216,7 @@ class AdminDebriefingFormController extends Controller
 
         return response()->download(
             $fullPath,
-            'debriefing_form_'.$form->id.'.pdf',
+            'debriefing_form_' . $form->id . '.pdf',
             ['Content-Type' => 'application/pdf']
         );
     }

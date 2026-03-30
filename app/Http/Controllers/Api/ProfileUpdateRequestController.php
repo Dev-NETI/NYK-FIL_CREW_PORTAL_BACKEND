@@ -279,6 +279,7 @@ class ProfileUpdateRequestController extends Controller
                 ];
             case 'contact':
                 return [
+                    'email' => $crew->email,
                     'contacts' => $crew->contacts?->toArray(),
                     'permanent_address' => $crew->contacts?->permanentAddress?->toArray(),
                     'current_address' => $crew->contacts?->currentAddress?->toArray(),
@@ -338,6 +339,11 @@ class ProfileUpdateRequestController extends Controller
                 break;
 
             case 'contact':
+                if (isset($requestedData['email'])) {
+                    $crew->email = $requestedData['email'];
+                    $crew->save();
+                }
+
                 if (isset($requestedData['contacts'])) {
                     $crew->contacts()->updateOrCreate(
                         ['user_id' => $crew->id],
