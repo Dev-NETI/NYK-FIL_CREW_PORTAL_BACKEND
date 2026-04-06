@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\Mpip\MpipCrewSyncController;
 use App\Http\Controllers\Api\Mpip\MpipContractSyncController;
 use App\Http\Controllers\Api\Mpip\MpipWageSyncController;
+use App\Http\Controllers\Api\Mpip\MpipCrewUpdateController;
+use App\Http\Controllers\Api\Mpip\MpipDocumentUpdateController;
 use App\Http\Controllers\Api\CrewAlloteeController;
 use App\Http\Controllers\Api\CrewCertificateController;
 use App\Http\Controllers\Api\CrewCertificateApprovalController;
@@ -240,6 +242,16 @@ Route::middleware('mpip.auth')->prefix('mpip')->group(function () {
     Route::post('crew/sync',      [MpipCrewSyncController::class,      'sync']);
     Route::post('contracts/sync', [MpipContractSyncController::class,  'sync']);
     Route::post('wages/sync',     [MpipWageSyncController::class,      'sync']);
+
+    // Crew upsert endpoints (T1–T8, T12 payload; crew_id as route param)
+    Route::put('update/cruise/{crew_id}',     [MpipCrewUpdateController::class, 'updateCruise']);
+    Route::put('update/non-nyk/{crew_id}',    [MpipCrewUpdateController::class, 'updateNonNyk']);
+    Route::put('update/industrial/{crew_id}', [MpipCrewUpdateController::class, 'updateIndustrial']);
+
+    // Document upsert endpoints (T9–T11; crew_id as route param)
+    Route::put('documents/travel/{crew_id}',       [MpipDocumentUpdateController::class, 'updateTravelDocuments']);
+    Route::put('documents/employment/{crew_id}',   [MpipDocumentUpdateController::class, 'updateEmploymentDocuments']);
+    Route::put('documents/certificates/{crew_id}', [MpipDocumentUpdateController::class, 'updateCertificates']);
 });
 
 // Appointment types (admin)
