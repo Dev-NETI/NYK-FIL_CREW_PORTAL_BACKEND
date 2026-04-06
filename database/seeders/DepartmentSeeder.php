@@ -15,7 +15,7 @@ class DepartmentSeeder extends Seeder
     public function run(): void
     {
         $departmentData = [
-            'Fleet Operations' => [
+            'Industrial Fleet Operations' => [
                 'FLEET A',
                 'FLEET B1',
                 'FLEET B2',
@@ -25,15 +25,24 @@ class DepartmentSeeder extends Seeder
                 'FLEET D2',
                 'FLEET E1',
                 'FLEET E2',
-                'NTMA FLEET'
+                'NTMA FLEET',
+                'NA'
             ],
-            'Technical Operations' => ['Dry', 'Liquid'],
             'Crew Development' => ['Shore-Based Work', 'Promotion'],
-            'Crew Allied Services' => ['VISA', 'JISS', 'Crew Morale', 'Cruise'],
-            'Finance' => ['Payroll', 'SLAF', 'Disbursement', 'SGA'],
-            'OP' => ['QAD', 'Claims'],
-            'Recruitment' => ['Recruitment'],
-            'Assessment' => ['Assessment'],
+            'Crew Morale and Welfare Department' => ['Crew Morale', 'NA'],
+            'Finance' => ['Payroll', 'SLAF', 'Disbursement', 'SGA', 'Receivables'],
+            'Legal and Crew Claims Department' => ['Claims', 'Legal', 'NA'],
+            'Recruitment' => ['Recruitment', 'NA'],
+            'Assessment' => ['Assessment', 'Engine', 'NA'],
+            'Marine Crew Development Department' => ['SSRP - NAS', 'Deck', 'Engine', 'Galley', 'NA'],
+            'Receivables' => ['Receivables'],
+            'Crew Management Department' => ['Dry Vessels', 'Liquid Vessels', 'NA'],
+            'Cruise' => ['Cruise', 'NA'],
+            'Cruise Operation Department' => ['Cruise Operation Department', 'NA'],
+            'Licensing and Liaison' => ['Liaison', 'Visa Processing', 'Licensing', 'NA'],
+            'Office of the President' => ['Office of the President', 'NA'],
+            'NA' => ['NA'],
+            'Crew Certification' => ['Crew Certification']
         ];
 
         foreach ($departmentData as $categoryName => $departments) {

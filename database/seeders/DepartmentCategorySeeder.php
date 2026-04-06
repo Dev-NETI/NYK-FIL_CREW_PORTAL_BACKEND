@@ -14,15 +14,22 @@ class DepartmentCategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Fleet Operations',
-            'Technical Operations',
+            'Industrial Fleet Operations',
+            'Crew Morale and Welfare Department',
             'Recruitment',
             'Assessment',
             'Crew Development',
             'Crew Certification',
-            'Crew Allied Services',
             'Finance',
-            'OP'
+            'Office of the President',
+            'Legal and Crew Claims Department',
+            'Marine Crew Development Department',
+            'Receivables',
+            'Crew Management Department',
+            'Cruise',
+            'Cruise Operation Department',
+            'Licensing and Liaison',
+            'NA'
         ];
 
         foreach ($categories as $category) {
